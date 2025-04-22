@@ -9,6 +9,23 @@ from sklearn.tree import _tree, export_text
 
 
 class Node:
+    """
+    Tree node class
+
+    Parameters
+    ----------
+    feature : int
+        Current node feature indice splitting
+    treshold : flaot
+        Current node treshold splittting
+    side : str
+        Side of the rule. 'L' for Left (i.e. less or equal) and 'R' for right (i.e. gretter)
+    node_id : int
+       Current  Node id
+    children : list of Node
+        Child Nodes if not a leaf node
+
+    """
     def __init__(self, feature=None,treshold=-1,side=None, node_id=-1, *children):
         
         self.node_id = node_id
@@ -27,7 +44,21 @@ class SirusMixin:
     """
     def explore_tree_(self,node_id,side):
         """
-        Explore  atree structe with Node class. A Node class is associated to childs if internal node.
+        Whole tree structure recursive explorator (with Node class). 
+        Node class are associated to their childs if internal node.
+
+        Parameters
+        ----------
+        node_id : int
+            Starting node id for the tree structure exploration.
+        side : str
+            Current node cutting side. 'L' for left and 'R' for right. 'root' for the root node.
+
+        Returns
+        ----------
+        Node: Node
+            The starting Node of the first call of this function (given node_id by user).
+
         """
         if self.tree_.children_left[node_id] != _tree.TREE_LEAF: # possible to add a max_depth constraint exploration value
             id_left_child = self.tree_.children_left[node_id]
@@ -42,7 +73,18 @@ class SirusMixin:
         return Node(self.tree_.feature[node_id],self.tree_.threshold[node_id],side,node_id,*children)
     def construct_longest_paths_(self,root):
         """
-        Generate tree_strucre (i.e a list of rules FROM node TO leafs rules).
+        Generate tree_strucre, i.e a list of rules that all starts FROM root node TO a leaf.
+        The lengh of this list is equal to the number of leaf.
+
+        Parameters
+        ----------
+        root : Node instance
+            The tree root.
+        Returns
+        ----------
+        tree_structure : list
+            list of longest paths, i.e a list of rules that all starts FROM root node TO a leaf
+
         """
         tree_structure = [[]]
         stack = [(root,0)]  # start with the root node id (0) and its depth (0)
@@ -56,8 +98,8 @@ class SirusMixin:
                 rule_right = (curr_rule.feature,curr_rule.treshold,'R')
                 common_path_rules = tree_structure[indice_in_tree_struct].copy()
                 common_path_rules.append(rule_right)
-                tree_structure.append(common_path_rules) ## DROITE : Ajouté à la fin
-                tree_structure[indice_in_tree_struct].append(rule_left) ## GAUCHE  : On le rajoute selon indice_in_tree_struct
+                tree_structure.append(common_path_rules) ## RIGHT : Added at the end
+                tree_structure[indice_in_tree_struct].append(rule_left) ## LEFT  : Added depending on indice_in_tree_struct
         
                 stack.append((curr_rule.children[0],indice_in_tree_struct))
                 stack.append(( curr_rule.children[1],len(tree_structure)-1 ))
@@ -69,6 +111,13 @@ class SirusMixin:
     def split_sub_rules_(self,path,is_removing_singleton=False):
         """
         From a multiple rule, generate the associated sub multiple/single rules.
+        Auxiliar function for generate_all_possible_rules_.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
         """
         list_sub_path = []
         max_size_curr_path = len(path)
@@ -83,6 +132,12 @@ class SirusMixin:
     def generate_all_possible_rules_(self,tree_structure):
         """
         Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
         """
         all_paths_list = []
         for i in range(len(tree_structure)):
@@ -94,7 +149,7 @@ class SirusMixin:
                 list_sub_path = self.split_sub_rules_(curr_path[k:],is_removing_singleton=False)
                 all_paths_list.extend(list_sub_path)
         
-            ## MOre complexe cases : internal rules
+            ## More complexe cases : internal rules
             if max_size_curr_path ==1:
                 continue
             else:
@@ -114,7 +169,14 @@ class SirusMixin:
     
     def from_rules_to_constraint(self,rule):
         """
-        Extract informations from a single rule
+        Extract informations from a single rule.
+        Auxiliar function for  generate_single_rule_mask.
+
+        Parameters
+        ----------
+
+        Returns
+        ----------
         """
         dimension = rule[0]
         treshold = rule[1]
@@ -124,6 +186,9 @@ class SirusMixin:
     def generate_single_rule_mask(self,X,dimension,treshold,sign):
         """
         Uses constraints of a single rule to generatye the associated mask for data set X.
+
+        Parameters
+        ----------
         """
         if sign=='L':
             return (X[:,dimension]<=treshold) #.mean()
@@ -132,6 +197,7 @@ class SirusMixin:
     
     def fit(self, X, y,p0=0.0,quantile=10,sample_weight=None):
         """
+        Fit method for SirusMixin.
         """
         X_bin = X.copy()
         list_quantile = [np.percentile(X_bin,q=i*quantile,axis=0) for i in range(int((100//quantile)+1))]
@@ -141,14 +207,14 @@ class SirusMixin:
             X_bin[:,dim] = array_quantile[out,dim]
         super().fit(X=X_bin, y=y, sample_weight=sample_weight)
 
-        root = self.explore_tree_(0,'Root')
-        tree_structure = self.construct_longest_paths_(root)
-        all_possible_rules_list = self.generate_all_possible_rules_(tree_structure)
-        all_possible_rules_list_str = [str(elem) for elem in all_possible_rules_list]
-        unique_str_rules,indices_rules,count_rules = np.unique(all_possible_rules_list_str,return_counts=True,return_index=True)
-        proportions_count = (count_rules / len(count_rules))
-        proportions_count_sort = -np.sort(-proportions_count)
-        proportions_count_sort_indices = np.argsort(-count_rules)
+        root = self.explore_tree_(0,'Root') ## Root node
+        tree_structure = self.construct_longest_paths_(root) ## generate the tree structure with Node instances
+        all_possible_rules_list = self.generate_all_possible_rules_(tree_structure) # Explre the tree structure to extract the longest rules (rules from root to a leaf)
+        all_possible_rules_list_str = [str(elem) for elem in all_possible_rules_list] # Trick for np.unique
+        unique_str_rules,indices_rules,count_rules = np.unique(all_possible_rules_list_str,return_counts=True,return_index=True) # get the unique rules and count
+        proportions_count = (count_rules / len(count_rules)) # Get frequency of each rules
+        proportions_count_sort = -np.sort(-proportions_count) # Sort rules frequency by descending order 
+        proportions_count_sort_indices = np.argsort(-count_rules) # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (proportions_count_sort > p0).sum() ## not necssary to sort proportions_count...
         
         list_mask_by_rules = []
@@ -190,6 +256,9 @@ class SirusMixin:
     
     
     def predict_proba(self, X, to_add_probas_outside_rules=True):
+        """
+        predict_proba method for SirusMixin.
+        """
         y_pred_probas = np.zeros((len(X),self.n_classes_))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
@@ -207,6 +276,9 @@ class SirusMixin:
         return  (1/self.n_rules)*y_pred_probas
 
     def predict(self, X, to_add_probas_outside_rules=True):
+        """
+        predict_proba method for SirusMixin.
+        """
         y_pred_probas = self.predict_proba(X=X,to_add_probas_outside_rules=to_add_probas_outside_rules)
         y_pred_numeric = np.argmax(y_pred_probas,axis=1) 
         if self.type_target != int:
@@ -218,14 +290,22 @@ class SirusMixin:
             return y_pred_numeric.ravel().reshape(-1,)
 
 
-class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifierAbd):
+class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier): 
     """
     SIRUS class applied with a DecisionTreeClassifier
+    Parameters
+    ----------
 
     """
 
-class SirusRFClassifier(SirusMixin, RandomForestClassifier):
+class SirusRFClassifier(SirusMixin, RandomForestClassifier): #DecisionTreeClassifier
     """
     SIRUS class applied with a RandomForestClassifier
 
     """
+
+
+#TODO : Define a splitter that split on train data values (and no longer on the mean of two values)
+#TODO : DecisionTreeClassifierAbd that uses the previous splitter
+#TODO : RandomForestClassifierAbd that uses the previous splitter
+#TODO : Adapt SirusMixin for RandomForestClassifierAbd
