@@ -42,7 +42,7 @@ class SirusMixin:
     """
     Mixin of SIRUS. Base of all SIRUS models.
     """
-    def explore_tree_(self,node_id,side):
+    def explore_tree_(self,node_id,side,tree):
         """
         Whole tree structure recursive explorator (with Node class). 
         Node class are associated to their childs if internal node.
@@ -60,17 +60,17 @@ class SirusMixin:
             The starting Node of the first call of this function (given node_id by user).
 
         """
-        if self.tree_.children_left[node_id] != _tree.TREE_LEAF: # possible to add a max_depth constraint exploration value
-            id_left_child = self.tree_.children_left[node_id]
-            id_right_child = self.tree_.children_right[node_id]
+        if tree.children_left[node_id] != _tree.TREE_LEAF: # possible to add a max_depth constraint exploration value
+            id_left_child = tree.children_left[node_id]
+            id_right_child = tree.children_right[node_id]
             children = [
-                self.explore_tree_(id_left_child,'L'), # L for \leq
-                self.explore_tree_(id_right_child,'R')
+                self.explore_tree_(id_left_child,'L',tree), # L for \leq
+                self.explore_tree_(id_right_child,'R',tree)
             ]
         else:
-            return Node(feature=self.tree_.feature[node_id],treshold=self.tree_.threshold[node_id],side=side,node_id=node_id)
+            return Node(feature=tree.feature[node_id],treshold=tree.threshold[node_id],side=side,node_id=node_id)
         
-        return Node(self.tree_.feature[node_id],self.tree_.threshold[node_id],side,node_id,*children)
+        return Node(tree.feature[node_id],tree.threshold[node_id],side,node_id,*children)
     def construct_longest_paths_(self,root):
         """
         Generate tree_strucre, i.e a list of rules that all starts FROM root node TO a leaf.
@@ -194,33 +194,41 @@ class SirusMixin:
             return (X[:,dimension]<=treshold) #.mean()
         else:
             return (X[:,dimension]>treshold)#.mean()
-    
-    def fit(self, X, y,p0=0.0,quantile=10,sample_weight=None):
-        """
-        Fit method for SirusMixin.
-        """
+        
+    def fit_main_classifier(self, X, y,quantile=10,sample_weight=None):
         X_bin = X.copy()
         list_quantile = [np.percentile(X_bin,q=i*quantile,axis=0) for i in range(int((100//quantile)+1))]
         array_quantile = np.array(list_quantile )
         for dim in range(X.shape[1]):
             out = np.searchsorted(array_quantile[:,dim], X_bin[:,dim],side='left')
             X_bin[:,dim] = array_quantile[out,dim]
-        super().fit(X=X_bin, y=y, sample_weight=sample_weight)
-
-        root = self.explore_tree_(0,'Root') ## Root node
+        super().fit(
+            X_bin,
+            y,
+            sample_weight=sample_weight,
+        )
+    
+    def extract_single_tree_rules(self,tree):
+        """
+        Fit method for SirusMixin.
+        """
+        root = self.explore_tree_(0,'Root',tree) ## Root node
         tree_structure = self.construct_longest_paths_(root) ## generate the tree structure with Node instances
         all_possible_rules_list = self.generate_all_possible_rules_(tree_structure) # Explre the tree structure to extract the longest rules (rules from root to a leaf)
+        return all_possible_rules_list
+        
+        
+    def fit_forest_rules(self, X, y,all_possible_rules_list,p0=0.0):
         all_possible_rules_list_str = [str(elem) for elem in all_possible_rules_list] # Trick for np.unique
         unique_str_rules,indices_rules,count_rules = np.unique(all_possible_rules_list_str,return_counts=True,return_index=True) # get the unique rules and count
         proportions_count = (count_rules / len(count_rules)) # Get frequency of each rules
         proportions_count_sort = -np.sort(-proportions_count) # Sort rules frequency by descending order 
         proportions_count_sort_indices = np.argsort(-count_rules) # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (proportions_count_sort > p0).sum() ## not necssary to sort proportions_count...
-        
         list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
-        # APPLY POST TREATMEANT HERE on count_sort_ind[:p0]
+        #### APPLY POST TREATMEANT HERE on count_sort_ind[:n_rules_to_keep] ####
         for indice in proportions_count_sort_indices[:n_rules_to_keep]:
             #for loop for getting all the values in train (X) passing the rules
             current_rules = all_possible_rules_list[indice]
@@ -263,7 +271,7 @@ class SirusMixin:
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
             list_mask=[]
-            for j in range(len(current_rules)): ## iteraation on each signle rule of the potentail multiple rule
+            for j in range(len(current_rules)): ## iteration on each signle rule of the potentail multiple rule
                 dimension,treshold,sign = self.from_rules_to_constraint(rule=current_rules[j])
                 mask = self.generate_single_rule_mask(X=X,dimension=dimension,treshold=treshold,sign=sign) # I do it on X and not on X_bin
                 list_mask.append(mask)
@@ -297,12 +305,47 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     ----------
 
     """
+    def fit(self, X, y,p0=0.0,quantile=10, sample_weight=None, check_input=True):
+        """Build a decision tree classifier from the training set (X, y).
 
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The training input samples. Internally, it will be converted to
+            ``dtype=np.float32`` and if a sparse matrix is provided
+            to a sparse ``csc_matrix``.
+
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            The target values (class labels) as integers or strings.
+
+        sample_weight : array-like of shape (n_samples,), default=None
+            Sample weights. If None, then samples are equally weighted. Splits
+            that would create child nodes with net zero or negative weight are
+            ignored while searching for a split in each node. Splits are also
+            ignored if they would result in any single class carrying a
+            negative weight in either child node.
+
+        check_input : bool, default=True
+            Allow to bypass several input checking.
+            Don't use this parameter unless you know what you're doing.
+
+        Returns
+        -------
+        self : DecisionTreeClassifier
+            Fitted estimator.
+        """
+        self.fit_main_classifier(X, y,quantile,sample_weight)
+        all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
+        self.fit_forest_rules(X, y,all_possible_rules_list,p0)
+        return self
 class SirusRFClassifier(SirusMixin, RandomForestClassifier): #DecisionTreeClassifier
     """
     SIRUS class applied with a RandomForestClassifier
 
     """
+    def fit(self, X, y,p0=0.0,quantile=10, sample_weight=None, check_input=True):
+        print('a')
+
 
 
 #TODO : Define a splitter that split on train data values (and no longer on the mean of two values)
