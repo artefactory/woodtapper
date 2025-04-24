@@ -4,7 +4,7 @@ from operator import and_
 
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.tree import _tree, export_text
 
 
@@ -296,6 +296,20 @@ class SirusMixin:
             return y_pred.ravel().reshape(-1,)
         else:
             return y_pred_numeric.ravel().reshape(-1,)
+        
+    def print_rules(self,max_rules=10):
+        for indice in range(max_rules):
+            current_rules = self.all_possible_rules_list[indice]
+            print("########")
+            print('Rules {} '.format(indice))
+            for j in range(len(current_rules)):
+                dimension,treshold,sign = self.from_rules_to_constraint(rule=current_rules[j])
+                if sign=='L':
+                    sign='<='
+                else:
+                    sign='>'
+                print("       &( X[:,{}] {} {} )".format(dimension,sign,treshold))
+
 
 
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier): 
@@ -345,10 +359,32 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier): #DecisionTreeClassi
     """
     def fit(self, X, y,p0=0.0,quantile=10, sample_weight=None, check_input=True):
         print('a')
+        self.fit_main_classifier(X, y,quantile,sample_weight)
+        print("Essai self.n_classes_ :  ",self.n_classes_)
+        all_possible_rules_list = []
+        for dtree in self.estimators_: ## extraction  of all trees rules
+            tree = dtree.tree_
+            all_possible_rules_list.extend( self.extract_single_tree_rules(tree) )
+        self.fit_forest_rules(X, y,all_possible_rules_list,p0)
 
+
+class SirusGBClassifier(SirusMixin, GradientBoostingClassifier): 
+    """
+    SIRUS class applied with a RandomForestClassifier
+
+    """
+    def fit(self, X, y,p0=0.0,quantile=10, sample_weight=None, check_input=True):
+        print('a')
+        self.fit_main_classifier(X, y,quantile,sample_weight)
+        print("Essai self.n_classes_ :  ",self.n_classes_)
+        all_possible_rules_list = []
+        for i in range(self.n_estimators_): ## extraction  of all trees rules
+            dtree = self.estimators_[i,1] ## Y 1-d
+            tree = dtree.tree_
+            all_possible_rules_list.extend( self.extract_single_tree_rules(tree) )
+        self.fit_forest_rules(X, y,all_possible_rules_list,p0)
 
 
 #TODO : Define a splitter that split on train data values (and no longer on the mean of two values)
 #TODO : DecisionTreeClassifierAbd that uses the previous splitter
 #TODO : RandomForestClassifierAbd that uses the previous splitter
-#TODO : Adapt SirusMixin for RandomForestClassifierAbd
