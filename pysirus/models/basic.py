@@ -7,7 +7,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.tree import _tree, export_text
 
-from sklearn import tree as tr
+from ._QuantileSplitter import QuantileBestSplitter
+from sklearn.utils._param_validation import  StrOptions
+from sklearn.tree import _splitter
+import sklearn.tree._classes
+sklearn.tree._classes.DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.BestSplitter,"quantile":QuantileBestSplitter}
+
 class Node:
     """
     Tree node class
@@ -191,7 +196,6 @@ class SirusMixin:
         ----------
         """
         if sign=='L':
-            print(dimension)
             return (X[:,dimension]<=treshold) #.mean()
         else:
             return (X[:,dimension]>treshold)#.mean()
@@ -208,7 +212,6 @@ class SirusMixin:
             y,
             sample_weight=sample_weight,
         )
-        tr.plot_tree(self)
     
     def extract_single_tree_rules(self,tree):
         """
@@ -216,7 +219,6 @@ class SirusMixin:
         """
         root = self.explore_tree_(0,'Root',tree) ## Root node
         tree_structure = self.construct_longest_paths_(root) ## generate the tree structure with Node instances
-        print(tree_structure)
         all_possible_rules_list = self.generate_all_possible_rules_(tree_structure) # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
         
@@ -314,15 +316,6 @@ class SirusMixin:
                 print("       &( X[:,{}] {} {} )".format(dimension,sign,treshold))
 
 
-
-
-from ._QuantileSplitter import QuantileBestSplitter
-from sklearn.tree import _splitter
-import sklearn.tree._classes
-sklearn.tree._classes.DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.BestSplitter,"quantile":QuantileBestSplitter}
-from sklearn.utils._param_validation import Interval, RealNotInt, StrOptions, Hidden
-from sklearn.tree._criterion import Criterion
-from numbers import Integral, Real
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier): 
     """
     SIRUS class applied with a DecisionTreeClassifier
@@ -330,32 +323,11 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     ----------
 
     """
+   
     _parameter_constraints: dict = {
-        "splitter": [StrOptions({"best", "random","quantile"})],
-        "max_depth": [Interval(Integral, 1, None, closed="left"), None],
-        "min_samples_split": [
-            Interval(Integral, 2, None, closed="left"),
-            Interval(RealNotInt, 0.0, 1.0, closed="right"),
-        ],
-        "min_samples_leaf": [
-            Interval(Integral, 1, None, closed="left"),
-            Interval(RealNotInt, 0.0, 1.0, closed="neither"),
-        ],
-        "min_weight_fraction_leaf": [Interval(Real, 0.0, 0.5, closed="both")],
-        "max_features": [
-            Interval(Integral, 1, None, closed="left"),
-            Interval(RealNotInt, 0.0, 1.0, closed="right"),
-            StrOptions({"sqrt", "log2"}),
-            None,
-        ],
-        "random_state": ["random_state"],
-        "max_leaf_nodes": [Interval(Integral, 2, None, closed="left"), None],
-        "min_impurity_decrease": [Interval(Real, 0.0, None, closed="left")],
-        "ccp_alpha": [Interval(Real, 0.0, None, closed="left")],
-        "monotonic_cst": ["array-like", None],
-        "criterion": [StrOptions({"gini", "entropy", "log_loss"}), Hidden(Criterion)],
-        "class_weight": [dict, list, StrOptions({"balanced"}), None],
+        **DecisionTreeClassifier._parameter_constraints
     }
+    _parameter_constraints["splitter"] = [StrOptions({"best", "random","quantile"})]
 
     def fit(self, X, y,p0=0.0,quantile=10, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
@@ -388,7 +360,6 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         """
         self.fit_main_classifier(X, y,quantile,sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
-        print(all_possible_rules_list)
         self.fit_forest_rules(X, y,all_possible_rules_list,p0) ## Checker que cx'est bien sur X et non le X_bin
         return self
 
