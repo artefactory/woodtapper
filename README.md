@@ -36,7 +36,7 @@ This work was done through a partenership between **Artefact Research Center** a
 
 <p align="center">
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
-    <img src="https://raw.githubusercontent.com/artefactory/choice-learn/main/docs/illustrations/logos/logo_arc.png" height="80" />
+    <img src="data/logos/logo_arc.png" height="80" />
   </a>
   &emsp;
   &emsp;
