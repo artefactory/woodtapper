@@ -4,7 +4,7 @@
 
 
 Abdoulaye SAKHO<sup>1, 2</sup>, Emmanuel MALHERBE<sup>1</sup></sup>, Erwan SCORNET<sup>2</sup> <br>
- <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université,</sub> 
+ <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université</sub> 
 
 Preprint. <br>
 [[Full Paper]]() <br>
