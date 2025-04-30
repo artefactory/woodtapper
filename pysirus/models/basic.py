@@ -1,4 +1,3 @@
-from collections import Counter
 from functools import reduce
 from operator import and_
 
@@ -6,15 +5,17 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
 from sklearn.ensemble._forest import ForestClassifier
-from sklearn.tree import _tree, export_text
-
-from ._QuantileSplitter import QuantileBestSplitter
+from sklearn.tree import _tree
 from sklearn.utils._param_validation import  StrOptions
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-sklearn.tree._classes.DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.BestSplitter,"quantile":QuantileBestSplitter}
-
 from sklearn.linear_model import Ridge
+from sklearn.ensemble._gb import set_huber_delta,_update_terminal_regions
+from sklearn._loss.loss import HuberLoss
+from sklearn.tree import DecisionTreeRegressor
+from ._QuantileSplitter import QuantileBestSplitter
+
+sklearn.tree._classes.DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.BestSplitter,"quantile":QuantileBestSplitter}
 
 class Node:
     """
@@ -96,7 +97,6 @@ class SirusMixin:
         """
         tree_structure = [[]]
         stack = [(root,0)]  # start with the root node id (0) and its depth (0)
-        depth = 0
         while len(stack) > 0:
             curr_rule,indice_in_tree_struct = stack.pop()
             is_split_node = (curr_rule.feature != -2)
@@ -233,7 +233,7 @@ class SirusMixin:
         proportions_count_sort = -np.sort(-proportions_count) # Sort rules frequency by descending order 
         proportions_count_sort_indices = np.argsort(-count_rules) # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (proportions_count_sort > p0).sum() ## not necssary to sort proportions_count...
-        list_mask_by_rules = []
+        #list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
         #### APPLY POST TREATMEANT HERE on count_sort_ind[:n_rules_to_keep] ####
@@ -315,7 +315,7 @@ class SirusMixin:
         proportions_count_sort = -np.sort(-proportions_count) # Sort rules frequency by descending order 
         proportions_count_sort_indices = np.argsort(-count_rules) # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (proportions_count_sort > p0).sum() ## not necssary to sort proportions_count...
-        list_mask_by_rules = []
+        #list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zers((X.shape[0],n_rules_to_keep))
@@ -358,6 +358,7 @@ class SirusMixin:
         self.list_probas_outside_by_rules = list_output_outside_by_rules
         self.type_target = y.dtype 
 
+        ## final predictor fitting :
         self.ridge = Ridge(alpha=1.0,fit_intercept=True, positive=True, random_state=self.random_stat)
         self.ridge.fit(X,y)
         #self.gamma_array = gamma_array
@@ -528,10 +529,6 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier): #DecisionTreeClassi
         self.fit_forest_rules(X, y,all_possible_rules_list,p0)
 
 ######### Regressor ############
-
-from sklearn.ensemble._gb import set_huber_delta,_update_terminal_regions
-from sklearn._loss.loss import HuberLoss
-from sklearn.tree import DecisionTreeRegressor
 
 class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor): 
     """
@@ -712,7 +709,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
 
 
 #TODO : filter redundant rules
-#TODO : 
+#TODO : CV for ridge regressor ?
         
 
 
