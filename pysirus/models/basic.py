@@ -304,8 +304,10 @@ class SirusMixin:
             return y_pred.ravel().reshape(-1,)
         else:
             return y_pred_numeric.ravel().reshape(-1,)
-    
-
+        
+    ################################
+    ######### Regressor ############
+    ################################    
     def fit_forest_rules_regressor(self, X, y,all_possible_rules_list,p0=0.0):
         all_possible_rules_list_str = [str(elem) for elem in all_possible_rules_list] # Trick for np.unique
         unique_str_rules,indices_rules,count_rules = np.unique(all_possible_rules_list_str,return_counts=True,return_index=True) # get the unique rules and count
@@ -525,6 +527,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier): #DecisionTreeClassi
             all_possible_rules_list.extend( self.extract_single_tree_rules(tree) )
         self.fit_forest_rules(X, y,all_possible_rules_list,p0)
 
+######### Regressor ############
 
 from sklearn.ensemble._gb import set_huber_delta,_update_terminal_regions
 from sklearn._loss.loss import HuberLoss
@@ -708,9 +711,8 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.fit_forest_rules(X, y,all_possible_rules_list,p0)
 
 
-#TODO : Define a splitter that split on train data values (and no longer on the mean of two values)
-#TODO : DecisionTreeClassifierAbd that uses the previous splitter
-#TODO : RandomForestClassifierAbd that uses the previous splitter
+#TODO : filter redundant rules
+#TODO : 
         
 
 
