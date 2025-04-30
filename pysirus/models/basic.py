@@ -1,5 +1,7 @@
 from functools import reduce
 from operator import and_
+from math import isclose
+from itertools import compress
 
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
@@ -246,6 +248,8 @@ class SirusMixin:
             y,
             sample_weight=sample_weight,
         )
+        self.array_quantile_ = array_quantile
+        #print('array_quantile : ', array_quantile)
 
     def extract_single_tree_rules(self, tree):
         """
@@ -259,8 +263,50 @@ class SirusMixin:
             tree_structure
         )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
+    
+    def generate_mask_of_several_rules(self,X,rules):
+        list_mask=[]
+        for j in range(len(rules)):
+            dimension,treshold,sign = self.from_rules_to_constraint(rule=rules[j])
+            mask = self.generate_single_rule_mask(X=X,dimension=dimension,treshold=treshold,sign=sign)
+            list_mask.append(mask)
+        final_mask = reduce(and_, list_mask)
+        return final_mask
+    
+    def detect_redundant_rules(self,all_possible_rules_list):
+        n_uniform = 1000
+        X_uniform = np.array([np.random.uniform(low=self.array_quantile_[0,i]-1,high=self.array_quantile_[-1,i]+1,size=(n_uniform)) for i in range(len(self.array_quantile_[0,:]))]).T
+        #rules_to_keep = np.zeros(len(all_possible_rules_list),dtype=int)
+        rules_to_keep = []
+        for i,rules in enumerate(all_possible_rules_list):
+            bool_value_current_rule = 1
+            for j,second_rules in enumerate(all_possible_rules_list):
+                if i==j:
+                    continue
+                else:
+                    
+                    mask = self.generate_mask_of_several_rules(X_uniform,rules) ## First rule proba
+                    X_uniform_valid = X_uniform[mask]
+                    probas_rules = len(X_uniform_valid) / n_uniform
 
-    def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0):
+                    mask = self.generate_mask_of_several_rules(X_uniform,second_rules) ## second rule proba
+                    X_uniform_valid = X_uniform[mask]
+                    probas_second_rules = len(X_uniform_valid) / n_uniform
+
+                    mask = self.generate_mask_of_several_rules(X_uniform,rules+second_rules) ## second rule proba
+                    X_uniform_valid = X_uniform[mask]
+                    probas_intersection_borth_rules = len(X_uniform_valid) / n_uniform
+
+                    if isclose(probas_intersection_borth_rules, probas_rules+probas_second_rules):
+                        bool_value_current_rule=0
+                        break
+            rules_to_keep.append(bool_value_current_rule)
+
+        return rules_to_keep
+                
+        
+
+    def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -279,13 +325,30 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
+        self.all_possible_rules_list = [
+            all_possible_rules_list[i]
+            for i in proportions_count_sort_indices[:n_rules_to_keep]
+        ]#all possible rules reindexed 
+        print('self.n_rules befor epost-treatment : ', len(self.all_possible_rules_list))
+        #### APPLY POST TREATMEANT : remove redundant rules
+        rules_to_keep = []
+        if batch_size_post_treatment is None:
+            batch_size_post_treatment = len(all_possible_rules_list)
+        for i in range(0,len(all_possible_rules_list),batch_size_post_treatment):
+            batch = all_possible_rules_list[i:i+batch_size_post_treatment]
+            curent_batch_rules_to_keep = self.detect_redundant_rules(batch) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
+            rules_to_keep.extend(curent_batch_rules_to_keep)
+        self.all_possible_rules_list = list(compress(self.all_possible_rules_list, rules_to_keep))
+        self.n_rules = len(self.all_possible_rules_list)
+        print('len(rules_to_keep) : ', len(rules_to_keep))
+        print('rules_to_keep : ', rules_to_keep)
+        print('self.n_rules : ', self.n_rules)
+
         # list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
-        #### APPLY POST TREATMEANT HERE on count_sort_ind[:n_rules_to_keep] ####
-        for indice in proportions_count_sort_indices[:n_rules_to_keep]:
+        for current_rules in self.all_possible_rules_list:
             # for loop for getting all the values in train (X) passing the rules
-            current_rules = all_possible_rules_list[indice]
             list_mask = []
             for j in range(
                 len(current_rules)
@@ -320,11 +383,6 @@ class SirusMixin:
             list_probas_by_rules.append(list_probas)
             list_probas_outside_by_rules.append(list_probas_outside_rules)
 
-        self.all_possible_rules_list = [
-            all_possible_rules_list[i]
-            for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]
-        self.n_rules = len(self.all_possible_rules_list)
         # self.list_mask_by_rules = list_mask_by_rules
         self.list_probas_by_rules = list_probas_by_rules
         self.list_probas_outside_by_rules = list_probas_outside_by_rules
@@ -404,11 +462,23 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
+        self.all_possible_rules_list = [ 
+            all_possible_rules_list[i]
+            for i in proportions_count_sort_indices[:n_rules_to_keep]
+        ]#all possible rules reindexed 
+        #### APPLY POST TREATMEANT : remove redundant rules
+        rules_to_keep = []
+        if batch_size_post_treatment is None:
+            batch_size_post_treatment = len(all_possible_rules_list)
+        for batch in np.array_split(X, len(all_possible_rules_list) // batch_size_post_treatment):
+            curent_batch_rules_to_keep = self.detect_redundant_rules(batch) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
+            rules_to_keep.extend(curent_batch_rules_to_keep)
+        self.all_possible_rules_list = self.all_possible_rules_list[rules_to_keep==1]
+        self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zers((X.shape[0], n_rules_to_keep))
-        #### APPLY POST TREATMEANT HERE on count_sort_ind[:n_rules_to_keep] ####
         for rule_number, indice in enumerate(
             proportions_count_sort_indices[:n_rules_to_keep]
         ):
@@ -447,12 +517,6 @@ class SirusMixin:
 
             # list_mask_by_rules.append(final_mask) # uselesss
 
-        ## all_possible_rules_list reindexed
-        self.all_possible_rules_list = [
-            all_possible_rules_list[i]
-            for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]
-        self.n_rules = len(self.all_possible_rules_list)
         # self.list_mask_by_rules = list_mask_by_rules
         self.list_probas_by_rules = list_output_by_rules
         self.list_probas_outside_by_rules = list_output_outside_by_rules
@@ -524,7 +588,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True):
+    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
         """Build a decision tree classifier from the training set (X, y).
 
         Parameters
@@ -556,7 +620,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
-            X, y, all_possible_rules_list, p0
+            X, y, all_possible_rules_list, p0,batch_size_post_treatment
         )  ## Checker que cx'est bien sur X et non le X_bin
         return self
 
@@ -633,13 +697,13 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.ccp_alpha = ccp_alpha
         self.splitter = splitter
 
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True):
+    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0)
+        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
 
 
 ######### Regressor ############
@@ -656,9 +720,10 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
-    def fit_forest_rules_regressor(
+    ### TODO : TRES ETRANGE de MODIFIER LE FIT ICI. Vérifier que c'est bien ce qu'on veut
+    def fit_forest_rules_regressor( 
         self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True
-    ):
+    ): 
         """Build a decision tree classifier from the training set (X, y)."""
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
@@ -815,14 +880,14 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
 
         return raw_predictions
 
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True):
+    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
             dtree = self.estimators_[i, 1]  ## Y 1-d
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0)
+        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
 
 
 # TODO : filter redundant rules
