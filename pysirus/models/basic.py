@@ -273,7 +273,8 @@ class SirusMixin:
         final_mask = reduce(and_, list_mask)
         return final_mask
     
-    def detect_redundant_rules(self,all_possible_rules_list):
+    def detect_redundant_rules(self,all_possible_rules_list,random_state=None):
+        np.random.seed(random_state)
         n_uniform = 1000
         X_uniform = np.array([np.random.uniform(low=self.array_quantile_[0,i]-1,high=self.array_quantile_[-1,i]+1,size=(n_uniform)) for i in range(len(self.array_quantile_[0,:]))]).T
         #rules_to_keep = np.zeros(len(all_possible_rules_list),dtype=int)
@@ -336,7 +337,7 @@ class SirusMixin:
             batch_size_post_treatment = len(all_possible_rules_list)
         for i in range(0,len(all_possible_rules_list),batch_size_post_treatment):
             batch = all_possible_rules_list[i:i+batch_size_post_treatment]
-            curent_batch_rules_to_keep = self.detect_redundant_rules(batch) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
+            curent_batch_rules_to_keep = self.detect_redundant_rules(batch,random_state=self.random_state) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
             #print('len(curent_batch_rules_to_keep) : ', len(curent_batch_rules_to_keep))
             rules_to_keep.extend(curent_batch_rules_to_keep)
         self.all_possible_rules_list = list(compress(all_possible_rules_list, rules_to_keep))
