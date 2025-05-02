@@ -720,7 +720,6 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
-    ### TODO : TRES ETRANGE de MODIFIER LE FIT ICI. Vérifier que c'est bien ce qu'on veut
     def fit_forest_rules_regressor( 
         self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True
     ): 
@@ -734,6 +733,17 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 
     def predict(self, X, to_add_probas_outside_rules=True):
         return self.predict_regressor(X, to_add_probas_outside_rules)
+    
+class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
+    """
+    DecisionTreeRegressor of scikit -learn with tghe "quantile" spliiter option
+    ----------
+
+    """
+
+    _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
+    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+
 
 
 class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
@@ -837,7 +847,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
                 y = np.array(original_y == k, dtype=np.float64)
 
             # induce regression tree on the negative gradient
-            tree = SirusDTreeRegressor(
+            tree = DecisionTreeRegressor2(
                 criterion=self.criterion,
                 splitter=self.splitter,  ## ici
                 max_depth=self.max_depth,
