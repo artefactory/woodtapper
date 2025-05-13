@@ -26,10 +26,11 @@ You will find code to reproduce the paper experiments as well as an nice impleme
 
 ## ⭐ How to use ????
 
-You need first to run the following command at the root of the repository : 
+You need first to run the following command inside models folder : 
 ```
 python setup.py build_ext --inplace
 ```
+Then, you have to move the generated file file models/build/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so into models/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so.
 
 ## ⭐ Reproducing the paper experiments
 
