@@ -249,7 +249,7 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        #print('array_quantile : ', array_quantile)
+        print('array_quantile : ', array_quantile)
 
     def extract_single_tree_rules(self, tree):
         """
@@ -298,7 +298,7 @@ class SirusMixin:
                     X_uniform_valid = X_uniform[mask]
                     probas_intersection_borth_rules = len(X_uniform_valid) / n_uniform
 
-                    if isclose(probas_intersection_borth_rules, probas_rules+probas_second_rules):
+                    if isclose(probas_intersection_borth_rules, probas_rules+probas_second_rules,rel_tol=1e-4):
                         bool_value_current_rule=0
                         break
             rules_to_keep.append(bool_value_current_rule)
