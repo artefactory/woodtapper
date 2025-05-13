@@ -26,6 +26,11 @@ You will find code to reproduce the paper experiments as well as an nice impleme
 
 ## ⭐ How to use ????
 
+You need first to run the following command at the root of the repository : 
+```
+python setup.py build_ext --inplace
+```
+
 ## ⭐ Reproducing the paper experiments
 
 ## ⭐ Data sets
