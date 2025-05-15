@@ -273,34 +273,54 @@ class SirusMixin:
         final_mask = reduce(and_, list_mask)
         return final_mask
     
-    def detect_redundant_rules(self,all_possible_rules_list,random_state=None):
+    def detect_redundant_rules(self,all_possible_rules_list,random_state=None,verbose=0):
         np.random.seed(random_state)
-        n_uniform = 1000
+        n_uniform = 10000
         X_uniform = np.array([np.random.uniform(low=self.array_quantile_[0,i]-1,high=self.array_quantile_[-1,i]+1,size=(n_uniform)) for i in range(len(self.array_quantile_[0,:]))]).T
         #rules_to_keep = np.zeros(len(all_possible_rules_list),dtype=int)
         rules_to_keep = []
+        n_rules = len(all_possible_rules_list)
         for i,rules in enumerate(all_possible_rules_list):
             bool_value_current_rule = 1
-            for j,second_rules in enumerate(all_possible_rules_list):
+            for j,second_rules in enumerate(all_possible_rules_list[i+1:]):
                 if i==j:
                     continue
                 else:
                     
-                    mask = self.generate_mask_of_several_rules(X_uniform,rules) ## First rule proba
-                    X_uniform_valid = X_uniform[mask]
+                    mask_rules = self.generate_mask_of_several_rules(X_uniform,rules) ## First rule proba
+                    X_uniform_valid = X_uniform[mask_rules]
                     probas_rules = len(X_uniform_valid) / n_uniform
 
-                    mask = self.generate_mask_of_several_rules(X_uniform,second_rules) ## second rule proba
-                    X_uniform_valid = X_uniform[mask]
+                    mask_second_rules = self.generate_mask_of_several_rules(X_uniform,second_rules) ## second rule proba
+                    X_uniform_valid = X_uniform[mask_second_rules]
                     probas_second_rules = len(X_uniform_valid) / n_uniform
 
-                    mask = self.generate_mask_of_several_rules(X_uniform,rules+second_rules) ## second rule proba
+                    #mask = self.generate_mask_of_several_rules(X_uniform,rules+second_rules) ## second rule proba
+                    mask = (mask_rules*mask_second_rules)
+                    #mask[mask>1] = 1
                     X_uniform_valid = X_uniform[mask]
                     probas_intersection_borth_rules = len(X_uniform_valid) / n_uniform
-
-                    if isclose(probas_intersection_borth_rules, probas_rules+probas_second_rules,rel_tol=1e-4):
+                    if verbose==1:
+                        print('**')
+                        print('i,j = ',i,j)
+                        print('rules :',rules)
+                        print('second_rules :',second_rules)
+                        sum_array = (mask_rules*mask_second_rules)
+                        #sum_array[sum_array>1] = 1
+                        #print(len(mask))
+                        #print('mask.sum()',mask.sum())
+                        #print('(mask == sum_array).sum() :',(mask == sum_array).sum())
+                        #print('(mask_rules==mask_second_rules).sum() :', (mask_rules==mask_second_rules).sum())
+                        print('probas_rules : ',probas_rules)
+                        print('probas_second_rules :', probas_second_rules)
+                        print('probas_intersection_borth_rules :',probas_intersection_borth_rules)
+                        print('probas_rules*probas_second_rules :', probas_rules*probas_second_rules)
+                        print('test egalité :',isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-2,abs_tol=1e-2))
+                    if not isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-2,abs_tol=1e-2):
                         bool_value_current_rule=0
                         break
+            if verbose==1:
+                print('Curr bool_value_current_rule :', bool_value_current_rule)  
             rules_to_keep.append(bool_value_current_rule)
 
         return rules_to_keep
