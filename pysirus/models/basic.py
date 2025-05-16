@@ -280,6 +280,7 @@ class SirusMixin:
         #rules_to_keep = np.zeros(len(all_possible_rules_list),dtype=int)
         rules_to_keep = []
         n_rules = len(all_possible_rules_list)
+        all_possible_rules_list.reverse() # reverse in order to drop the rules associated to lowest values of frequency first
         for i,rules in enumerate(all_possible_rules_list):
             bool_value_current_rule = 1
             for j,second_rules in enumerate(all_possible_rules_list[i+1:]):
@@ -315,14 +316,15 @@ class SirusMixin:
                         print('probas_second_rules :', probas_second_rules)
                         print('probas_intersection_borth_rules :',probas_intersection_borth_rules)
                         print('probas_rules*probas_second_rules :', probas_rules*probas_second_rules)
-                        print('test egalité :',isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-2,abs_tol=1e-2))
-                    if not isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-2,abs_tol=1e-2):
+                        print('test egalité :',isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-3,abs_tol=1e-3))
+                    if not isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-3,abs_tol=1e-3):
                         bool_value_current_rule=0
                         break
             if verbose==1:
                 print('Curr bool_value_current_rule :', bool_value_current_rule)  
             rules_to_keep.append(bool_value_current_rule)
-
+        
+        rules_to_keep.reverse() # reverse the list because the original one was revearsed also
         return rules_to_keep
                 
         
@@ -346,10 +348,15 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
+        #all_possible_rules_list = [
+        #    all_possible_rules_list[i]
+        #    for i in proportions_count_sort_indices[:n_rules_to_keep]
+        #]#all possible rules reindexed 
         all_possible_rules_list = [
-            all_possible_rules_list[i]
+            eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
+
         print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
         rules_to_keep = []
@@ -644,8 +651,8 @@ class SirusMixin:
         
         print(base_ps_text)
         header_condition = "IF Condition"
-        header_then = f"THEN P(C{target_class_index})" 
-        header_else = f"ELSE P(C{target_class_index})" 
+        header_then = f"     THEN P(C{target_class_index})" 
+        header_else = f"     ELSE P(C{target_class_index})" 
         
         max_condition_len = 0
         condition_strings_for_rules = []
