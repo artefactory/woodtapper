@@ -5,8 +5,8 @@ from itertools import compress
 
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.ensemble._forest import ForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, RandomForestRegressor
+from sklearn.ensemble._forest import ForestClassifier,ForestRegressor
 from sklearn.tree import _tree
 from sklearn.utils._param_validation import StrOptions
 from sklearn.tree import _splitter
@@ -327,7 +327,121 @@ class SirusMixin:
         rules_to_keep.reverse() # reverse the list because the original one was revearsed also
         return rules_to_keep
                 
-        
+    def paths_filter_2(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        """
+        paths_ftr = []
+        proba_ftr = []
+        split_gen = []
+        ind_max = len(paths)
+        ind = 0
+        num_rule_temp = 0
+
+        while num_rule_temp < num_rule and ind < ind_max:
+            #path_ind = copy.deepcopy(paths[ind])
+            path_ind = paths[ind]
+            
+            ## Remove empty split (variable 0)
+            #split_var = [split[0] for split in path_ind]
+            #if 0 in split_var:
+            #    path_ind = [split for split in path_ind if split[0] != 0]
+            
+            # Format rule with 2 cuts on same variable and direction
+            if len(path_ind) == 2:
+                if (path_ind[0][0] == path_ind[1][0]) and (path_ind[0][2] == path_ind[1][2]):
+                    if path_ind[0][1] > path_ind[1][1]:
+                        path_ind = [path_ind[0]] if path_ind[0][2] == 1 else [path_ind[1]]
+                    else:
+                        path_ind = [path_ind[1]] if path_ind[0][2] == 1 else [path_ind[0]]
+                    paths[ind] = path_ind
+            
+            split_ind = [split[:2] for split in path_ind]
+            d = len(path_ind)
+            
+            # Avoid duplicates
+            if [split_ind] not in split_gen:
+                paths_ftr.append(path_ind)
+                proba_ftr.append(proba[ind])
+                num_rule_temp = len(paths_ftr)
+                
+                # Add generated interaction
+                if d <= 2:
+                    if d == 1:
+                        split_gen_temp = [split_ind]
+                        split_gen += split_gen_temp
+                    if d == 2:
+                        # get index of rules involving any similar constraint
+                        bool_ind = []
+                        for path in paths_ftr:
+                            if len(path) <= 2:
+                                bools = [
+                                    any([(x[:2] == y[:2]) for y in path_ind])
+                                    for x in path
+                                ]
+                                bool_ind.append([all(bools), any(bools)])
+                            else:
+                                bool_ind.append([False, False])
+                        bool_all = [x[0] for x in bool_ind]
+                        bool_any = [x[1] for x in bool_ind]
+                        bool_mixed = [not a and b for a, b in zip(bool_all, bool_any)]
+                        num_rule_all = sum(bool_all)
+                        num_rule_any = sum(bool_any)
+                        
+                        if num_rule_all >= 2:
+                            split_gen.append(split_ind)
+                        
+                        # combine path with paths_ftr
+                        split_gen_temp = []
+                        for j, mixed in enumerate(bool_mixed):
+                            if mixed:
+                                x = paths_ftr[j]
+                                split_diff = [s for s in (x + path_ind) if s not in set(map(tuple, x)).intersection(map(tuple, path_ind))]
+                                if len(split_diff) == 2 and split_diff[0][:2] == split_diff[1][:2]:
+                                    split1 = [split_diff[0][:2]]
+                                    if split1 not in split_gen:
+                                        split_gen_temp.append([split_diff[0][:2]])
+                        
+                        # specific case: two splits on the same variable
+                        if split_ind[0][0] == split_ind[1][0]:
+                            bool_double = [
+                                all([x in split_ind for x in split]) and len(split) == 1
+                                for split in split_gen
+                            ]
+                            if any(bool_double):
+                                for k, is_double in enumerate(bool_double):
+                                    if is_double:
+                                        split = split_gen[k]
+                                        split_diff = [s for s in split_ind if s not in split]
+                                        if len(split_diff) > 0:
+                                            split_gen_temp.append(split_diff)
+                        # Flatten and filter out None
+                        split_gen_temp = [x for x in split_gen_temp if x is not None]
+                        if split_gen_temp:
+                            split_gen_1 = [x for x in split_gen if len(x) == 1]
+                            more_temp = []
+                            for split in split_gen_temp:
+                                for split1 in split_gen_1:
+                                    if len(split) == 1 and split[0][0] == split1[0][0] and split[0][1] != split1[0][1]:
+                                        if split[0][1] > split1[0][1]:
+                                            more_temp.append(split1 + split)
+                                        else:
+                                            more_temp.append(split + split1)
+                            split_gen_temp += more_temp
+                            # Remove already existing in split_gen
+                            split_gen_temp = [x for x in split_gen_temp if x not in split_gen]
+                            split_gen += split_gen_temp
+            ind += 1
+
+        return {'paths': paths_ftr, 'proba': proba_ftr}
 
     def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
@@ -474,7 +588,7 @@ class SirusMixin:
     ################################
     ######### Regressor ############
     ################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0):
+    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -493,23 +607,24 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
-        self.all_possible_rules_list = [ 
-            all_possible_rules_list[i]
+        all_possible_rules_list = [ 
+            eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
         #### APPLY POST TREATMEANT : remove redundant rules
         rules_to_keep = []
         if batch_size_post_treatment is None:
             batch_size_post_treatment = len(all_possible_rules_list)
-        for batch in np.array_split(X, len(all_possible_rules_list) // batch_size_post_treatment):
-            curent_batch_rules_to_keep = self.detect_redundant_rules(batch) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
+        for i in range(0,len(all_possible_rules_list),batch_size_post_treatment):
+            batch = all_possible_rules_list[i:i+batch_size_post_treatment]
+            curent_batch_rules_to_keep = self.detect_redundant_rules(batch,random_state=self.random_state) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
             rules_to_keep.extend(curent_batch_rules_to_keep)
-        self.all_possible_rules_list = self.all_possible_rules_list[rules_to_keep==1]
+        self.all_possible_rules_list = list(compress(all_possible_rules_list, rules_to_keep))
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
-        gamma_array = np.zers((X.shape[0], n_rules_to_keep))
+        gamma_array = np.zeros((X.shape[0], n_rules_to_keep))
         for rule_number, indice in enumerate(
             proportions_count_sort_indices[:n_rules_to_keep]
         ):
@@ -543,8 +658,8 @@ class SirusMixin:
             list_output_by_rules.append(output_value)
             list_output_outside_by_rules.append(output_outside_value)
 
-            gamma_array[rule_number, final_mask] = output_value
-            gamma_array[rule_number, ~final_mask] = output_value
+            gamma_array[final_mask, rule_number ] = output_value
+            gamma_array[ ~final_mask, rule_number] = output_outside_value
 
             # list_mask_by_rules.append(final_mask) # uselesss
 
@@ -555,7 +670,7 @@ class SirusMixin:
 
         ## final predictor fitting :
         self.ridge = Ridge(
-            alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_stat
+            alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         )
         self.ridge.fit(X, y)
         # self.gamma_array = gamma_array
@@ -1029,6 +1144,81 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
         self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
+
+
+class SirusRFRegressor(SirusMixin, RandomForestRegressor):
+    _parameter_constraints: dict = {**RandomForestRegressor._parameter_constraints}
+    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+
+    def __init__(
+        self,
+        n_estimators=100,
+        *,
+        criterion="squared_error",
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        min_weight_fraction_leaf=0.0,
+        max_features=1.0,
+        max_leaf_nodes=None,
+        min_impurity_decrease=0.0,
+        bootstrap=True,
+        oob_score=False,
+        n_jobs=None,
+        random_state=None,
+        verbose=0,
+        warm_start=False,
+        ccp_alpha=0.0,
+        max_samples=None,
+        monotonic_cst=None,
+        splitter="quantile",
+    ):
+        super(ForestRegressor, self).__init__(
+            estimator=DecisionTreeRegressor(),
+            n_estimators=n_estimators,
+            estimator_params=(
+                "criterion",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "min_weight_fraction_leaf",
+                "max_features",
+                "max_leaf_nodes",
+                "min_impurity_decrease",
+                "random_state",
+                "ccp_alpha",
+                "monotonic_cst",
+                "splitter",
+            ),
+            bootstrap=bootstrap,
+            oob_score=oob_score,
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose,
+            warm_start=warm_start,
+            max_samples=max_samples,
+        )
+
+        self.criterion = criterion
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.min_weight_fraction_leaf = min_weight_fraction_leaf
+        self.max_features = max_features
+        self.max_leaf_nodes = max_leaf_nodes
+        self.min_impurity_decrease = min_impurity_decrease
+        self.ccp_alpha = ccp_alpha
+        self.monotonic_cst = monotonic_cst
+        self.splitter = splitter
+
+    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
+        self.fit_main_classifier(X, y, quantile, sample_weight)
+        all_possible_rules_list = []
+        for i in range(self.n_outputs_):  ## extraction  of all trees rules
+            dtree = self.estimators_[i]  
+            tree = dtree.tree_
+            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
+        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
 
 
 # TODO : filter redundant rules
