@@ -474,27 +474,7 @@ class SirusMixin:
 
         print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
-        #rules_to_keep = []
-        #if batch_size_post_treatment is None:
-        #    batch_size_post_treatment = len(all_possible_rules_list)
-        #for i in range(0,len(all_possible_rules_list),batch_size_post_treatment):
-        #    batch = all_possible_rules_list[i:i+batch_size_post_treatment]
-        #    curent_batch_rules_to_keep = self.detect_redundant_rules(batch,random_state=self.random_state) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
-            #print('len(curent_batch_rules_to_keep) : ', len(curent_batch_rules_to_keep))
-        #    rules_to_keep.extend(curent_batch_rules_to_keep)
-        #self.all_possible_rules_list = list(compress(all_possible_rules_list, rules_to_keep))
-        #self.n_rules = len(self.all_possible_rules_list)
-        #print('len(rules_to_keep) : ', len(rules_to_keep))
-        #print('np.sum(rules_to_keep) : ', np.sum(rules_to_keep))
-        #print('rules_to_keep : ', rules_to_keep)
-        #print('self.n_rules : ', self.n_rules)
-        ##print('after self.all_possible_rules_list :', self.all_possible_rules_list)
-        #print('Before all_possible_rules_list',all_possible_rules_list)
 
-        #print('all_possible_rules_list_str :', all_possible_rules_list_str)
-        #print('proportions_count_sort  : ',proportions_count_sort)
-
-        print('len(all_possible_rules_list) : ', len(all_possible_rules_list))
         print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
         res = self.paths_filter_2(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
