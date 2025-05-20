@@ -173,7 +173,7 @@ class SirusMixin:
             curr_path = tree_structure[i]
             max_size_curr_path = len(curr_path)
 
-            ## Sigle rules
+            ## Single rules
             for k in range(max_size_curr_path):
                 if [curr_path[k]] not in all_paths_list :
                     all_paths_list.append([curr_path[k]])
@@ -188,7 +188,7 @@ class SirusMixin:
             ## More complexe cases : internal rules
             if max_size_curr_path == 1:
                 continue
-            else:
+            else: 
                 curr_path_size_pair = (max_size_curr_path % 2) == 0
                 if curr_path_size_pair:  ## PAIRS
                     for k in range(1, (max_size_curr_path // 2)):
@@ -204,12 +204,6 @@ class SirusMixin:
                             is_removing_singleton=True,
                         )
                         all_paths_list.extend(list_sub_path)
-                        #if k == (max_size_curr_path // 2):  # case odd last
-                        #    list_sub_path = self.split_sub_rules_(
-                        #        curr_path[k : max_size_curr_path - (k - 1)],
-                        #        is_removing_singleton=True,
-                        #    )
-                        #    all_paths_list.extend(list_sub_path)
         return all_paths_list
 
     def from_rules_to_constraint(self, rule):
@@ -496,10 +490,11 @@ class SirusMixin:
         #print('self.n_rules : ', self.n_rules)
         ##print('after self.all_possible_rules_list :', self.all_possible_rules_list)
         #print('Before all_possible_rules_list',all_possible_rules_list)
-        print('all_possible_rules_list_str :', all_possible_rules_list_str)
-        print('proportions_count_sort  : ',proportions_count_sort)
 
+        #print('all_possible_rules_list_str :', all_possible_rules_list_str)
+        #print('proportions_count_sort  : ',proportions_count_sort)
 
+        print('len(all_possible_rules_list) : ', len(all_possible_rules_list))
         print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
         res = self.paths_filter_2(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
