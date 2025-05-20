@@ -397,9 +397,13 @@ class SirusMixin:
                         num_rule_all = sum(bool_all)
                         num_rule_any = sum(bool_any)
                         
-                        if num_rule_all >= 2:
+                        if num_rule_all >= 2: #The currrent rule is of depth 2 and 
+                        #involves to rules from path_tr. Thus, it is lineary dependant from the filtered rules paths_ftr.
+                        # We add it to genrated rules only
                             split_gen.append(split_ind)
-                        
+                            split_gen.extend([[split[:2]] for split in path_ind])
+
+
                         # combine path with paths_ftr
                         split_gen_temp = []
                         for j, mixed in enumerate(bool_mixed):
@@ -433,9 +437,9 @@ class SirusMixin:
                                 for split1 in split_gen_1:
                                     if len(split) == 1 and split[0][0] == split1[0][0] and split[0][1] != split1[0][1]:
                                         if split[0][1] > split1[0][1]:
-                                            more_temp.append(split1 + split)
+                                            more_temp.append([split1 + split])
                                         else:
-                                            more_temp.append(split + split1)
+                                            more_temp.append([split + split1])
                             split_gen_temp += more_temp
                             # Remove already existing in split_gen
                             split_gen_temp = [x for x in split_gen_temp if x not in split_gen]
