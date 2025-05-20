@@ -447,6 +447,58 @@ class SirusMixin:
             ind += 1
 
         return {'paths': paths_ftr, 'proba': proba_ftr}
+    def paths_filter_2depth(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        """
+        paths_ftr = []
+        proba_ftr = []
+        split_gen = []
+        ind_max = len(paths)
+        ind = 0
+        num_rule_temp = 0
+
+        while num_rule_temp < num_rule and ind < ind_max:
+            #path_ind = copy.deepcopy(paths[ind])
+            path_ind = paths[ind]
+            
+            split_ind = [split[:2] for split in path_ind]
+            d = len(path_ind)
+            
+            # Avoid duplicates
+            if d == 1:
+                if split_ind not in split_gen:
+                    paths_ftr.append(path_ind)
+                    proba_ftr.append(proba[ind])
+                    num_rule_temp = len(paths_ftr)
+                split_gen_temp = [split_ind]
+                split_gen += split_gen_temp
+            if d == 2:
+                list_bool_in_ftr = []
+                for curr_split_ind in split_ind:
+                    if [curr_split_ind] in split_gen:
+                        list_bool_in_ftr.append(True)
+                    else:
+                        list_bool_in_ftr.append(False)
+                    if not all(list_bool_in_ftr) and split_ind not in split_gen:
+                        paths_ftr.append(path_ind)
+                        proba_ftr.append(proba[ind])
+                        num_rule_temp = len(paths_ftr)
+                split_gen.append(split_ind)
+                split_gen.append([split_ind[0][:2]])
+                split_gen.append([split_ind[1][:2]])
+
+            ind += 1
+
+        return {'paths': paths_ftr, 'proba': proba_ftr}
 
     def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
@@ -481,7 +533,7 @@ class SirusMixin:
 
         print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
-        res = self.paths_filter_2(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         #print('After all_possible_rules_list',res['paths'])
