@@ -488,13 +488,18 @@ class SirusMixin:
                         list_bool_in_ftr.append(True)
                     else:
                         list_bool_in_ftr.append(False)
-                    if not all(list_bool_in_ftr) and split_ind not in split_gen:
+                    if (not all(list_bool_in_ftr)) and (split_ind not in split_gen):
                         paths_ftr.append(path_ind)
                         proba_ftr.append(proba[ind])
                         num_rule_temp = len(paths_ftr)
                 split_gen.append(split_ind)
-                split_gen.append([split_ind[0][:2]])
-                split_gen.append([split_ind[1][:2]])
+                if ([split_ind[0]] in split_gen) and ([split_ind[1]] not in split_gen): # if one of the sigle rule is already in split_gen 
+                    # then trough alinear combination we can obtain the other one.
+                    split_gen.append([split_ind[1]])
+                if ([split_ind[1]] in split_gen) and ([split_ind[0]] not in split_gen):
+                    split_gen.append([split_ind[0]])
+                #split_gen.append([split_ind[0][:2]])
+                #split_gen.append([split_ind[1][:2]])
 
             ind += 1
 
@@ -662,7 +667,7 @@ class SirusMixin:
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filter_2(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
@@ -1028,7 +1033,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
     
 class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
     """
-    DecisionTreeRegressor of scikit -learn with tghe "quantile" spliiter option
+    DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     ----------
 
     """
@@ -1186,10 +1191,11 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            dtree = self.estimators_[i, 1]  ## Y 1-d
+            print('self.estimators_.shape', self.estimators_.shape)
+            dtree = self.estimators_[i,0]  
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
+        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
 
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
