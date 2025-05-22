@@ -57,7 +57,9 @@ class SirusMixin:
     """
     Mixin of SIRUS. Base of all SIRUS models.
     """
-
+    #######################################################
+    ##### Auxiliary function for path construction  #######
+    #######################################################
     def explore_tree_(self, node_id, side, tree):
         """
         Whole tree structure recursive explorator (with Node class).
@@ -234,23 +236,6 @@ class SirusMixin:
         else:
             return X[:, dimension] > treshold  # .mean()
 
-    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None):
-        X_bin = X.copy()
-        list_quantile = [
-            np.percentile(X_bin, q=i * quantile, axis=0)
-            for i in range(int((100 // quantile) + 1))
-        ]
-        array_quantile = np.array(list_quantile)
-        for dim in range(X.shape[1]):
-            out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
-            X_bin[:, dim] = array_quantile[out, dim]
-        super().fit(
-            X_bin,
-            y,
-            sample_weight=sample_weight,
-        )
-        self.array_quantile_ = array_quantile
-        print('array_quantile : ', array_quantile)
 
     def extract_single_tree_rules(self, tree):
         """
@@ -505,6 +490,11 @@ class SirusMixin:
 
         return {'paths': paths_ftr, 'proba': proba_ftr}
 
+    
+    #######################################################
+    ############ Classification fit and predict  ##########
+    #######################################################
+
     def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
@@ -640,9 +630,9 @@ class SirusMixin:
                 -1,
             )
 
-    ################################
-    ######### Regressor ############
-    ################################
+    #######################################################
+    ############# Regressor fit and predict  ##############
+    #######################################################
     def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
@@ -755,6 +745,32 @@ class SirusMixin:
             y_pred = self.ridge.predict(gamma_array)
 
         return y_pred
+    
+    #######################################################
+    ################ Fit main classiifer   ################
+    #######################################################
+    
+    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None):
+        X_bin = X.copy()
+        list_quantile = [
+            np.percentile(X_bin, q=i * quantile, axis=0)
+            for i in range(int((100 // quantile) + 1))
+        ]
+        array_quantile = np.array(list_quantile)
+        for dim in range(X.shape[1]):
+            out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+            X_bin[:, dim] = array_quantile[out, dim]
+        super().fit(
+            X_bin,
+            y,
+            sample_weight=sample_weight,
+        )
+        self.array_quantile_ = array_quantile
+        print('array_quantile : ', array_quantile)
+
+    #######################################################
+    ################## Print rules   ######################
+    #######################################################
 
     def print_rules(self, max_rules=10):
         if self.feature_names_in_ is None:
