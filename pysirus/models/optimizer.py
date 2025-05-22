@@ -94,25 +94,8 @@ def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1):
             print("\nRaw suggested grid values:")
             print(suggested_tuning_grid)
         return np.linspace(min_p0_for_target_rules,max_p0_for_target_rules,20)
-    else:
-        
+    else:      
         raise ValueError("\n--- No p0 Range Found for 1-25 Rules --- No p0 values in the explored range consistently produced 1-25 rules.")
-        if results_exploration_df['n_rules'].notna().any():
-            min_rules_found = results_exploration_df['n_rules'].min()
-            max_rules_found = results_exploration_df['n_rules'].max()
-            print(f"Min rules found: {min_rules_found}, Max rules found: {max_rules_found}")
-            if max_rules_found < 1 and max_rules_found >=0 :
-                print("All tested p0 values resulted in too few rules (<1). Try smaller p0 values in 'p0_exploration_grid'.")
-                print("e.g., p0_exploration_grid = np.linspace(0.00001, 0.001, 30)")
-            elif min_rules_found > 25:
-                print("All tested p0 values resulted in too many rules (>25). Try larger p0 values in 'p0_exploration_grid'.")
-                print("e.g., p0_exploration_grid = np.linspace(0.05, 0.5, 30)") # Example, adjust based on plot
-            else:
-                print("The 1-25 rule range might be very narrow or you might need to adjust 'p0_exploration_grid' to be finer or cover a different sub-range.")
-        else:
-            print("All attempts to fit the model resulted in errors or no rule counts.")
-
-    print("\nExploration finished.")
 
 def train_optimal_extractor_p0(clf,X_train,y_train,scoring):
     # --- Tuning Configuration ---
