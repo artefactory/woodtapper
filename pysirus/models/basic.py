@@ -482,46 +482,6 @@ class SirusMixin:
             ind += 1
 
         return {'paths': paths_ftr, 'proba': proba_ftr}
-    def get_rules_grid_po(self,p0_exploration_grid = np.linspace(0.01, 0.05, 15) ):
-        # --- Store results ---
-        p0_rule_counts = []
-
-        print(f"\nStarting p0 exploration for rule counts...")
-        print(f"Exploring {len(p0_exploration_grid)} p0 values from {p0_exploration_grid.min():.5f} to {p0_exploration_grid.max():.5f}")
-
-        # --- Exploration Loop ---
-        for p0_val in p0_exploration_grid:
-            print(f"  Testing p0 = {p0_val:.5f}...")
-            try:
-                
-                sirus_model_explore = SirusRFClassifier(
-                    max_depth=10,       
-                    random_state=0,     
-                    splitter="quantile" 
-                )
-                sirus_model_explore.fit(
-                    X_train_np, y_train,
-                    quantile=10,                      
-                    batch_size_post_treatment=50,     
-                    p0=p0_val
-                )
-
-                
-                n_rules = len(sirus_model_explore.all_possible_rules_list)
-                
-
-                p0_rule_counts.append({'p0': p0_val, 'n_rules': n_rules})
-                print(f"    p0 = {p0_val:.5f} -> {n_rules} rules generated.")
-
-            except Exception as e:
-                print(f"    ERROR for p0 = {p0_val:.5f}: {e}")
-                p0_rule_counts.append({'p0': p0_val, 'n_rules': np.nan}) # Record error as NaN
-                continue
-
-        # --- Convert results to DataFrame for easier analysis ---
-        results_exploration_df = pd.DataFrame(p0_rule_counts)
-        print("\n--- Exploration Results (p0 vs. n_rules) ---")
-        print(results_exploration_df)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
@@ -918,6 +878,3 @@ class SirusMixin:
                 else_val_str = f"{p_s_if_false:.0f}%"
 
             print(f"if   {condition_str_formatted:<{condition_col_width - 5}} then {then_val_str:<12} else {else_val_str:<12}")
-
-
-
