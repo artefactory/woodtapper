@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 
 
-def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid = np.linspace(0.01, 0.05, 15),verbose=1):
+def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid=np.linspace(0.01, 0.05, 15),verbose=0):
     """
     From grdi of pO values (p0_exploration_grid), compute the associated number of rules.
     """
@@ -21,11 +21,7 @@ def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid = np.linspace(0.01
             print(f"  Testing p0 = {p0_val:.5f}...")
         try:
             
-            sirus_model_explore = clf(
-                max_depth=10,       
-                random_state=0,     
-                splitter="quantile" 
-            )
+            sirus_model_explore = clf
             sirus_model_explore.fit(
                 X_train, y_train,
                 quantile=10,                      
@@ -51,6 +47,7 @@ def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid = np.linspace(0.01
     if verbose==1:
         print("\n--- Exploration Results (p0 vs. n_rules) ---")
         print(results_exploration_df)
+    return results_exploration_df
 
 def print_nrules_grid(results_exploration_df):
     """
@@ -71,7 +68,7 @@ def print_nrules_grid(results_exploration_df):
     plt.tight_layout()
     plt.show()
 
-def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1):
+def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=0):
     # --- Suggesting a p0 range for your main tuning ---
     # Filter the DataFrame for p0 values that yielded rules in the 1-25 range
     target_rules_df = results_exploration_df[
@@ -97,11 +94,9 @@ def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1):
     else:      
         raise ValueError("\n--- No p0 Range Found for 1-25 Rules --- No p0 values in the explored range consistently produced 1-25 rules.")
 
-def train_optimal_extractor_p0(clf,X_train,y_train,scoring):
+def train_optimal_extractor_p0(clf,X_train,y_train,scoring,p0_exploration_grid=np.linspace(0.01, 0.05, 15),n_cv_splits=5,n_cv_repeats=5):
     # --- Tuning Configuration ---
-    n_cv_splits = 5
-    n_cv_repeats = 5 
-    results_exploration_df = get_rules_grid_p0(clf,X_train,y_train,scoring)
+    results_exploration_df = get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid)
     p0_grid = get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1) 
     p0_results_list = []
 
@@ -124,11 +119,7 @@ def train_optimal_extractor_p0(clf,X_train,y_train,scoring):
                 y_fold_train, y_fold_val = y_train[train_idx], y_train[val_idx]
 
                 try:
-                    sirus_model = clf(
-                        max_depth=10,
-                        random_state=0, 
-                        splitter="quantile"
-                    )
+                    sirus_model = clf
                     sirus_model.fit(
                         X_fold_train, y_fold_train,
                         quantile=10,
@@ -202,13 +193,12 @@ def train_optimal_extractor_p0(clf,X_train,y_train,scoring):
             print(f"Achieved Mean Number of Rules: {optimal_n_rules:.2f}")
 
             print("\nRetraining final model with optimal p0 on full training data...")
-            final_sirus_model = clf(
-                max_depth=10, random_state=0, splitter="quantile"
-            )
+            final_sirus_model = clf
             final_sirus_model.fit(
                 X_train, y_train, quantile=10, batch_size_post_treatment=50, p0=optimal_p0
             )
             print("Final model trained.")
+            return final_sirus_model
         else:
             print("\nNo candidate models found within the threshold. Optimal p0 not determined.")
     else:
