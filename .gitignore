@@ -5,3 +5,4 @@
 .venv/
 pysirus/models/build
 pysirus/models/_QuantileSplitter.c
+test_sirus/
