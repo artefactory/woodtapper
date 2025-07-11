@@ -36,6 +36,7 @@ from sklearn.tree._partitioner cimport (
     FEATURE_THRESHOLD, DensePartitioner, SparsePartitioner,
     shift_missing_values_to_left_if_required
 )
+#from _QuantilePartitioner import QuantileDensePartitioner
 from sklearn.tree._utils cimport RAND_R_MAX, rand_int, rand_uniform
 
 import numpy as np
