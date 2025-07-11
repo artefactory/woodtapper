@@ -1,20 +1,13 @@
 from functools import reduce
 from operator import and_
 from math import isclose
-from itertools import compress
 
 import numpy as np
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.ensemble._forest import ForestClassifier
 from sklearn.tree import _tree
-from sklearn.utils._param_validation import StrOptions
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
-from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
-from sklearn._loss.loss import HuberLoss
-from sklearn.tree import DecisionTreeRegressor
+
 from ._QuantileSplitter import QuantileBestSplitter
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
@@ -57,7 +50,9 @@ class SirusMixin:
     """
     Mixin of SIRUS. Base of all SIRUS models.
     """
-
+    #######################################################
+    ##### Auxiliary function for path construction  #######
+    #######################################################
     def explore_tree_(self, node_id, side, tree):
         """
         Whole tree structure recursive explorator (with Node class).
@@ -153,7 +148,9 @@ class SirusMixin:
         else:
             int_to_add = 0
         for j in range(max_size_curr_path - int_to_add):
-            list_sub_path.append(path[: (max_size_curr_path - j)])
+            curr_path = path[: (max_size_curr_path - j)]
+            if len(curr_path) >= 2:
+                list_sub_path.append(curr_path)
         return list_sub_path
 
     def generate_all_possible_rules_(self, tree_structure):
@@ -171,17 +168,22 @@ class SirusMixin:
             curr_path = tree_structure[i]
             max_size_curr_path = len(curr_path)
 
+            ## Single rules
+            for k in range(max_size_curr_path):
+                if [curr_path[k]] not in all_paths_list :
+                    all_paths_list.append([curr_path[k]])
+
             ## We take all the rules strating from a head node
             for k in range(max_size_curr_path):
                 list_sub_path = self.split_sub_rules_(
-                    curr_path[k:], is_removing_singleton=False
+                    curr_path[k:], is_removing_singleton=True
                 )
                 all_paths_list.extend(list_sub_path)
 
             ## More complexe cases : internal rules
             if max_size_curr_path == 1:
                 continue
-            else:
+            else: 
                 curr_path_size_pair = (max_size_curr_path % 2) == 0
                 if curr_path_size_pair:  ## PAIRS
                     for k in range(1, (max_size_curr_path // 2)):
@@ -197,12 +199,6 @@ class SirusMixin:
                             is_removing_singleton=True,
                         )
                         all_paths_list.extend(list_sub_path)
-                        if k == (max_size_curr_path // 2):  # case odd last
-                            list_sub_path = self.split_sub_rules_(
-                                curr_path[k : max_size_curr_path - (k - 1)],
-                                is_removing_singleton=True,
-                            )
-                            all_paths_list.extend(list_sub_path)
         return all_paths_list
 
     def from_rules_to_constraint(self, rule):
@@ -233,23 +229,6 @@ class SirusMixin:
         else:
             return X[:, dimension] > treshold  # .mean()
 
-    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None):
-        X_bin = X.copy()
-        list_quantile = [
-            np.percentile(X_bin, q=i * quantile, axis=0)
-            for i in range(int((100 // quantile) + 1))
-        ]
-        array_quantile = np.array(list_quantile)
-        for dim in range(X.shape[1]):
-            out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
-            X_bin[:, dim] = array_quantile[out, dim]
-        super().fit(
-            X_bin,
-            y,
-            sample_weight=sample_weight,
-        )
-        self.array_quantile_ = array_quantile
-        print('array_quantile : ', array_quantile)
 
     def extract_single_tree_rules(self, tree):
         """
@@ -273,39 +252,239 @@ class SirusMixin:
         final_mask = reduce(and_, list_mask)
         return final_mask
     
-    def detect_redundant_rules(self,all_possible_rules_list,random_state=None):
+    def detect_redundant_rules(self,all_possible_rules_list,random_state=None,verbose=0):
         np.random.seed(random_state)
-        n_uniform = 1000
+        n_uniform = 10000
         X_uniform = np.array([np.random.uniform(low=self.array_quantile_[0,i]-1,high=self.array_quantile_[-1,i]+1,size=(n_uniform)) for i in range(len(self.array_quantile_[0,:]))]).T
         #rules_to_keep = np.zeros(len(all_possible_rules_list),dtype=int)
         rules_to_keep = []
+        n_rules = len(all_possible_rules_list)
+        all_possible_rules_list.reverse() # reverse in order to drop the rules associated to lowest values of frequency first
         for i,rules in enumerate(all_possible_rules_list):
             bool_value_current_rule = 1
-            for j,second_rules in enumerate(all_possible_rules_list):
+            for j,second_rules in enumerate(all_possible_rules_list[i+1:]):
                 if i==j:
                     continue
                 else:
                     
-                    mask = self.generate_mask_of_several_rules(X_uniform,rules) ## First rule proba
-                    X_uniform_valid = X_uniform[mask]
+                    mask_rules = self.generate_mask_of_several_rules(X_uniform,rules) ## First rule proba
+                    X_uniform_valid = X_uniform[mask_rules]
                     probas_rules = len(X_uniform_valid) / n_uniform
 
-                    mask = self.generate_mask_of_several_rules(X_uniform,second_rules) ## second rule proba
-                    X_uniform_valid = X_uniform[mask]
+                    mask_second_rules = self.generate_mask_of_several_rules(X_uniform,second_rules) ## second rule proba
+                    X_uniform_valid = X_uniform[mask_second_rules]
                     probas_second_rules = len(X_uniform_valid) / n_uniform
 
-                    mask = self.generate_mask_of_several_rules(X_uniform,rules+second_rules) ## second rule proba
+                    #mask = self.generate_mask_of_several_rules(X_uniform,rules+second_rules) ## second rule proba
+                    mask = (mask_rules*mask_second_rules)
+                    #mask[mask>1] = 1
                     X_uniform_valid = X_uniform[mask]
                     probas_intersection_borth_rules = len(X_uniform_valid) / n_uniform
-
-                    if isclose(probas_intersection_borth_rules, probas_rules+probas_second_rules,rel_tol=1e-4):
+                    if verbose==1:
+                        print('**')
+                        print('i,j = ',i,j)
+                        print('rules :',rules)
+                        print('second_rules :',second_rules)
+                        sum_array = (mask_rules*mask_second_rules)
+                        #sum_array[sum_array>1] = 1
+                        #print(len(mask))
+                        #print('mask.sum()',mask.sum())
+                        #print('(mask == sum_array).sum() :',(mask == sum_array).sum())
+                        #print('(mask_rules==mask_second_rules).sum() :', (mask_rules==mask_second_rules).sum())
+                        print('probas_rules : ',probas_rules)
+                        print('probas_second_rules :', probas_second_rules)
+                        print('probas_intersection_borth_rules :',probas_intersection_borth_rules)
+                        print('probas_rules*probas_second_rules :', probas_rules*probas_second_rules)
+                        print('test egalité :',isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-3,abs_tol=1e-3))
+                    if not isclose(probas_intersection_borth_rules, probas_rules*probas_second_rules,rel_tol=1e-3,abs_tol=1e-3):
                         bool_value_current_rule=0
                         break
+            if verbose==1:
+                print('Curr bool_value_current_rule :', bool_value_current_rule)  
             rules_to_keep.append(bool_value_current_rule)
-
+        
+        rules_to_keep.reverse() # reverse the list because the original one was revearsed also
         return rules_to_keep
                 
-        
+    def paths_filter_2(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        """
+        paths_ftr = []
+        proba_ftr = []
+        split_gen = []
+        ind_max = len(paths)
+        ind = 0
+        num_rule_temp = 0
+
+        while num_rule_temp < num_rule and ind < ind_max:
+            #path_ind = copy.deepcopy(paths[ind])
+            path_ind = paths[ind]
+            
+            ## Remove empty split (variable 0)
+            #split_var = [split[0] for split in path_ind]
+            #if 0 in split_var:
+            #    path_ind = [split for split in path_ind if split[0] != 0]
+            
+            # Format rule with 2 cuts on same variable and direction
+            if len(path_ind) == 2:
+                if (path_ind[0][0] == path_ind[1][0]) and (path_ind[0][2] == path_ind[1][2]):
+                    if path_ind[0][1] > path_ind[1][1]:
+                        path_ind = [path_ind[0]] if path_ind[0][2] == 1 else [path_ind[1]]
+                    else:
+                        path_ind = [path_ind[1]] if path_ind[0][2] == 1 else [path_ind[0]]
+                    paths[ind] = path_ind
+            
+            split_ind = [split[:2] for split in path_ind]
+            d = len(path_ind)
+            
+            # Avoid duplicates
+            if split_ind not in split_gen:
+                paths_ftr.append(path_ind)
+                proba_ftr.append(proba[ind])
+                num_rule_temp = len(paths_ftr)
+                
+                # Add generated interaction
+                if d <= 2:
+                    if d == 1:
+                        split_gen_temp = [split_ind]
+                        split_gen += split_gen_temp
+                    if d == 2:
+                        # get index of rules involving any similar constraint
+                        bool_ind = []
+                        for path in paths_ftr:
+                            if len(path) <= 2:
+                                bools = [
+                                    any([(x[:2] == y[:2]) for y in path_ind])
+                                    for x in path
+                                ]
+                                bool_ind.append([all(bools), any(bools)])
+                            else:
+                                bool_ind.append([False, False])
+                        bool_all = [x[0] for x in bool_ind]
+                        bool_any = [x[1] for x in bool_ind]
+                        bool_mixed = [not a and b for a, b in zip(bool_all, bool_any)]
+                        num_rule_all = sum(bool_all)
+                        num_rule_any = sum(bool_any)
+                        
+                        if num_rule_all >= 2: #The currrent rule is of depth 2 and 
+                        #involves to rules from path_tr. Thus, it is lineary dependant from the filtered rules paths_ftr.
+                        # We add it to genrated rules only
+                            split_gen.append(split_ind)
+                            split_gen.extend([[split[:2]] for split in path_ind])
+
+
+                        # combine path with paths_ftr
+                        split_gen_temp = []
+                        for j, mixed in enumerate(bool_mixed):
+                            if mixed:
+                                x = paths_ftr[j]
+                                split_diff = [s for s in (x + path_ind) if s not in set(map(tuple, x)).intersection(map(tuple, path_ind))]
+                                if len(split_diff) == 2 and split_diff[0][:2] == split_diff[1][:2]:
+                                    split1 = [split_diff[0][:2]]
+                                    if split1 not in split_gen:
+                                        split_gen_temp.append([split_diff[0][:2]])
+                        
+                        # specific case: two splits on the same variable
+                        if split_ind[0][0] == split_ind[1][0]:
+                            bool_double = [
+                                all([x in split_ind for x in split]) and len(split) == 1
+                                for split in split_gen
+                            ]
+                            if any(bool_double):
+                                for k, is_double in enumerate(bool_double):
+                                    if is_double:
+                                        split = split_gen[k]
+                                        split_diff = [s for s in split_ind if s not in split]
+                                        if len(split_diff) > 0:
+                                            split_gen_temp.append(split_diff)
+                        # Flatten and filter out None
+                        split_gen_temp = [x for x in split_gen_temp if x is not None]
+                        if split_gen_temp:
+                            split_gen_1 = [x for x in split_gen if len(x) == 1]
+                            more_temp = []
+                            for split in split_gen_temp:
+                                for split1 in split_gen_1:
+                                    if len(split) == 1 and split[0][0] == split1[0][0] and split[0][1] != split1[0][1]:
+                                        if split[0][1] > split1[0][1]:
+                                            more_temp.append([split1 + split])
+                                        else:
+                                            more_temp.append([split + split1])
+                            split_gen_temp += more_temp
+                            # Remove already existing in split_gen
+                            split_gen_temp = [x for x in split_gen_temp if x not in split_gen]
+                            split_gen += split_gen_temp
+            ind += 1
+
+        return {'paths': paths_ftr, 'proba': proba_ftr}
+    def paths_filter_2depth(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        """
+        paths_ftr = []
+        proba_ftr = []
+        split_gen = []
+        ind_max = len(paths)
+        ind = 0
+        num_rule_temp = 0
+
+        while num_rule_temp < num_rule and ind < ind_max:
+            #path_ind = copy.deepcopy(paths[ind])
+            path_ind = paths[ind]
+            
+            split_ind = [split[:2] for split in path_ind]
+            d = len(path_ind)
+            
+            # Avoid duplicates
+            if d == 1:
+                if split_ind not in split_gen:
+                    paths_ftr.append(path_ind)
+                    proba_ftr.append(proba[ind])
+                    num_rule_temp = len(paths_ftr)
+                split_gen_temp = [split_ind]
+                split_gen += split_gen_temp
+            if d == 2:
+                list_bool_in_ftr = []
+                for curr_split_ind in split_ind:
+                    if [curr_split_ind] in split_gen:
+                        list_bool_in_ftr.append(True)
+                    else:
+                        list_bool_in_ftr.append(False)
+                    if (not all(list_bool_in_ftr)) and (split_ind not in split_gen):
+                        paths_ftr.append(path_ind)
+                        proba_ftr.append(proba[ind])
+                        num_rule_temp = len(paths_ftr)
+                split_gen.append(split_ind)
+                if ([split_ind[0]] in split_gen) and ([split_ind[1]] not in split_gen): # if one of the sigle rule is already in split_gen 
+                    # then trough alinear combination we can obtain the other one.
+                    split_gen.append([split_ind[1]])
+                if ([split_ind[1]] in split_gen) and ([split_ind[0]] not in split_gen):
+                    split_gen.append([split_ind[0]])
+                #split_gen.append([split_ind[0][:2]])
+                #split_gen.append([split_ind[1][:2]])
+
+            ind += 1
+
+        return {'paths': paths_ftr, 'proba': proba_ftr}
+    #######################################################
+    ############ Classification fit and predict  ##########
+    #######################################################
 
     def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
@@ -326,27 +505,25 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
+        #all_possible_rules_list = [
+        #    all_possible_rules_list[i]
+        #    for i in proportions_count_sort_indices[:n_rules_to_keep]
+        #]#all possible rules reindexed 
         all_possible_rules_list = [
-            all_possible_rules_list[i]
+            eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
+
         print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
-        rules_to_keep = []
-        if batch_size_post_treatment is None:
-            batch_size_post_treatment = len(all_possible_rules_list)
-        for i in range(0,len(all_possible_rules_list),batch_size_post_treatment):
-            batch = all_possible_rules_list[i:i+batch_size_post_treatment]
-            curent_batch_rules_to_keep = self.detect_redundant_rules(batch,random_state=self.random_state) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
-            #print('len(curent_batch_rules_to_keep) : ', len(curent_batch_rules_to_keep))
-            rules_to_keep.extend(curent_batch_rules_to_keep)
-        self.all_possible_rules_list = list(compress(all_possible_rules_list, rules_to_keep))
+
+        print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
+        print('25 proportions_count_sort : ',proportions_count_sort[:25])
+        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
-        print('len(rules_to_keep) : ', len(rules_to_keep))
-        print('np.sum(rules_to_keep) : ', np.sum(rules_to_keep))
-        print('rules_to_keep : ', rules_to_keep)
-        print('self.n_rules : ', self.n_rules)
-        #print('after self.all_possible_rules_list :', self.all_possible_rules_list)
+        #print('After all_possible_rules_list',res['paths'])
+        #print('n_rules after post-treatment : ', self.n_rules)
 
         # list_mask_by_rules = []
         list_probas_by_rules = []
@@ -444,10 +621,10 @@ class SirusMixin:
                 -1,
             )
 
-    ################################
-    ######### Regressor ############
-    ################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0):
+    #######################################################
+    ############# Regressor fit and predict  ##############
+    #######################################################
+    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -466,23 +643,18 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
-        self.all_possible_rules_list = [ 
-            all_possible_rules_list[i]
+        all_possible_rules_list = [ 
+            eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
         #### APPLY POST TREATMEANT : remove redundant rules
-        rules_to_keep = []
-        if batch_size_post_treatment is None:
-            batch_size_post_treatment = len(all_possible_rules_list)
-        for batch in np.array_split(X, len(all_possible_rules_list) // batch_size_post_treatment):
-            curent_batch_rules_to_keep = self.detect_redundant_rules(batch) ## pas ouf de donner un attribut en argument à une méthode... mais ça rend ma fonction réutilisable plus tard...
-            rules_to_keep.extend(curent_batch_rules_to_keep)
-        self.all_possible_rules_list = self.all_possible_rules_list[rules_to_keep==1]
+        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
-        gamma_array = np.zers((X.shape[0], n_rules_to_keep))
+        gamma_array = np.zeros((X.shape[0], n_rules_to_keep))
         for rule_number, indice in enumerate(
             proportions_count_sort_indices[:n_rules_to_keep]
         ):
@@ -516,8 +688,8 @@ class SirusMixin:
             list_output_by_rules.append(output_value)
             list_output_outside_by_rules.append(output_outside_value)
 
-            gamma_array[rule_number, final_mask] = output_value
-            gamma_array[rule_number, ~final_mask] = output_value
+            gamma_array[final_mask, rule_number ] = output_value
+            gamma_array[ ~final_mask, rule_number] = output_outside_value
 
             # list_mask_by_rules.append(final_mask) # uselesss
 
@@ -528,7 +700,7 @@ class SirusMixin:
 
         ## final predictor fitting :
         self.ridge = Ridge(
-            alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_stat
+            alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         )
         self.ridge.fit(X, y)
         # self.gamma_array = gamma_array
@@ -564,8 +736,47 @@ class SirusMixin:
             y_pred = self.ridge.predict(gamma_array)
 
         return y_pred
+    
+    #######################################################
+    ################ Fit main classiifer   ################
+    #######################################################
+
+    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None,to_not_binarize_colindex=None):
+        if to_not_binarize_colindex is None:
+            X_bin = X.copy()
+            list_quantile = [
+            np.percentile(X_bin, q=i * quantile, axis=0)
+            for i in range(int((100 // quantile) + 1))
+            ]
+            array_quantile = np.array(list_quantile)
+            for dim in range(X.shape[1]):
+                out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+                X_bin[:, dim] = array_quantile[out, dim]
+        else :
+            list_quantile = [
+            np.percentile(X_bin[:,~to_not_binarize_colindex], q=i * quantile, axis=0)
+            for i in range(int((100 // quantile) + 1))
+            ]
+            array_quantile = np.array(list_quantile)
+            for dim in range(X.shape[1]):
+                if dim not in to_not_binarize_colindex:
+                    out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+                    X_bin[:, dim] = array_quantile[out, dim]
+        super().fit(
+            X_bin,
+            y,
+            sample_weight=sample_weight,
+        )
+        self.array_quantile_ = array_quantile
+        print('array_quantile : ', array_quantile)
+
+    #######################################################
+    ################## Print rules   ######################
+    #######################################################
 
     def print_rules(self, max_rules=10):
+        if self.feature_names_in_ is None:
+            self.feature_names_in_ = np.arange(self.n_features_in_)
         for indice in range(max_rules):
             current_rules = self.all_possible_rules_list[indice]
             print("########")
@@ -578,331 +789,103 @@ class SirusMixin:
                     sign = "<="
                 else:
                     sign = ">"
-                print("       &( X[:,{}] {} {} )".format(dimension, sign, treshold))
-
-
-class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
-    """
-    SIRUS class applied with a DecisionTreeClassifier
-    Parameters
-    ----------
-
-    """
-
-    _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
-
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
-        """Build a decision tree classifier from the training set (X, y).
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix} of shape (n_samples, n_features)
-            The training input samples. Internally, it will be converted to
-            ``dtype=np.float32`` and if a sparse matrix is provided
-            to a sparse ``csc_matrix``.
-
-        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            The target values (class labels) as integers or strings.
-
-        sample_weight : array-like of shape (n_samples,), default=None
-            Sample weights. If None, then samples are equally weighted. Splits
-            that would create child nodes with net zero or negative weight are
-            ignored while searching for a split in each node. Splits are also
-            ignored if they would result in any single class carrying a
-            negative weight in either child node.
-
-        check_input : bool, default=True
-            Allow to bypass several input checking.
-            Don't use this parameter unless you know what you're doing.
-
-        Returns
-        -------
-        self : DecisionTreeClassifier
-            Fitted estimator.
-        """
-        self.fit_main_classifier(X, y, quantile, sample_weight)
-        all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
-        self.fit_forest_rules(
-            X, y, all_possible_rules_list, p0,batch_size_post_treatment
-        )  ## Checker que cx'est bien sur X et non le X_bin
-        return self
-
-
-class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClassifier
-    """
-    SIRUS class applied with a RandomForestClassifier
-
-    """
-
-    _parameter_constraints: dict = {**RandomForestClassifier._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
-
-    def __init__(
-        self,
-        n_estimators=100,
-        *,
-        criterion="gini",
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        min_weight_fraction_leaf=0.0,
-        max_features="sqrt",
-        max_leaf_nodes=None,
-        min_impurity_decrease=0.0,
-        bootstrap=True,
-        oob_score=False,
-        n_jobs=None,
-        random_state=None,
-        verbose=0,
-        warm_start=False,
-        class_weight=None,
-        ccp_alpha=0.0,
-        max_samples=None,
-        monotonic_cst=None,
-        splitter="quantile",
-    ):
-        super(ForestClassifier, self).__init__(
-            estimator=DecisionTreeClassifier(),
-            n_estimators=n_estimators,
-            estimator_params=(
-                "criterion",
-                "max_depth",
-                "min_samples_split",
-                "min_samples_leaf",
-                "min_weight_fraction_leaf",
-                "max_features",
-                "max_leaf_nodes",
-                "min_impurity_decrease",
-                "random_state",
-                "ccp_alpha",
-                "monotonic_cst",
-                "splitter",
-            ),
-            bootstrap=bootstrap,
-            oob_score=oob_score,
-            n_jobs=n_jobs,
-            random_state=random_state,
-            verbose=verbose,
-            warm_start=warm_start,
-            class_weight=class_weight,
-            max_samples=max_samples,
-        )
-
-        self.criterion = criterion
-        self.max_depth = max_depth
-        self.min_samples_split = min_samples_split
-        self.min_samples_leaf = min_samples_leaf
-        self.min_weight_fraction_leaf = min_weight_fraction_leaf
-        self.max_features = max_features
-        self.max_leaf_nodes = max_leaf_nodes
-        self.min_impurity_decrease = min_impurity_decrease
-        self.monotonic_cst = monotonic_cst
-        self.ccp_alpha = ccp_alpha
-        self.splitter = splitter
-
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
-        self.fit_main_classifier(X, y, quantile, sample_weight)
-        all_possible_rules_list = []
-        for dtree in self.estimators_:  ## extraction  of all trees rules
-            tree = dtree.tree_
-            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
-
-
-######### Regressor ############
-
-
-class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
-    """
-    SIRUS class applied with a DecisionTreeClassifier
-    Parameters
-    ----------
-
-    """
-
-    _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
-
-    def fit_forest_rules_regressor( 
-        self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True
-    ): 
-        """Build a decision tree classifier from the training set (X, y)."""
-        self.fit_main_classifier(X, y, quantile, sample_weight)
-        all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
-        self.fit_forest_rules(
-            X, y, all_possible_rules_list, p0
-        )  ## Checker que cx'est bien sur X et non le X_bin
-        return self
-
-    def predict(self, X, to_add_probas_outside_rules=True):
-        return self.predict_regressor(X, to_add_probas_outside_rules)
+                print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
     
-class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
-    """
-    DecisionTreeRegressor of scikit -learn with tghe "quantile" spliiter option
-    ----------
+    def show_rules(self, max_rules=9, target_class_index=1):
+        if not hasattr(self, 'all_possible_rules_list') or \
+           not hasattr(self, 'list_probas_by_rules') or \
+           not hasattr(self, 'list_probas_outside_by_rules'):
+            print("Model does not have the required rule attributes. Ensure it's fitted.")
+            return
 
-    """
+        rules_all = self.all_possible_rules_list
+        probas_if_true_all = self.list_probas_by_rules
+        probas_if_false_all = self.list_probas_outside_by_rules
 
-    _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+        if not (len(rules_all) == len(probas_if_true_all) == len(probas_if_false_all)):
+            print("Error: Mismatch in lengths of rule attributes.")
+            return
 
+        num_rules_to_show = min(max_rules, len(rules_all))
+        if num_rules_to_show == 0:
+            print("No rules to display.")
+            return
 
+        # Attempt to build/use feature mapping
+        feature_mapping = None
+        if hasattr(self, 'feature_names_in_'): # Standard scikit-learn attribute
+            # Create a mapping from index to name if feature_names_in_ is a list
+            feature_mapping = {i: name for i, name in enumerate(self.feature_names_in_)}
+        elif hasattr(self, 'feature_names_'): # Custom attribute for feature names
+            if isinstance(self.feature_names_, dict):
+                feature_mapping = self.feature_names_ # Assumes it's already index:name
+            elif isinstance(self.feature_names_, list):
+                feature_mapping = {i: name for i, name in enumerate(self.feature_names_)}
+        # If no mapping, column_name will default to using indices.
 
-class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
-    """
-    SIRUS class applied with a RandomForestClassifier
+        base_ps_text = ""
+        if probas_if_false_all and probas_if_false_all[0] and len(probas_if_false_all[0]) > target_class_index:
+            avg_outside_target_probas = [
+                p[target_class_index] for p in probas_if_false_all if p and len(p) > target_class_index
+            ]
+            if avg_outside_target_probas:
+                estimated_avg_target_prob = np.mean(avg_outside_target_probas) * 100
+                base_ps_text = (f"Estimated average rate for target class {target_class_index} (from 'else' clauses) p_s = {estimated_avg_target_prob:.0f}%.\n"
+                                f"(Note: True average rate should be P(Class={target_class_index}) from training data).\n")
+        
+        print(base_ps_text)
+        header_condition = "IF Condition"
+        header_then = f"     THEN P(C{target_class_index})" 
+        header_else = f"     ELSE P(C{target_class_index})" 
+        
+        max_condition_len = 0
+        condition_strings_for_rules = []
 
-    """
+        for i in range(num_rules_to_show):
+            current_rule_conditions = rules_all[i]
+            condition_parts_str = []
+            for j in range(len(current_rule_conditions)):
+                
+                dimension, treshold, sign_internal = self.from_rules_to_constraint(
+                    rule=current_rule_conditions[j]
+                )
+                
+                column_name = f"Feature[{dimension}]" # Default if no mapping
+                if feature_mapping and dimension in feature_mapping:
+                    column_name = feature_mapping[dimension]
+                elif feature_mapping and isinstance(dimension, str) and dimension in feature_mapping.values():
+                    # If dimension is already a name that's in the mapping's values (less common for index)
+                    column_name = dimension 
+                
+                sign_display = "<=" if sign_internal == "L" else ">"
+                treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
+                condition_parts_str.append(f"{column_name} {sign_display} {treshold_display}")
+            
+            full_condition_str = " & ".join(condition_parts_str)
+            condition_strings_for_rules.append(full_condition_str)
+            if len(full_condition_str) > max_condition_len:
+                max_condition_len = len(full_condition_str)
 
-    _parameter_constraints: dict = {**GradientBoostingClassifier._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+        condition_col_width = max(max_condition_len, len(header_condition)) + 2
 
-    def __init__(
-        self,
-        *,
-        loss="log_loss",
-        learning_rate=0.1,
-        n_estimators=100,
-        subsample=1.0,
-        criterion="friedman_mse",
-        min_samples_split=2,
-        min_samples_leaf=1,
-        min_weight_fraction_leaf=0.0,
-        max_depth=3,
-        min_impurity_decrease=0.0,
-        init=None,
-        random_state=None,
-        max_features=None,
-        verbose=0,
-        max_leaf_nodes=None,
-        warm_start=False,
-        validation_fraction=0.1,
-        n_iter_no_change=None,
-        tol=1e-4,
-        ccp_alpha=0.0,
-        splitter="quantile",
-    ):
-        super().__init__(
-            loss=loss,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            criterion=criterion,
-            min_samples_split=min_samples_split,
-            min_samples_leaf=min_samples_leaf,
-            min_weight_fraction_leaf=min_weight_fraction_leaf,
-            max_depth=max_depth,
-            init=init,
-            subsample=subsample,
-            max_features=max_features,
-            random_state=random_state,
-            verbose=verbose,
-            max_leaf_nodes=max_leaf_nodes,
-            min_impurity_decrease=min_impurity_decrease,
-            warm_start=warm_start,
-            validation_fraction=validation_fraction,
-            n_iter_no_change=n_iter_no_change,
-            tol=tol,
-            ccp_alpha=ccp_alpha,
-        )
-        self.splitter = splitter
+        print(f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}")
+        print("-" * (condition_col_width + 15 + 15 + 2))
 
-    def _fit_stage(
-        self,
-        i,
-        X,
-        y,
-        raw_predictions,
-        sample_weight,
-        sample_mask,
-        random_state,
-        X_csc=None,
-        X_csr=None,
-    ):
-        """Fit another stage of ``n_trees_per_iteration_`` trees."""
-        original_y = y
+        for i in range(num_rules_to_show):
+            condition_str_formatted = condition_strings_for_rules[i]
+            
+            prob_if_true_list = probas_if_true_all[i]
+            prob_if_false_list = probas_if_false_all[i]
 
-        if isinstance(self._loss, HuberLoss):
-            set_huber_delta(
-                loss=self._loss,
-                y_true=y,
-                raw_prediction=raw_predictions,
-                sample_weight=sample_weight,
-            )
-        # TODO: Without oob, i.e. with self.subsample = 1.0, we could call
-        # self._loss.loss_gradient and use it to set train_score_.
-        # But note that train_score_[i] is the score AFTER fitting the i-th tree.
-        # Note: We need the negative gradient!
-        neg_gradient = -self._loss.gradient(
-            y_true=y,
-            raw_prediction=raw_predictions,
-            sample_weight=None,  # We pass sample_weights to the tree directly.
-        )
-        # 2-d views of shape (n_samples, n_trees_per_iteration_) or (n_samples, 1)
-        # on neg_gradient to simplify the loop over n_trees_per_iteration_.
-        if neg_gradient.ndim == 1:
-            neg_g_view = neg_gradient.reshape((-1, 1))
-        else:
-            neg_g_view = neg_gradient
+            then_val_str = "N/A"
+            else_val_str = "N/A"
 
-        for k in range(self.n_trees_per_iteration_):
-            if self._loss.is_multiclass:
-                y = np.array(original_y == k, dtype=np.float64)
+            if prob_if_true_list and len(prob_if_true_list) > target_class_index:
+                p_s_if_true = prob_if_true_list[target_class_index] * 100
+                then_val_str = f"{p_s_if_true:.0f}%"
+            
+            if prob_if_false_list and len(prob_if_false_list) > target_class_index:
+                p_s_if_false = prob_if_false_list[target_class_index] * 100
+                else_val_str = f"{p_s_if_false:.0f}%"
 
-            # induce regression tree on the negative gradient
-            tree = DecisionTreeRegressor2(
-                criterion=self.criterion,
-                splitter=self.splitter,  ## ici
-                max_depth=self.max_depth,
-                min_samples_split=self.min_samples_split,
-                min_samples_leaf=self.min_samples_leaf,
-                min_weight_fraction_leaf=self.min_weight_fraction_leaf,
-                min_impurity_decrease=self.min_impurity_decrease,
-                max_features=self.max_features,
-                max_leaf_nodes=self.max_leaf_nodes,
-                random_state=random_state,
-                ccp_alpha=self.ccp_alpha,
-            )
-
-            if self.subsample < 1.0:
-                # no inplace multiplication!
-                sample_weight = sample_weight * sample_mask.astype(np.float64)
-
-            X = X_csc if X_csc is not None else X
-            tree.fit(
-                X, neg_g_view[:, k], sample_weight=sample_weight, check_input=False
-            )
-
-            # update tree leaves
-            X_for_tree_update = X_csr if X_csr is not None else X
-            _update_terminal_regions(
-                self._loss,
-                tree.tree_,
-                X_for_tree_update,
-                y,
-                neg_g_view[:, k],
-                raw_predictions,
-                sample_weight,
-                sample_mask,
-                learning_rate=self.learning_rate,
-                k=k,
-            )
-
-            # add tree to ensemble
-            self.estimators_[i, k] = tree
-
-        return raw_predictions
-
-    def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True,batch_size_post_treatment=None):
-        self.fit_main_classifier(X, y, quantile, sample_weight)
-        all_possible_rules_list = []
-        for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            dtree = self.estimators_[i, 1]  ## Y 1-d
-            tree = dtree.tree_
-            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
-
-
-# TODO : filter redundant rules
-# TODO : CV for ridge regressor ?
+            print(f"if   {condition_str_formatted:<{condition_col_width - 5}} then {then_val_str:<12} else {else_val_str:<12}")

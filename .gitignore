@@ -2,5 +2,6 @@
 *.npy
 *__pycache__
 *.ipynb_checkpoints
+.venv/
 pysirus/models/build
 pysirus/models/_QuantileSplitter.c
