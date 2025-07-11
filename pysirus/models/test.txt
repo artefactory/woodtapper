@@ -1,0 +1,291 @@
+/home/abdoulaye_sakho/miniconda3/envs/dev_env/lib/python3.11/site-packages/Cython/Compiler/Main.py:381: FutureWarning: Cython directive 'language_level' not set, using '3str' for now (Py3). This has changed from earlier releases! File: /home/abdoulaye_sakho/S3/sirus/rules/pysirus/models/_QuantileSplitter.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:58:16: Cannot convert 'SplitRecord *' to Python object
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                parent_record,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:59:16: Cannot convert 'ParentInfo *' to Python object
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:58:16: Cannot convert 'SplitRecord *' to Python object
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                parent_record,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:59:16: Cannot convert 'ParentInfo *' to Python object
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Discarding owned Python object not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Calling gil-requiring function not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:19: Accessing Python attribute not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                 ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:17: Calling gil-requiring function not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                 ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:17: Constructing Python tuple not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Constructing Python tuple not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:58:16: Converting to Python object not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                parent_record,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:59:16: Converting to Python object not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Discarding owned Python object not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Calling gil-requiring function not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:19: Accessing Python attribute not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                 ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:17: Calling gil-requiring function not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                 ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:17: Constructing Python tuple not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """Find the best split on node samples[start:end]
+
+            Returns -1 in case of failure to allocate memory (and raise MemoryError)
+            or 0 otherwise.
+            """
+            super().node_split_best(
+                                   ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:54:35: Constructing Python tuple not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            """
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:58:16: Converting to Python object not allowed without gil
+
+Error compiling Cython file:
+------------------------------------------------------------
+...
+            super().node_split_best(
+                splitter,
+                partitioner,
+                criterion,
+                split,
+                parent_record,
+                ^
+------------------------------------------------------------
+
+_QuantileSplitter.pyx:59:16: Converting to Python object not allowed without gil
+Traceback (most recent call last):
+  File "/home/abdoulaye_sakho/S3/sirus/rules/pysirus/models/setup.py", line 7, in <module>
+    ext_modules=cythonize("_QuantileSplitter.pyx"),
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/abdoulaye_sakho/miniconda3/envs/dev_env/lib/python3.11/site-packages/Cython/Build/Dependencies.py", line 1154, in cythonize
+    cythonize_one(*args)
+  File "/home/abdoulaye_sakho/miniconda3/envs/dev_env/lib/python3.11/site-packages/Cython/Build/Dependencies.py", line 1321, in cythonize_one
+    raise CompileError(None, pyx_file)
+Cython.Compiler.Errors.CompileError: _QuantileSplitter.pyx
