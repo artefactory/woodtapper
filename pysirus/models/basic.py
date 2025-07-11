@@ -741,16 +741,27 @@ class SirusMixin:
     ################ Fit main classiifer   ################
     #######################################################
 
-    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None):
-        X_bin = X.copy()
-        list_quantile = [
+    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None,to_not_binarize_colindex=None):
+        if to_not_binarize_colindex is None:
+            X_bin = X.copy()
+            list_quantile = [
             np.percentile(X_bin, q=i * quantile, axis=0)
             for i in range(int((100 // quantile) + 1))
-        ]
-        array_quantile = np.array(list_quantile)
-        for dim in range(X.shape[1]):
-            out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
-            X_bin[:, dim] = array_quantile[out, dim]
+            ]
+            array_quantile = np.array(list_quantile)
+            for dim in range(X.shape[1]):
+                out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+                X_bin[:, dim] = array_quantile[out, dim]
+        else :
+            list_quantile = [
+            np.percentile(X_bin[:,~to_not_binarize_colindex], q=i * quantile, axis=0)
+            for i in range(int((100 // quantile) + 1))
+            ]
+            array_quantile = np.array(list_quantile)
+            for dim in range(X.shape[1]):
+                if dim not in to_not_binarize_colindex:
+                    out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+                    X_bin[:, dim] = array_quantile[out, dim]
         super().fit(
             X_bin,
             y,
