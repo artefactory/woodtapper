@@ -401,10 +401,12 @@ class SirusMixin:
         """
         if len(new_rule)==2:
             A, B = new_rule
-            implied = [(self._implies(A, single_rule) or self._implies(B, single_rule)) for single_rule in possible_rule]
+            implied = [(self._implies(A,single_rule) or self._implies(B, single_rule)) for single_rule in possible_rule]
+            print('implied len(2) :',implied)
             return all(implied)
         else:
-            implied = [( self._implies(new_rule, sc)) for sc in possible_rule]
+            implied = [( self._implies(new_rule,single_rule)) for single_rule in possible_rule]
+            print('implied len(1) :',implied)
             return all(implied)
 
 
@@ -512,31 +514,42 @@ class SirusMixin:
         paths_left = self._rules_lefty(paths)
 
         while num_rule_temp < num_rule and ind < ind_max:
-            #print("**************"*5)
+            print("**************"*5)
             curr_path= paths_left[ind]
-            #print('Compared ruled paths_left: ',curr_path )
-            #print('Paths: ',paths[ind] )
-            #print('Path ftr: ',paths_ftr)
+            print('Compared ruled paths_left: ',curr_path )
+            print('Paths: ',paths[ind] )
+            print('Path ftr: ',paths_ftr)
             
             if curr_path in paths_ftr: ## Avoid duplicates
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr)!= 0: ## If there are already filtered paths
+            elif len(paths_ftr) == 1: ## If there are no filtered paths yet
+                if len(curr_path)==1 and len(paths_ftr[0])==1 and (self._related_rule(curr_path, paths_ftr[0])):
+                    paths_ftr.append(curr_path)
+                    ind += 1
+                    num_rule_temp = len(paths_ftr)
+                    continue
+            elif len(paths_ftr)> 1: ## If there are already filtered paths
                 list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
                 related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
+                print('related_paths_ftr :',related_paths_ftr)
                 if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
                 else:
-                    matrix = self._generate_dependance_matrix(curr_path,related_paths_ftr[0])
+                    rules_ensemble = related_paths_ftr + [curr_path]
+                    print('rules_ensemble :',rules_ensemble)
+                    matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
                     for x in related_paths_ftr[1:]:
-                        curr_matrix = self._generate_dependance_matrix(curr_path,x)
-                        np.hstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
+                        curr_matrix = self._generate_dependance_matrix(rules_ensemble,x)
+                        np.vstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
                     
                     # Check if the current rule is redundant with the previous ones trough matrix rank
                     matrix_rank = np.linalg.matrix_rank(matrix, tol=1e-5)
-                    if matrix_rank == len(related_paths_ftr)+1:
+                    print(matrix)
+                    print('matrix_rank :',matrix_rank)
+                    if matrix_rank == len(rules_ensemble)+1: ## 1 for the vector with 1e 
                         # The current rule is not redundant with the previous ones
                         paths_ftr.append(curr_path)
                         proba_ftr.append(proba[ind])
@@ -548,7 +561,7 @@ class SirusMixin:
                 proba_ftr.append(proba[ind])
                 ind += 1
                 num_rule_temp = len(paths_ftr)
-            
+        
         return {'paths': paths_ftr, 'proba': proba_ftr}
                  
         
@@ -564,10 +577,10 @@ class SirusMixin:
             Returns:
                 dict: {'paths': filtered_paths, 'proba': filtered_proba}
         """
-        if len(paths) <= num_rule:
-            return {'paths': paths, 'proba': proba}
-        else:
-            return self.paths_filter_matrix_2d(paths=paths, proba=proba, num_rule=num_rule)
+        #if len(paths) <= num_rule:
+        #    return {'paths': paths, 'proba': proba}
+        #else:
+        return self.paths_filter_matrix_2d(paths=paths, proba=proba, num_rule=num_rule)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
@@ -608,7 +621,7 @@ class SirusMixin:
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
         print('####'*5)
         res = self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
-        print('after paths_filtering_2d res : ',res)
+        print('after paths_filtering_2d res : ',res['paths'])
         print('####'*5)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
@@ -876,9 +889,9 @@ class SirusMixin:
                     rule=current_rules[j]
                 )
                 if sign == "L":
-                    sign = "<="
+                    sign = "<"
                 else:
-                    sign = ">"
+                    sign = ">="
                 print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
     
     def show_rules(self, max_rules=9, target_class_index=1):
@@ -947,7 +960,7 @@ class SirusMixin:
                     # If dimension is already a name that's in the mapping's values (less common for index)
                     column_name = dimension 
                 
-                sign_display = "<=" if sign_internal == "L" else ">"
+                sign_display = "<" if sign_internal == "L" else ">="
                 treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
                 condition_parts_str.append(f"{column_name} {sign_display} {treshold_display}")
             
