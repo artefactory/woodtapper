@@ -225,9 +225,9 @@ class SirusMixin:
         ----------
         """
         if sign == "L":
-            return X[:, dimension] <= treshold  # .mean()
+            return X[:, dimension] < treshold  # .mean()
         else:
-            return X[:, dimension] > treshold  # .mean()
+            return X[:, dimension] >= treshold  # .mean()
 
 
     def extract_single_tree_rules(self, tree):
@@ -392,14 +392,13 @@ class SirusMixin:
             return False
     def _list_implies(self,new_rule, possible_rule):
         """
-        Check if a new rule implies (is contained) a possible rule.
+        Check if a new rule implies (is contained) in  possible rule.
         Args:
             new_rule (tuple): New rule to check.
             possible_rule (list): A possible rule.
         Returns:
             bool: True if the new rule implies (partially) the possible rule .
         """
-    # condition: tuple(SubClause, SubClause), rule: Rule
         if len(new_rule)==2:
             A, B = new_rule
             implied = [(self._implies(A, single_rule) or self._implies(B, single_rule)) for single_rule in possible_rule]
@@ -408,12 +407,13 @@ class SirusMixin:
             implied = [( self._implies(new_rule, sc)) for sc in possible_rule]
             return all(implied)
 
-    def _generate_dependance_matrix(self,possible_rules, A, B=None):
+
+    def _generate_dependance_matrix(self,possible_rules, relative_rules ):
         """
-        Generate a dependence matrix for the given possible rules and two rules A and B.
+        Generate a dependence matrix for the given possible rules and relative_rules.
         The matrix will have 4 rows and len(possible_rules) + 1 columns.
         The first column will be all ones, and the rest will contain boolean values indicating
-        whether the combination of A and B implies each possible rule.
+        whether the combination of relative_rules (A (and B)) implies each possible rule.
         Args:
             possible_rules (list): List of possible rules.
             A (tuple): First rule to check.
@@ -421,44 +421,48 @@ class SirusMixin:
         Returns:
         """
         len_possible_rules = len(possible_rules)
-        if B is not None:
+        if len(relative_rules)==1:
+            A = relative_rules[0]
+            data = np.zeros((2, len_possible_rules+1), dtype=bool)
+            data[:, 0] = 1
+            nA = self._reverse(A)
+            for col in range(1, len_possible_rules+1):
+                curr_rule = [possible_rules[col-1]]
+                data[0, col] = self._list_implies(A, curr_rule)
+                data[1, col] = self._list_implies(nA, curr_rule)        
+        else:
+            A, B = relative_rules
             data = np.zeros((4, len_possible_rules+1), dtype=bool)
             data[:, 0] = 1
             nA = self._reverse(A)
             nB = self._reverse(B)
             for col in range(1, len_possible_rules+1):
-                curr_rule = possible_rules[col-1]
+                curr_rule = [possible_rules[col-1]]
                 data[0, col] = self._list_implies([A, B], curr_rule)
                 data[1, col] = self._list_implies([A, nB], curr_rule)
                 data[2, col] = self._list_implies([nA, B], curr_rule)
                 data[3, col] = self._list_implies([nA, nB], curr_rule)
-        else:
-            data = np.zeros((2, len_possible_rules+1), dtype=bool)
-            data[:, 0] = 1
-            nA = self._reverse(A)
-            for col in range(1, len_possible_rules+1):
-                curr_rule = possible_rules[col-1]
-                data[0, col] = self._list_implies(A, curr_rule)
-                data[1, col] = self._list_implies(nA, curr_rule)
+            
         return data
-    def _possibles_single_rules_left(self,possible_rules):
+    def _rules_lefty(self,possible_rules):
         """
-        Generate all possible single rules from a list of possible rules. 
-        The rules are saved under their lefty version (arbitrary choice).
-        Redundant single rules are removed.
+        Generate all possible single rules from the given possible rules, ensuring that
+        the left side of the rules is always in the form of (var, thr, "L").
         Args:
+            possible_rules (list): List of possible rules, where each rule is a list of splits.
         """
         S = []
         for rules in possible_rules:
+            new_lefty_rules= []
             for single_rule in rules:
                 if single_rule[2]=="R":
                     new_single_rule = self._reverse(single_rule)
                 else:
                     new_single_rule = single_rule
-                if new_single_rule not in S:
-                    S.append(new_single_rule)
+                new_lefty_rules.append(new_single_rule)
+            S.append(new_lefty_rules)
         return S
-    def _related_rule(self,curr_rule, A, B):
+    def _related_rule(self,curr_rule, relative_rule):
         """
         Check if the current rule is related to the single rules A and B.
         Args:
@@ -466,19 +470,37 @@ class SirusMixin:
             A (tuple): First single rule.
             B (tuple): Second single rule.
         """
-        if len(curr_rule) == 1:
-            if curr_rule[2]=='R':
-                curr_rule = self._reverse(curr_rule)
-            return (curr_rule == A) or (curr_rule == B)
-        elif len(curr_rule) == 2:
-            l1,l2 = curr_rule[0], curr_rule[1]
-            if l1[2]=='R':
-                l1 = self._reverse(l1)
-            if l2[2]=='R':
-                l2 = self._reverse(l2)
-            return (l1 == A and l2 == B) or (l1 == B and l2 == A)
+        
+        if len(relative_rule)==1:
+            A = relative_rule[0]
+            if len(curr_rule) == 1:
+                if curr_rule[0][2]=='R':
+                    curr_rule[0] = self._reverse(curr_rule[0])
+                return (curr_rule[0] == A) 
+            elif len(curr_rule) == 2:
+                l1,l2 = curr_rule[0], curr_rule[1]
+                if l1[2]=='R':
+                    l1 = self._reverse(l1)
+                if l2[2]=='R':
+                    l2 = self._reverse(l2)
+                return (l1 == A ) or (l2 == A)
+            else:
+                raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         else:
-            raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
+            A, B = relative_rule
+            if len(curr_rule) == 1:
+                if curr_rule[0][2]=='R':
+                    curr_rule[0] = self._reverse(curr_rule[0])
+                return (curr_rule[0] == A) or (curr_rule[0] == B)
+            elif len(curr_rule) == 2:
+                l1,l2 = curr_rule[0], curr_rule[1]
+                if l1[2]=='R':
+                    l1 = self._reverse(l1)
+                if l2[2]=='R':
+                    l2 = self._reverse(l2)
+                return (l1 == A and l2 == B) or (l1 == B and l2 == A)
+            else:
+                raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         
     def paths_filter_matrix_2d(self,paths, proba, num_rule):
         paths_ftr = []
@@ -487,31 +509,37 @@ class SirusMixin:
         ind_max = len(paths)
         ind = 0
         num_rule_temp = 0
-        paths_left = self._possibles_single_rules_left(paths)
+        paths_left = self._rules_lefty(paths)
 
         while num_rule_temp < num_rule and ind < ind_max:
+            #print("**************"*5)
             curr_path= paths_left[ind]
-            #split_ind = [split[:2] for split in curr_path]
-            #d = len(curr_path)
+            #print('Compared ruled paths_left: ',curr_path )
+            #print('Paths: ',paths[ind] )
+            #print('Path ftr: ',paths_ftr)
+            
             if curr_path in paths_ftr: ## Avoid duplicates
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr != 0): ## If there are already filtered paths
+            elif len(paths_ftr)!= 0: ## If there are already filtered paths
                 list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
-                related_paths_ftr = paths_ftr[list_bool_related_rules]
-
-                matrix = self._generate_dependance_matrix(curr_path,related_paths_ftr[0])
-                for x in related_paths_ftr[1]:
-                    curr_matrix = self._generate_dependance_matrix(curr_path,x)
-                    np.hstack(matrix,curr_matrix) ## Stack the current matrix with the previous ones
-                
-                # Check if the current rule is redundant with the previous ones trough matrix rank
-                matrix_rank = np.linalg.matrix_rank(matrix, tol=1e-5)
-                if matrix_rank == len(related_paths_ftr)+1:
-                    # The current rule is not redundant with the previous ones
+                related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
+                if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
+                else:
+                    matrix = self._generate_dependance_matrix(curr_path,related_paths_ftr[0])
+                    for x in related_paths_ftr[1:]:
+                        curr_matrix = self._generate_dependance_matrix(curr_path,x)
+                        np.hstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
+                    
+                    # Check if the current rule is redundant with the previous ones trough matrix rank
+                    matrix_rank = np.linalg.matrix_rank(matrix, tol=1e-5)
+                    if matrix_rank == len(related_paths_ftr)+1:
+                        # The current rule is not redundant with the previous ones
+                        paths_ftr.append(curr_path)
+                        proba_ftr.append(proba[ind])
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 
@@ -576,8 +604,12 @@ class SirusMixin:
         #### APPLY POST TREATMEANT : remove redundant rules
 
         print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
+        print('####'*5)
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
+        print('####'*5)
         res = self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        print('after paths_filtering_2d res : ',res)
+        print('####'*5)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         #print('After all_possible_rules_list',res['paths'])
