@@ -306,125 +306,6 @@ class SirusMixin:
         rules_to_keep.reverse() # reverse the list because the original one was revearsed also
         return rules_to_keep
                 
-    def paths_filter_2(self,paths, proba, num_rule):
-        """
-            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
-            
-            Args:
-                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
-                proba (list): Probabilities associated with each path/rule
-                num_rule (int): Max number of rules to keep
-            
-            Returns:
-                dict: {'paths': filtered_paths, 'proba': filtered_proba}
-        """
-        paths_ftr = []
-        proba_ftr = []
-        split_gen = []
-        ind_max = len(paths)
-        ind = 0
-        num_rule_temp = 0
-
-        while num_rule_temp < num_rule and ind < ind_max:
-            #path_ind = copy.deepcopy(paths[ind])
-            path_ind = paths[ind]
-            
-            ## Remove empty split (variable 0)
-            #split_var = [split[0] for split in path_ind]
-            #if 0 in split_var:
-            #    path_ind = [split for split in path_ind if split[0] != 0]
-            
-            # Format rule with 2 cuts on same variable and direction
-            if len(path_ind) == 2:
-                if (path_ind[0][0] == path_ind[1][0]) and (path_ind[0][2] == path_ind[1][2]):
-                    if path_ind[0][1] > path_ind[1][1]:
-                        path_ind = [path_ind[0]] if path_ind[0][2] == 1 else [path_ind[1]]
-                    else:
-                        path_ind = [path_ind[1]] if path_ind[0][2] == 1 else [path_ind[0]]
-                    paths[ind] = path_ind
-            
-            split_ind = [split[:2] for split in path_ind]
-            d = len(path_ind)
-            
-            # Avoid duplicates
-            if split_ind not in split_gen:
-                paths_ftr.append(path_ind)
-                proba_ftr.append(proba[ind])
-                num_rule_temp = len(paths_ftr)
-                
-                # Add generated interaction
-                if d <= 2:
-                    if d == 1:
-                        split_gen_temp = [split_ind]
-                        split_gen += split_gen_temp
-                    if d == 2:
-                        # get index of rules involving any similar constraint
-                        bool_ind = []
-                        for path in paths_ftr:
-                            if len(path) <= 2:
-                                bools = [
-                                    any([(x[:2] == y[:2]) for y in path_ind])
-                                    for x in path
-                                ]
-                                bool_ind.append([all(bools), any(bools)])
-                            else:
-                                bool_ind.append([False, False])
-                        bool_all = [x[0] for x in bool_ind]
-                        bool_any = [x[1] for x in bool_ind]
-                        bool_mixed = [not a and b for a, b in zip(bool_all, bool_any)]
-                        num_rule_all = sum(bool_all)
-                        num_rule_any = sum(bool_any)
-                        
-                        if num_rule_all >= 2: #The currrent rule is of depth 2 and 
-                        #involves to rules from path_tr. Thus, it is lineary dependant from the filtered rules paths_ftr.
-                        # We add it to genrated rules only
-                            split_gen.append(split_ind)
-                            split_gen.extend([[split[:2]] for split in path_ind])
-
-
-                        # combine path with paths_ftr
-                        split_gen_temp = []
-                        for j, mixed in enumerate(bool_mixed):
-                            if mixed:
-                                x = paths_ftr[j]
-                                split_diff = [s for s in (x + path_ind) if s not in set(map(tuple, x)).intersection(map(tuple, path_ind))]
-                                if len(split_diff) == 2 and split_diff[0][:2] == split_diff[1][:2]:
-                                    split1 = [split_diff[0][:2]]
-                                    if split1 not in split_gen:
-                                        split_gen_temp.append([split_diff[0][:2]])
-                        
-                        # specific case: two splits on the same variable
-                        if split_ind[0][0] == split_ind[1][0]:
-                            bool_double = [
-                                all([x in split_ind for x in split]) and len(split) == 1
-                                for split in split_gen
-                            ]
-                            if any(bool_double):
-                                for k, is_double in enumerate(bool_double):
-                                    if is_double:
-                                        split = split_gen[k]
-                                        split_diff = [s for s in split_ind if s not in split]
-                                        if len(split_diff) > 0:
-                                            split_gen_temp.append(split_diff)
-                        # Flatten and filter out None
-                        split_gen_temp = [x for x in split_gen_temp if x is not None]
-                        if split_gen_temp:
-                            split_gen_1 = [x for x in split_gen if len(x) == 1]
-                            more_temp = []
-                            for split in split_gen_temp:
-                                for split1 in split_gen_1:
-                                    if len(split) == 1 and split[0][0] == split1[0][0] and split[0][1] != split1[0][1]:
-                                        if split[0][1] > split1[0][1]:
-                                            more_temp.append([split1 + split])
-                                        else:
-                                            more_temp.append([split + split1])
-                            split_gen_temp += more_temp
-                            # Remove already existing in split_gen
-                            split_gen_temp = [x for x in split_gen_temp if x not in split_gen]
-                            split_gen += split_gen_temp
-            ind += 1
-
-        return {'paths': paths_ftr, 'proba': proba_ftr}
     def paths_filter_2depth(self,paths, proba, num_rule):
         """
             Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
@@ -482,6 +363,183 @@ class SirusMixin:
             ind += 1
 
         return {'paths': paths_ftr, 'proba': proba_ftr}
+    
+    def _reverse(self, single_rule):
+        """
+        Reverse a single rule.
+        """
+        if single_rule[2] == "L":
+            return (single_rule[0], single_rule[1], "R")
+        else:
+            return (single_rule[0], single_rule[1], "L")
+        
+    def _implies(self,single_rule_a,single_rule_b):
+        """""
+        Check if single_rule_a implies single_rule_b.
+        """""
+        if single_rule_a[0] == single_rule_b[0]:
+            if single_rule_a[2] == 'L':
+                if single_rule_b[2] == 'L':
+                    return single_rule_a[1] <= single_rule_b[1]
+                else:
+                    return False
+            else:
+                if single_rule_b[2] == 'R':
+                    return single_rule_a[1] >= single_rule_b[1]
+                else:
+                    return False
+        else:
+            return False
+    def _list_implies(self,new_rule, possible_rule):
+        """
+        Check if a new rule implies (is contained) a possible rule.
+        Args:
+            new_rule (tuple): New rule to check.
+            possible_rule (list): A possible rule.
+        Returns:
+            bool: True if the new rule implies (partially) the possible rule .
+        """
+    # condition: tuple(SubClause, SubClause), rule: Rule
+        if len(new_rule)==2:
+            A, B = new_rule
+            implied = [(self._implies(A, single_rule) or self._implies(B, single_rule)) for single_rule in possible_rule]
+            return all(implied)
+        else:
+            implied = [( self._implies(new_rule, sc)) for sc in possible_rule]
+            return all(implied)
+
+    def _generate_dependance_matrix(self,possible_rules, A, B=None):
+        """
+        Generate a dependence matrix for the given possible rules and two rules A and B.
+        The matrix will have 4 rows and len(possible_rules) + 1 columns.
+        The first column will be all ones, and the rest will contain boolean values indicating
+        whether the combination of A and B implies each possible rule.
+        Args:
+            possible_rules (list): List of possible rules.
+            A (tuple): First rule to check.
+            B (tuple): Second rule to check.
+        Returns:
+        """
+        len_possible_rules = len(possible_rules)
+        if B is not None:
+            data = np.zeros((4, len_possible_rules+1), dtype=bool)
+            data[:, 0] = 1
+            nA = self._reverse(A)
+            nB = self._reverse(B)
+            for col in range(1, len_possible_rules+1):
+                curr_rule = possible_rules[col-1]
+                data[0, col] = self._list_implies([A, B], curr_rule)
+                data[1, col] = self._list_implies([A, nB], curr_rule)
+                data[2, col] = self._list_implies([nA, B], curr_rule)
+                data[3, col] = self._list_implies([nA, nB], curr_rule)
+        else:
+            data = np.zeros((2, len_possible_rules+1), dtype=bool)
+            data[:, 0] = 1
+            nA = self._reverse(A)
+            for col in range(1, len_possible_rules+1):
+                curr_rule = possible_rules[col-1]
+                data[0, col] = self._list_implies(A, curr_rule)
+                data[1, col] = self._list_implies(nA, curr_rule)
+        return data
+    def _possibles_single_rules_left(self,possible_rules):
+        """
+        Generate all possible single rules from a list of possible rules. 
+        The rules are saved under their lefty version (arbitrary choice).
+        Redundant single rules are removed.
+        Args:
+        """
+        S = []
+        for rules in possible_rules:
+            for single_rule in rules:
+                if single_rule[2]=="R":
+                    new_single_rule = self._reverse(single_rule)
+                else:
+                    new_single_rule = single_rule
+                if new_single_rule not in S:
+                    S.append(new_single_rule)
+        return S
+    def _related_rule(self,curr_rule, A, B):
+        """
+        Check if the current rule is related to the single rules A and B.
+        Args:
+            curr_rule (tuple): Current rule to check.
+            A (tuple): First single rule.
+            B (tuple): Second single rule.
+        """
+        if len(curr_rule) == 1:
+            if curr_rule[2]=='R':
+                curr_rule = self._reverse(curr_rule)
+            return (curr_rule == A) or (curr_rule == B)
+        elif len(curr_rule) == 2:
+            l1,l2 = curr_rule[0], curr_rule[1]
+            if l1[2]=='R':
+                l1 = self._reverse(l1)
+            if l2[2]=='R':
+                l2 = self._reverse(l2)
+            return (l1 == A and l2 == B) or (l1 == B and l2 == A)
+        else:
+            raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
+        
+    def paths_filter_matrix_2d(self,paths, proba, num_rule):
+        paths_ftr = []
+        proba_ftr = []
+        #split_gen = []
+        ind_max = len(paths)
+        ind = 0
+        num_rule_temp = 0
+        paths_left = self._possibles_single_rules_left(paths)
+
+        while num_rule_temp < num_rule and ind < ind_max:
+            curr_path= paths_left[ind]
+            #split_ind = [split[:2] for split in curr_path]
+            #d = len(curr_path)
+            if curr_path in paths_ftr: ## Avoid duplicates
+                ind += 1
+                num_rule_temp = len(paths_ftr)
+                continue
+            elif len(paths_ftr != 0): ## If there are already filtered paths
+                list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
+                related_paths_ftr = paths_ftr[list_bool_related_rules]
+
+                matrix = self._generate_dependance_matrix(curr_path,related_paths_ftr[0])
+                for x in related_paths_ftr[1]:
+                    curr_matrix = self._generate_dependance_matrix(curr_path,x)
+                    np.hstack(matrix,curr_matrix) ## Stack the current matrix with the previous ones
+                
+                # Check if the current rule is redundant with the previous ones trough matrix rank
+                matrix_rank = np.linalg.matrix_rank(matrix, tol=1e-5)
+                if matrix_rank == len(related_paths_ftr)+1:
+                    # The current rule is not redundant with the previous ones
+                    paths_ftr.append(curr_path)
+                    proba_ftr.append(proba[ind])
+                ind += 1
+                num_rule_temp = len(paths_ftr)
+                
+            else: ## If there are no filtered paths yet
+                paths_ftr.append(curr_path)
+                proba_ftr.append(proba[ind])
+                ind += 1
+                num_rule_temp = len(paths_ftr)
+            
+        return {'paths': paths_ftr, 'proba': proba_ftr}
+                 
+        
+    def paths_filtering_2d(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        """
+        if len(paths) <= num_rule:
+            return {'paths': paths, 'proba': proba}
+        else:
+            return self.paths_filter_matrix_2d(paths=paths, proba=proba, num_rule=num_rule)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
@@ -519,7 +577,7 @@ class SirusMixin:
 
         print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         print('25 proportions_count_sort : ',proportions_count_sort[:25])
-        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        res = self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         #print('After all_possible_rules_list',res['paths'])
