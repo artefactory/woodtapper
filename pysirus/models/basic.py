@@ -257,6 +257,8 @@ class SirusMixin:
     def _reverse(self, single_rule):
         """
         Reverse a single rule.
+        Args:
+            single_rule (tuple): A single rule in the form (var, thr, dir).
         """
         if single_rule[2] == "L":
             return (single_rule[0], single_rule[1], "R")
@@ -266,6 +268,9 @@ class SirusMixin:
     def _implies(self,single_rule_a,single_rule_b):
         """""
         Check if single_rule_a implies single_rule_b.
+        Args:
+            single_rule_a (tuple): First single rule in the form (var, thr, dir).
+            single_rule_b (tuple): Second single rule in the form (var, thr, dir).
         """""
         if single_rule_a[0] == single_rule_b[0]:
             if single_rule_a[2] == 'L':
@@ -280,56 +285,68 @@ class SirusMixin:
                     return False
         else:
             return False
-    def _list_implies(self,new_rule, possible_rule):
+    def _list_implies(self,rule_to_implie, implied_rules):
         """
-        Check if a new rule implies (is contained) in  possible rule.
+        Check if a new rule implies implies possible rules.
         Args:
-            new_rule (tuple): New rule to check.
-            possible_rule (list): A possible rule.
+            rule_to_implie (list of tuple): New rule to check.
+            implied_rules (list of tuple): A possible rule.
         Returns:
             bool: True if the new rule implies (partially) the possible rule .
         """
-        if len(new_rule)==2:
-            A, B = new_rule
-            implied = [(self._implies(A,single_rule) or self._implies(B, single_rule)) for single_rule in possible_rule]
+        if len(rule_to_implie)==2:
+            A, B = rule_to_implie
+            implied = [(self._implies(A,single_rule) or self._implies(B, single_rule)) for single_rule in implied_rules]
             print('implied len(2) :',implied)
             return all(implied)
         else:
-            implied = [( self._implies(new_rule,single_rule)) for single_rule in possible_rule]
+            #raise error ?
+            print('rule_to_implie : ',rule_to_implie)
+            print('implied_rules : ',implied_rules)
+            implied = [( self._implies(rule_to_implie[0],single_rule)) for single_rule in implied_rules]
             print('implied len(1) :',implied)
             return all(implied)
 
 
-    def _generate_dependance_matrix(self,possible_rules, relative_rules ):
+    def _generate_dependance_matrix(self,possible_rules, relative_rules):
         """
         Generate a dependence matrix for the given possible rules and relative_rules.
         The matrix will have 4 rows and len(possible_rules) + 1 columns.
         The first column will be all ones, and the rest will contain boolean values indicating
         whether the combination of relative_rules (A (and B)) implies each possible rule.
         Args:
-            possible_rules (list): List of possible rules.
-            A (tuple): First rule to check.
-            B (tuple): Second rule to check.
+            possible_rules (list of tuples): List of possible rules.
+            relative_rules (list of tuples):
         Returns:
         """
         len_possible_rules = len(possible_rules)
         if len(relative_rules)==1:
-            A = relative_rules[0]
-            data = np.zeros((2, len_possible_rules+1), dtype=bool)
-            data[:, 0] = 1
-            nA = self._reverse(A)
-            for col in range(1, len_possible_rules+1):
-                curr_rule = [possible_rules[col-1]]
+            A = relative_rules#[0]
+            #data = np.zeros((2, len_possible_rules+1), dtype=bool)
+            #data[:, 0] = 1
+            data = np.zeros((2, len_possible_rules), dtype=bool)
+            nA = [self._reverse(A[0])]
+            #for col in range(1, len_possible_rules+1):
+                #curr_rule = [possible_rules[col-1]]
+            for col in range(len_possible_rules):
+                curr_rule = possible_rules[col]
+                #if len(curr_rule) == 1:
+                #    curr_rule = [curr_rule]
                 data[0, col] = self._list_implies(A, curr_rule)
                 data[1, col] = self._list_implies(nA, curr_rule)        
         else:
             A, B = relative_rules
-            data = np.zeros((4, len_possible_rules+1), dtype=bool)
-            data[:, 0] = 1
+            #data = np.zeros((4, len_possible_rules+1), dtype=bool)
+            #data[:, 0] = 1
+            data = np.zeros((4, len_possible_rules), dtype=bool)
             nA = self._reverse(A)
             nB = self._reverse(B)
-            for col in range(1, len_possible_rules+1):
-                curr_rule = [possible_rules[col-1]]
+            #for col in range(1, len_possible_rules+1):
+            #    curr_rule = [possible_rules[col-1]]
+            for col in range(len_possible_rules):
+                curr_rule = possible_rules[col]
+                #if len(curr_rule) == 1:
+                #    curr_rule = [curr_rule]
                 data[0, col] = self._list_implies([A, B], curr_rule)
                 data[1, col] = self._list_implies([A, nB], curr_rule)
                 data[2, col] = self._list_implies([nA, B], curr_rule)
@@ -338,25 +355,31 @@ class SirusMixin:
         return data
     def _rules_lefty(self,possible_rules):
         """
-        Generate all possible single rules from the given possible rules, ensuring that
-        the left side of the rules is always in the form of (var, thr, "L").
-        Args:
-            possible_rules (list): List of possible rules, where each rule is a list of splits.
+       
         """
         S = []
         for rules in possible_rules:
             new_lefty_rules= []
-            for single_rule in rules:
-                if single_rule[2]=="R":
-                    new_single_rule = self._reverse(single_rule)
+
+            if len(rules)==1:
+                if rules[0][2]=="R":
+                    new_single_rule = self._reverse(rules[0])
                 else:
-                    new_single_rule = single_rule
+                    new_single_rule = rules[0]
                 new_lefty_rules.append(new_single_rule)
+            else:
+                new_lefty_rules = rules
+            #for single_rule in rules:
+            #    if single_rule[2]=="R":
+            #        new_single_rule = self._reverse(single_rule)
+            #    else:
+            #        new_single_rule = single_rule
+            #    new_lefty_rules.append(new_single_rule)
             S.append(new_lefty_rules)
         return S
     def _related_rule(self,curr_rule, relative_rule):
         """
-        Check if the current rule is related to the single rules A and B.
+        Check if the current rule is related to relative_rule.
         Args:
             curr_rule (tuple): Current rule to check.
             A (tuple): First single rule.
@@ -390,7 +413,7 @@ class SirusMixin:
                     l1 = self._reverse(l1)
                 if l2[2]=='R':
                     l2 = self._reverse(l2)
-                return (l1 == A and l2 == B) or (l1 == B and l2 == A)
+                return (l1 == A or l2 == B) or (l1 == B or l2 == A)
             else:
                 raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         
@@ -402,6 +425,8 @@ class SirusMixin:
         ind = 0
         num_rule_temp = 0
         paths_left = self._rules_lefty(paths)
+        #paths_left = paths
+        bool_only_single_rule_in_paths_ftr = True
 
         while num_rule_temp < num_rule and ind < ind_max:
             print("**************"*5)
@@ -414,41 +439,66 @@ class SirusMixin:
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr) == 1: ## If there are no filtered paths yet
-                if len(curr_path)==1 and len(paths_ftr[0])==1 and (self._related_rule(curr_path, paths_ftr[0])):
-                    paths_ftr.append(curr_path)
-                    ind += 1
-                    num_rule_temp = len(paths_ftr)
-                    continue
-            elif len(paths_ftr)> 1: ## If there are already filtered paths
+            #elif len(paths_ftr) == 1: ## If there are no filtered paths yet
+            #    if len(curr_path)==1 and len(paths_ftr[0])==1 and (self._related_rule(curr_path, paths_ftr[0])):
+            #        paths_ftr.append(curr_path)
+            #        ind += 1
+            #        num_rule_temp = len(paths_ftr)
+            #        continue
+            elif len(paths_ftr) != 0: ## If there are already filtered paths
                 list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
                 related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
                 print('related_paths_ftr :',related_paths_ftr)
                 if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
+                    if len(curr_path)==2:
+                        bool_only_single_rule_in_paths_ftr=False
                 else:
                     rules_ensemble = related_paths_ftr + [curr_path]
                     print('rules_ensemble :',rules_ensemble)
-                    matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
-                    for x in related_paths_ftr[1:]:
-                        curr_matrix = self._generate_dependance_matrix(rules_ensemble,x)
-                        np.vstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
-                    
-                    # Check if the current rule is redundant with the previous ones trough matrix rank
-                    matrix_rank = np.linalg.matrix_rank(matrix, tol=1e-5)
-                    print(matrix)
-                    print('matrix_rank :',matrix_rank)
-                    if matrix_rank == len(rules_ensemble)+1: ## 1 for the vector with 1e 
-                        # The current rule is not redundant with the previous ones
-                        paths_ftr.append(curr_path)
-                        proba_ftr.append(proba[ind])
+                    if not bool_only_single_rule_in_paths_ftr: ## if they are not only single rules
+                        
+                        #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
+                        list_matrix = []
+                        for x in related_paths_ftr:
+                            if len(x)==2:
+                                curr_matrix = self._generate_dependance_matrix(rules_ensemble,x)
+                                #matrix = np.vstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
+                                list_matrix.append(curr_matrix)
+                                print('curr_matrix :',curr_matrix)
+                        if len(list_matrix) >0:
+                            # Check if the current rule is redundant with the previous ones trough matrix rank
+                            n_rules_compared = list_matrix[0].shape[1]
+                            matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
+                            ones_vector = np.ones((len(matrix),1))  # Vector of ones
+                            matrix = np.hstack((matrix,ones_vector))
+                            matrix_rank = np.linalg.matrix_rank(matrix)
+                            print('matrix : ',matrix)
+                            print('matrix_rank :',matrix_rank)
+                            #if matrix_rank == len(rules_ensemble)+1: ## 1 for the vector with 1e 
+                            if matrix_rank == (n_rules_compared):  
+                                # The current rule is not redundant with the previous ones
+                                paths_ftr.append(curr_path)
+                                proba_ftr.append(proba[ind])
+                                if len(curr_path)==2:
+                                    bool_only_single_rule_in_paths_ftr=False
+                    else:
+                        print('aa')
+                        # If they are only single rules, we only need to check if the current rule has a lengh of 2
+                        if len(curr_path) == 2:
+                            print('bb')
+                            paths_ftr.append(curr_path)
+                            proba_ftr.append(proba[ind])
+                            bool_only_single_rule_in_paths_ftr=False
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 
             else: ## If there are no filtered paths yet
                 paths_ftr.append(curr_path)
                 proba_ftr.append(proba[ind])
+                if len(curr_path)==2:
+                        bool_only_single_rule_in_paths_ftr=False
                 ind += 1
                 num_rule_temp = len(paths_ftr)
         
