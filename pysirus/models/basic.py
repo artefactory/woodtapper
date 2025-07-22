@@ -468,9 +468,14 @@ class SirusMixin:
                                 list_matrix.append(curr_matrix)
                                 print('curr_matrix :',curr_matrix)
                         if len(list_matrix) >0:
+                            print('list_matrix : ',list_matrix)
                             # Check if the current rule is redundant with the previous ones trough matrix rank
-                            n_rules_compared = list_matrix[0].shape[1]
-                            matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
+                            n_rules_compared = list_matrix[0].shape[1] + 1
+                            #matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
+                            matrix =list_matrix[0]
+                            for j in range(1,len(list_matrix)):
+                                matrix = np.vstack((matrix,list_matrix[j]))
+
                             ones_vector = np.ones((len(matrix),1))  # Vector of ones
                             matrix = np.hstack((matrix,ones_vector))
                             matrix_rank = np.linalg.matrix_rank(matrix)
