@@ -458,7 +458,7 @@ class SirusMixin:
                     rules_ensemble = related_paths_ftr + [curr_path]
                     print('rules_ensemble :',rules_ensemble)
                     if not bool_only_single_rule_in_paths_ftr: ## if they are not only single rules
-                        
+                        related_paths_ftr = paths_ftr##
                         #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
                         list_matrix = []
                         for x in related_paths_ftr:
