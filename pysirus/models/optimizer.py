@@ -94,7 +94,7 @@ def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=0):
     else:      
         raise ValueError("\n--- No p0 Range Found for 1-25 Rules --- No p0 values in the explored range consistently produced 1-25 rules.")
 
-def train_optimal_extractor_p0(clf,X_train,y_train,scoring,p0_exploration_grid=np.linspace(0.01, 0.05, 15),n_cv_splits=5,n_cv_repeats=5):
+def train_optimal_extractor_p0(clf,X_train,y_train,quantile,scoring,scoring_on_probas=True,p0_exploration_grid=np.linspace(0.01, 0.05, 15),n_cv_splits=5,n_cv_repeats=5):
     # --- Tuning Configuration ---
     results_exploration_df = get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid)
     p0_grid = get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1) 
@@ -122,12 +122,15 @@ def train_optimal_extractor_p0(clf,X_train,y_train,scoring,p0_exploration_grid=n
                     sirus_model = clf
                     sirus_model.fit(
                         X_fold_train, y_fold_train,
-                        quantile=10,
+                        quantile=quantile,
                         batch_size_post_treatment=50,
                         p0=p0_val
                     )
 
-                    y_pred_proba_val = sirus_model.predict_proba(X_fold_val)[:, 1]
+                    if not (scoring_on_probas):
+                        y_pred_proba_val = sirus_model.predict_proba(X_fold_val)[:, 1]
+                    else:
+                        y_pred_proba_val = sirus_model.predict_proba(X_fold_val)
                     auc_score = scoring(y_fold_val, y_pred_proba_val)
                     fold_auc_scores_this_rep.append(auc_score)
 
