@@ -1,6 +1,6 @@
 <div align="center">
 
-# Stable Rules Extraction
+# Stable and Interpretable RUle Set in Python (pySIRUS)
 
 
 Abdoulaye SAKHO<sup>1, 2</sup>, Emmanuel MALHERBE<sup>1</sup></sup>, Erwan SCORNET<sup>2</sup> <br>
@@ -16,27 +16,28 @@ Preprint. <br>
 **Abstract:** *Repository for the devloppement of scikit-learn based methodology for stable rules extraction from a tree-based classifier.*
 
 
-You will find code to reproduce the paper experiments as well as an nice implementation of our *new* and *efficient* strategy for your projects.
-## ⭐ Table of Contents
-  - [How to use MGS-GRF](#-how-to-use-the-mgs-grf-algorithm-to-learn-on-imbalanced-data)
-  - [Reproducing the paper experiments](#-reproducing-the-paper-experiments)
-  - [Data sets](#-data-sets)
-  - [Acknowledgements](#-acknowledgements)
-  - [Citation](#-citation)
+## 🛠 Installation
+First you can clone the repository:
+```bash
+git clone git@github.com:artefactory/mgs-grf.git
+```
 
-## ⭐ How to use ????
+And install the required packages into your environment (conda, mamba or pip):
+```bash
+pip install -r requirements.txt
+```
 
-You need first to run the following command inside models folder : 
+> ⚠️ **Warning** Then, you **need** to run the following command inside models folder : 
 ```
 python setup.py build_ext --inplace
 ```
-Then, you have to move the generated file file models/build/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so into models/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so.
+> Finally, you have to move the generated file file *models/build/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so* into *models/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so*
 
-## ⭐ Reproducing the paper experiments
+## 🚀 How to use pySIRUS
 
-## ⭐ Data sets
+## 💾 Data sets
 
-## ⭐ Acknowledgements
+## 🙏 Acknowledgements
 
 This work was done through a partenership between **Artefact Research Center** and the **Laboratoire de Probabilités Statistiques et Modélisation** (LPSM) of Sorbonne University.
 
