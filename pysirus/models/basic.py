@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge,RidgeCV
 
 from ._QuantileSplitter import QuantileBestSplitter
 
@@ -225,9 +225,9 @@ class SirusMixin:
         ----------
         """
         if sign == "L":
-            return X[:, dimension] < treshold  # .mean()
+            return X[:, dimension] <= treshold  # .mean()
         else:
-            return X[:, dimension] >= treshold  # .mean()
+            return X[:, dimension] > treshold  # .mean()
 
 
     def extract_single_tree_rules(self, tree):
@@ -297,14 +297,14 @@ class SirusMixin:
         if len(rule_to_implie)==2:
             A, B = rule_to_implie
             implied = [(self._implies(A,single_rule) or self._implies(B, single_rule)) for single_rule in implied_rules]
-            print('implied len(2) :',implied)
+            #** print('implied len(2) :',implied)
             return all(implied)
         else:
             #raise error ?
-            print('rule_to_implie : ',rule_to_implie)
-            print('implied_rules : ',implied_rules)
+            #**print('rule_to_implie : ',rule_to_implie)
+            #**print('implied_rules : ',implied_rules)
             implied = [( self._implies(rule_to_implie[0],single_rule)) for single_rule in implied_rules]
-            print('implied len(1) :',implied)
+            #**print('implied len(1) :',implied)
             return all(implied)
 
 
@@ -429,11 +429,11 @@ class SirusMixin:
         bool_only_single_rule_in_paths_ftr = True
 
         while num_rule_temp < num_rule and ind < ind_max:
-            print("**************"*5)
+            #**print("**************"*5)
             curr_path= paths_left[ind]
-            print('Compared ruled paths_left: ',curr_path )
-            print('Paths: ',paths[ind] )
-            print('Path ftr: ',paths_ftr)
+            #**print('Compared ruled paths_left: ',curr_path )
+            #**print('Paths: ',paths[ind] )
+            #**print('Path ftr: ',paths_ftr)
             
             if curr_path in paths_ftr: ## Avoid duplicates
                 ind += 1
@@ -448,7 +448,7 @@ class SirusMixin:
             elif len(paths_ftr) != 0: ## If there are already filtered paths
                 list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
                 related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
-                print('related_paths_ftr :',related_paths_ftr)
+                #**print('related_paths_ftr :',related_paths_ftr)
                 if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
@@ -456,9 +456,9 @@ class SirusMixin:
                         bool_only_single_rule_in_paths_ftr=False
                 else:
                     rules_ensemble = related_paths_ftr + [curr_path]
-                    print('rules_ensemble :',rules_ensemble)
+                    #**print('rules_ensemble :',rules_ensemble)
                     if not bool_only_single_rule_in_paths_ftr: ## if they are not only single rules
-                        related_paths_ftr = paths_ftr##
+                        related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
                         #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
                         list_matrix = []
                         for x in related_paths_ftr:
@@ -466,9 +466,9 @@ class SirusMixin:
                                 curr_matrix = self._generate_dependance_matrix(rules_ensemble,x)
                                 #matrix = np.vstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
                                 list_matrix.append(curr_matrix)
-                                print('curr_matrix :',curr_matrix)
+                                #**print('curr_matrix :',curr_matrix)
                         if len(list_matrix) >0:
-                            print('list_matrix : ',list_matrix)
+                            #**print('list_matrix : ',list_matrix)
                             # Check if the current rule is redundant with the previous ones trough matrix rank
                             n_rules_compared = list_matrix[0].shape[1] + 1
                             #matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
@@ -479,8 +479,8 @@ class SirusMixin:
                             ones_vector = np.ones((len(matrix),1))  # Vector of ones
                             matrix = np.hstack((matrix,ones_vector))
                             matrix_rank = np.linalg.matrix_rank(matrix)
-                            print('matrix : ',matrix)
-                            print('matrix_rank :',matrix_rank)
+                            #**print('matrix : ',matrix)
+                            #**print('matrix_rank :',matrix_rank)
                             #if matrix_rank == len(rules_ensemble)+1: ## 1 for the vector with 1e 
                             if matrix_rank == (n_rules_compared):  
                                 # The current rule is not redundant with the previous ones
@@ -489,10 +489,10 @@ class SirusMixin:
                                 if len(curr_path)==2:
                                     bool_only_single_rule_in_paths_ftr=False
                     else:
-                        print('aa')
+                        #**print('aa')
                         # If they are only single rules, we only need to check if the current rule has a lengh of 2
                         if len(curr_path) == 2:
-                            print('bb')
+                            #**print('bb')
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
                             bool_only_single_rule_in_paths_ftr=False
@@ -558,16 +558,16 @@ class SirusMixin:
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
 
-        print('n_rules before post-treatment : ', len(all_possible_rules_list))
+        #**print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
 
-        print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
-        print('####'*5)
-        print('25 proportions_count_sort : ',proportions_count_sort[:25])
-        print('####'*5)
+        #**print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
+        #**print('####'*5)
+        #**print('25 proportions_count_sort : ',proportions_count_sort[:25])
+        #**print('####'*5)
         res = self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
-        print('after paths_filtering_2d res : ',res['paths'])
-        print('####'*5)
+        #**print('after paths_filtering_2d res : ',res['paths'])
+        #**print('####'*5)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         #print('After all_possible_rules_list',res['paths'])
@@ -696,18 +696,18 @@ class SirusMixin:
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        #res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        res=self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
-        gamma_array = np.zeros((X.shape[0], n_rules_to_keep))
-        for rule_number, indice in enumerate(
-            proportions_count_sort_indices[:n_rules_to_keep]
+        gamma_array = np.zeros((X.shape[0], self.n_rules))
+        for rule_number, current_rules in enumerate(
+            self.all_possible_rules_list
         ):
             # for loop for getting all the values in train (X) passing the rules
-            current_rules = all_possible_rules_list[indice]
             list_mask = []
             for j in range(
                 len(current_rules)
@@ -747,10 +747,15 @@ class SirusMixin:
         self.type_target = y.dtype
 
         ## final predictor fitting :
-        self.ridge = Ridge(
-            alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
+        #self.ridge = Ridge(
+        #    alpha=1, fit_intercept=True, positive=True, random_state=self.random_state
+        #)
+        self.ridge = RidgeCV(
+            alphas=np.arange(0.01,1,0.1),cv=5,scoring='neg_mean_squared_error', fit_intercept=True,
         )
-        self.ridge.fit(X, y)
+        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array,ones_vector))
+        self.ridge.fit(gamma_array, y)
         # self.gamma_array = gamma_array
 
     def predict_regressor(self, X, to_add_probas_outside_rules=True):
@@ -781,7 +786,9 @@ class SirusMixin:
                     indice
                 ]
 
-            y_pred = self.ridge.predict(gamma_array)
+        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array,ones_vector))
+        y_pred = self.ridge.predict(gamma_array)
 
         return y_pred
     
@@ -816,7 +823,7 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        print('array_quantile : ', array_quantile)
+        #**print('array_quantile : ', array_quantile)
 
     #######################################################
     ################## Print rules   ######################
@@ -834,9 +841,9 @@ class SirusMixin:
                     rule=current_rules[j]
                 )
                 if sign == "L":
-                    sign = "<"
+                    sign = "<="
                 else:
-                    sign = ">="
+                    sign = ">"
                 print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
     
     def show_rules(self, max_rules=9, target_class_index=1):
@@ -905,7 +912,7 @@ class SirusMixin:
                     # If dimension is already a name that's in the mapping's values (less common for index)
                     column_name = dimension 
                 
-                sign_display = "<" if sign_internal == "L" else ">="
+                sign_display = "<=" if sign_internal == "L" else ">"
                 treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
                 condition_parts_str.append(f"{column_name} {sign_display} {treshold_display}")
             

@@ -326,11 +326,12 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            print('self.estimators_.shape', self.estimators_.shape)
+            #print('self.estimators_.shape', self.estimators_.shape)
             dtree = self.estimators_[i,0]  
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
+        #self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
+        self.fit_forest_rules(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
 
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
