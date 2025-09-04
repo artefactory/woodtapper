@@ -646,8 +646,12 @@ class SirusMixin:
                 y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[
                     indice
                 ]  ## If the rule is not verified we add the probas of the training samples not verifying the rule.
-
-        return (1 / self.n_rules) * y_pred_probas
+        if to_add_probas_outside_rules:
+            return (1 / self.n_rules) * (y_pred_probas)
+        else:
+            scaling_coeffs = y_pred_probas.sum(axis=1)
+            y_pred_probas = y_pred_probas / np.array([scaling_coeffs,scaling_coeffs,scaling_coeffs]).T
+            return y_pred_probas
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
