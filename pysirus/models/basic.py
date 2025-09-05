@@ -353,30 +353,6 @@ class SirusMixin:
                 data[3, col] = self._list_implies([nA, nB], curr_rule)
             
         return data
-    def _rules_lefty(self,possible_rules):
-        """
-       
-        """
-        S = []
-        for rules in possible_rules:
-            new_lefty_rules= []
-
-            if len(rules)==1:
-                if rules[0][2]=="R":
-                    new_single_rule = self._reverse(rules[0])
-                else:
-                    new_single_rule = rules[0]
-                new_lefty_rules.append(new_single_rule)
-            else:
-                new_lefty_rules = rules
-            #for single_rule in rules:
-            #    if single_rule[2]=="R":
-            #        new_single_rule = self._reverse(single_rule)
-            #    else:
-            #        new_single_rule = single_rule
-            #    new_lefty_rules.append(new_single_rule)
-            S.append(new_lefty_rules)
-        return S
     def _related_rule(self,curr_rule, relative_rule):
         """
         Check if the current rule is related to relative_rule.
@@ -424,13 +400,11 @@ class SirusMixin:
         ind_max = len(paths)
         ind = 0
         num_rule_temp = 0
-        paths_left = self._rules_lefty(paths)
-        #paths_left = paths
         bool_only_single_rule_in_paths_ftr = True
 
         while num_rule_temp < num_rule and ind < ind_max:
             #**print("**************"*5)
-            curr_path= paths_left[ind]
+            curr_path= paths[ind]
             #**print('Compared ruled paths_left: ',curr_path )
             #**print('Paths: ',paths[ind] )
             #**print('Path ftr: ',paths_ftr)
