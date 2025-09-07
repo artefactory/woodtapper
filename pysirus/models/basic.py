@@ -219,7 +219,7 @@ class SirusMixin:
 
     def generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
-        Uses constraints of a single rule to generatye the associated mask for data set X.
+        Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
 
         Parameters
         ----------
@@ -243,7 +243,10 @@ class SirusMixin:
         )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
     
-    def generate_mask_of_several_rules(self,X,rules):
+    def generate_mask_rule(self,X,rules):
+        """
+        Generate the mask associated to a rule of len >=1.
+        """
         list_mask=[]
         for j in range(len(rules)):
             dimension,treshold,sign = self.from_rules_to_constraint(rule=rules[j])
@@ -364,44 +367,42 @@ class SirusMixin:
         
         if len(relative_rule)==1:
             A = relative_rule[0]
-            if len(curr_rule) == 1:
-                if curr_rule[0][2]=='R':
-                    curr_rule[0] = self._reverse(curr_rule[0])
-                return (curr_rule[0] == A) 
+            if len(curr_rule) == 1: ## Both are len = 1
+                return (curr_rule[0][0]== A[0])  and (curr_rule[0][1]== A[1])
             elif len(curr_rule) == 2:
                 l1,l2 = curr_rule[0], curr_rule[1]
-                if l1[2]=='R':
-                    l1 = self._reverse(l1)
-                if l2[2]=='R':
-                    l2 = self._reverse(l2)
-                return (l1 == A ) or (l2 == A)
+                return ((l1[0]== A[0])  and (l1[1]== A[1])) or ((l1[0]== A[0])  and (l1[1]== A[1]))
             else:
                 raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         else:
             A, B = relative_rule
             if len(curr_rule) == 1:
-                if curr_rule[0][2]=='R':
-                    curr_rule[0] = self._reverse(curr_rule[0])
-                return (curr_rule[0] == A) or (curr_rule[0] == B)
+                return ((curr_rule[0][0]== A[0])  and (curr_rule[0][1]== A[1])) or ((curr_rule[0][0]== B[0])  and (curr_rule[0][1]== B[1]))
             elif len(curr_rule) == 2:
                 l1,l2 = curr_rule[0], curr_rule[1]
-                if l1[2]=='R':
-                    l1 = self._reverse(l1)
-                if l2[2]=='R':
-                    l2 = self._reverse(l2)
-                return (l1 == A or l2 == B) or (l1 == B or l2 == A)
+                return ((l1[0]== A[0])  and (l1[1]== A[1])) or ((l1[0]== B[0])  and (l1[1]== B[1])) or ((l1[0]== A[0])  and (l2[1]== A[1])) or ((l2[0]== B[0])  and (l2[1]== B[1]))
             else:
                 raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         
-    def paths_filter_matrix_2d(self,paths, proba, num_rule):
+    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule,y):
         paths_ftr = []
         proba_ftr = []
         #split_gen = []
         ind_max = len(paths)
         ind = 0
         num_rule_temp = 0
-        bool_only_single_rule_in_paths_ftr = True
-
+        
+        n_samples_indep = 10000
+        data_indep = np.zeros((n_samples_indep, self.array_quantile_.shape[1]), dtype=float)
+        for j in range(self.array_quantile_.shape[1]):
+            np.random.seed(j)
+            elem_low = self.array_quantile_[:,j].min()
+            elem_high = self.array_quantile_[:,j].max()
+            data_indep[:,j]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
+        np.random.seed(self.random_state)
+        #print('data indep : ',data_indep)
+        #print('data indep shape : ',data_indep.shape)
+            
         while num_rule_temp < num_rule and ind < ind_max:
             #**print("**************"*5)
             curr_path= paths[ind]
@@ -426,65 +427,58 @@ class SirusMixin:
                 if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
-                    if len(curr_path)==2:
-                        bool_only_single_rule_in_paths_ftr=False
                 else:
                     rules_ensemble = related_paths_ftr + [curr_path]
                     #**print('rules_ensemble :',rules_ensemble)
-                    if not bool_only_single_rule_in_paths_ftr: ## if they are not only single rules
-                        related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
-                        #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
-                        list_matrix = []
-                        for x in related_paths_ftr:
-                            if len(x)==2:
-                                curr_matrix = self._generate_dependance_matrix(rules_ensemble,x)
-                                #matrix = np.vstack((matrix,curr_matrix)) ## Stack the current matrix with the previous ones
-                                list_matrix.append(curr_matrix)
-                                #**print('curr_matrix :',curr_matrix)
-                        if len(list_matrix) >0:
-                            #**print('list_matrix : ',list_matrix)
-                            # Check if the current rule is redundant with the previous ones trough matrix rank
-                            n_rules_compared = list_matrix[0].shape[1] + 1
-                            #matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
-                            matrix =list_matrix[0]
-                            for j in range(1,len(list_matrix)):
-                                matrix = np.vstack((matrix,list_matrix[j]))
+                    #related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
+                    #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
+                    list_matrix = [[] for i in range(len(rules_ensemble))]
+                    for i,x in enumerate(rules_ensemble):
+                        mask_x = self.generate_mask_rule(X=data_indep,rules=x)
+                        #y_train_rule = y[mask_x]
+                        #y_train_outside_rule = y[~mask_x]
+                        #probas_true = mask_x.sum() / n_samples_indep
+                        #probas_not_true = (~mask_x).sum() / n_samples_indep
+                        #final_col_matrix = np.full((n_samples_indep,),probas_true)
+                        #final_col_matrix[~mask_x]=probas_not_true
+                        #list_matrix[i]=final_col_matrix
+                        list_matrix[i]=mask_x
 
-                            ones_vector = np.ones((len(matrix),1))  # Vector of ones
-                            matrix = np.hstack((matrix,ones_vector))
-                            matrix_rank = np.linalg.matrix_rank(matrix)
-                            #**print('matrix : ',matrix)
-                            #**print('matrix_rank :',matrix_rank)
-                            #if matrix_rank == len(rules_ensemble)+1: ## 1 for the vector with 1e 
-                            if matrix_rank == (n_rules_compared):  
-                                # The current rule is not redundant with the previous ones
-                                paths_ftr.append(curr_path)
-                                proba_ftr.append(proba[ind])
-                                if len(curr_path)==2:
-                                    bool_only_single_rule_in_paths_ftr=False
-                    else:
-                        #**print('aa')
-                        # If they are only single rules, we only need to check if the current rule has a lengh of 2
-                        if len(curr_path) == 2:
-                            #**print('bb')
+                    if len(list_matrix) >0:
+                        #**print('list_matrix : ',list_matrix)
+                        # Check if the current rule is redundant with the previous ones trough matrix rank
+                        matrix = np.array(list_matrix).T
+                        #print('matrix v1: ',matrix)
+                        #print('matrix v1 shape: ',matrix.shape)
+                        #matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
+                        #matrix =list_matrix[0]
+                        #for j in range(1,len(list_matrix)):
+                        #    matrix = np.vstack((matrix,list_matrix[j]))
+
+                        ones_vector = np.ones((len(matrix),1))  # Vector of ones
+                        matrix = np.hstack((matrix,ones_vector))
+                        matrix_rank = np.linalg.matrix_rank(matrix)
+                        #print('matrix : ',matrix)
+                        #print('matrix v2 shape: ',matrix.shape)
+                        #print('matrix_rank :',matrix_rank)
+                        n_rules_compared = len(rules_ensemble)
+                        if matrix_rank == (n_rules_compared) + 1:  
+                            # The current rule is not redundant with the previous ones
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
-                            bool_only_single_rule_in_paths_ftr=False
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 
             else: ## If there are no filtered paths yet
                 paths_ftr.append(curr_path)
                 proba_ftr.append(proba[ind])
-                if len(curr_path)==2:
-                        bool_only_single_rule_in_paths_ftr=False
                 ind += 1
                 num_rule_temp = len(paths_ftr)
         
         return {'paths': paths_ftr, 'proba': proba_ftr}
                  
         
-    def paths_filtering_2d(self,paths, proba, num_rule):
+    def paths_filtering_stochastic(self,paths, proba, num_rule,y):
         """
             Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
             
@@ -499,7 +493,7 @@ class SirusMixin:
         #if len(paths) <= num_rule:
         #    return {'paths': paths, 'proba': proba}
         #else:
-        return self.paths_filter_matrix_2d(paths=paths, proba=proba, num_rule=num_rule)
+        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule,y=y)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
@@ -535,11 +529,11 @@ class SirusMixin:
         #**print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
 
-        #**print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
-        #**print('####'*5)
-        #**print('25 proportions_count_sort : ',proportions_count_sort[:25])
-        #**print('####'*5)
-        res = self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
+        #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
+        #print('####'*5)
+        #print('25 proportions_count_sort : ',proportions_count_sort[:25])
+        #print('####'*5)
+        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25,y=y) ## Maximum number of rule to keep=25
         #**print('after paths_filtering_2d res : ',res['paths'])
         #**print('####'*5)
         self.all_possible_rules_list = res['paths']
@@ -801,7 +795,7 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        #**print('array_quantile : ', array_quantile)
+        #print('array_quantile : ', array_quantile)
 
     #######################################################
     ################## Print rules   ######################
