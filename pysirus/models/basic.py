@@ -630,7 +630,7 @@ class SirusMixin:
         )
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
         if self.type_target != int:
-            y_pred = y_pred_numeric.copy().astype()
+            y_pred = y_pred_numeric.copy().astype(self.type_target)
             for i, cls in zip(self.classes_):
                 y_pred[y_pred_numeric == i] = cls
             return y_pred.ravel().reshape(
