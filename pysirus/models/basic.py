@@ -384,7 +384,7 @@ class SirusMixin:
             else:
                 raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         
-    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule,y):
+    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule,X,y):
         paths_ftr = []
         proba_ftr = []
         #split_gen = []
@@ -396,8 +396,8 @@ class SirusMixin:
         data_indep = np.zeros((n_samples_indep, self.array_quantile_.shape[1]), dtype=float)
         for j in range(self.array_quantile_.shape[1]):
             np.random.seed(j)
-            elem_low = self.array_quantile_[:,j].min()
-            elem_high = self.array_quantile_[:,j].max()
+            elem_low = self.array_quantile_[:,j].min()-1
+            elem_high = self.array_quantile_[:,j].max()+1
             data_indep[:,j]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
         np.random.seed(self.random_state)
         #print('data indep : ',data_indep)
@@ -435,14 +435,16 @@ class SirusMixin:
                     list_matrix = [[] for i in range(len(rules_ensemble))]
                     for i,x in enumerate(rules_ensemble):
                         mask_x = self.generate_mask_rule(X=data_indep,rules=x)
+                        list_matrix[i]=mask_x
+                        #mask_x = self.generate_mask_rule(X=X,rules=x)
+                        #list_matrix[i]=mask_x
                         #y_train_rule = y[mask_x]
                         #y_train_outside_rule = y[~mask_x]
-                        #probas_true = mask_x.sum() / n_samples_indep
-                        #probas_not_true = (~mask_x).sum() / n_samples_indep
-                        #final_col_matrix = np.full((n_samples_indep,),probas_true)
+                        #probas_true = y_train_rule.sum() / len(y_train_rule)
+                        #probas_not_true = y_train_outside_rule.sum() / len(y_train_outside_rule)
+                        #final_col_matrix = np.full((len(y),),probas_true)
                         #final_col_matrix[~mask_x]=probas_not_true
-                        #list_matrix[i]=final_col_matrix
-                        list_matrix[i]=mask_x
+                        #list_matrix[i]=final_col_matrix                        
 
                     if len(list_matrix) >0:
                         #**print('list_matrix : ',list_matrix)
@@ -478,7 +480,7 @@ class SirusMixin:
         return {'paths': paths_ftr, 'proba': proba_ftr}
                  
         
-    def paths_filtering_stochastic(self,paths, proba, num_rule,y):
+    def paths_filtering_stochastic(self,paths, proba, num_rule,X,y):
         """
             Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
             
@@ -493,12 +495,12 @@ class SirusMixin:
         #if len(paths) <= num_rule:
         #    return {'paths': paths, 'proba': proba}
         #else:
-        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule,y=y)
+        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule,X=X,y=y)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
 
-    def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
+    def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -533,7 +535,7 @@ class SirusMixin:
         #print('####'*5)
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
         #print('####'*5)
-        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25,y=y) ## Maximum number of rule to keep=25
+        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25,X=X,y=y) ## Maximum number of rule to keep=25
         #**print('after paths_filtering_2d res : ',res['paths'])
         #**print('####'*5)
         self.all_possible_rules_list = res['paths']
@@ -544,6 +546,9 @@ class SirusMixin:
         # list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
+        if sample_weight is  None:
+            sample_weight = np.full((len(y),),1)## vector of ones
+
         for current_rules in self.all_possible_rules_list:
             # for loop for getting all the values in train (X) passing the rules
             list_mask = []
@@ -558,8 +563,10 @@ class SirusMixin:
                 )  # I do it on X and not on X_bin
                 list_mask.append(mask)
             final_mask = reduce(and_, list_mask)
-            y_train_rule = y[final_mask]
-            y_train_outside_rule = y[~final_mask]
+            y_train_rule = y[final_mask] 
+            y_train_outside_rule = y[~final_mask] * sample_weight[~final_mask]
+            sample_weight_rule = sample_weight[final_mask]
+            sample_weight_outside_rule = sample_weight[~final_mask]
 
             list_probas = []
             list_probas_outside_rules = []
@@ -567,13 +574,13 @@ class SirusMixin:
                 if len(y_train_rule) == 0:
                     curr_probas = 0
                 else:
-                    curr_probas = len(y_train_rule[y_train_rule == cl]) / len(
-                        y_train_rule
-                    )
+                    curr_probas = sample_weight_rule[y_train_rule == cl].sum() / sample_weight_rule.sum()
+                if len(y_train_outside_rule) == 0:
+                    curr_probas_outside_rules = 0
+                else:
+                    curr_probas_outside_rules = sample_weight_outside_rule[y_train_outside_rule == cl].sum() / sample_weight_outside_rule.sum()
+    
                 list_probas.append(curr_probas)
-                curr_probas_outside_rules = len(
-                    y_train_outside_rule[y_train_outside_rule == cl]
-                ) / len(y_train_outside_rule)
                 list_probas_outside_rules.append(curr_probas_outside_rules)
 
             # list_mask_by_rules.append(final_mask) # uselesss
@@ -644,7 +651,7 @@ class SirusMixin:
     #######################################################
     ############# Regressor fit and predict  ##############
     #######################################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,batch_size_post_treatment=None):
+    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
