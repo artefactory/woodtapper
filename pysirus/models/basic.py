@@ -312,26 +312,13 @@ class SirusMixin:
             elem_high = self.array_quantile_[:,j].max()+1
             data_indep[:,j]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
         np.random.seed(self.random_state)
-        #print('data indep : ',data_indep)
-        #print('data indep shape : ',data_indep.shape)
             
         while num_rule_temp < num_rule and ind < ind_max:
-            #**print("**************"*5)
             curr_path= paths[ind]
-            #**print('Compared ruled paths_left: ',curr_path )
-            #**print('Paths: ',paths[ind] )
-            #**print('Path ftr: ',paths_ftr)
-            
             if curr_path in paths_ftr: ## Avoid duplicates
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 continue
-            #elif len(paths_ftr) == 1: ## If there are no filtered paths yet
-            #    if len(curr_path)==1 and len(paths_ftr[0])==1 and (self._related_rule(curr_path, paths_ftr[0])):
-            #        paths_ftr.append(curr_path)
-            #        ind += 1
-            #        num_rule_temp = len(paths_ftr)
-            #        continue
             elif len(paths_ftr) != 0: ## If there are already filtered paths
                 list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
                 related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
@@ -341,40 +328,18 @@ class SirusMixin:
                     proba_ftr.append(proba[ind])
                 else:
                     rules_ensemble = related_paths_ftr + [curr_path]
-                    #**print('rules_ensemble :',rules_ensemble)
                     #related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
-                    #matrix = self._generate_dependance_matrix(rules_ensemble,related_paths_ftr[0])
                     list_matrix = [[] for i in range(len(rules_ensemble))]
                     for i,x in enumerate(rules_ensemble):
                         mask_x = self.generate_mask_rule(X=data_indep,rules=x)
-                        list_matrix[i]=mask_x
-                        #mask_x = self.generate_mask_rule(X=X,rules=x)
-                        #list_matrix[i]=mask_x
-                        #y_train_rule = y[mask_x]
-                        #y_train_outside_rule = y[~mask_x]
-                        #probas_true = y_train_rule.sum() / len(y_train_rule)
-                        #probas_not_true = y_train_outside_rule.sum() / len(y_train_outside_rule)
-                        #final_col_matrix = np.full((len(y),),probas_true)
-                        #final_col_matrix[~mask_x]=probas_not_true
-                        #list_matrix[i]=final_col_matrix                        
+                        list_matrix[i]=mask_x                       
 
                     if len(list_matrix) >0:
-                        #**print('list_matrix : ',list_matrix)
                         # Check if the current rule is redundant with the previous ones trough matrix rank
                         matrix = np.array(list_matrix).T
-                        #print('matrix v1: ',matrix)
-                        #print('matrix v1 shape: ',matrix.shape)
-                        #matrix = np.array(list_matrix).reshape(-1,n_rules_compared)
-                        #matrix =list_matrix[0]
-                        #for j in range(1,len(list_matrix)):
-                        #    matrix = np.vstack((matrix,list_matrix[j]))
-
                         ones_vector = np.ones((len(matrix),1))  # Vector of ones
                         matrix = np.hstack((matrix,ones_vector))
                         matrix_rank = np.linalg.matrix_rank(matrix)
-                        #print('matrix : ',matrix)
-                        #print('matrix v2 shape: ',matrix.shape)
-                        #print('matrix_rank :',matrix_rank)
                         n_rules_compared = len(rules_ensemble)
                         if matrix_rank == (n_rules_compared) + 1:  
                             # The current rule is not redundant with the previous ones
@@ -392,7 +357,7 @@ class SirusMixin:
         return {'paths': paths_ftr, 'proba': proba_ftr}
                  
         
-    def paths_filtering_stochastic(self,paths, proba, num_rule,X,y):
+    def paths_filtering_stochastic(self,paths, proba, num_rule):
         """
             Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
             
@@ -431,16 +396,10 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > p0
         ).sum()  ## not necssary to sort proportions_count...
-        #all_possible_rules_list = [
-        #    all_possible_rules_list[i]
-        #    for i in proportions_count_sort_indices[:n_rules_to_keep]
-        #]#all possible rules reindexed 
         all_possible_rules_list = [
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
-
-        #**print('n_rules before post-treatment : ', len(all_possible_rules_list))
         #### APPLY POST TREATMEANT : remove redundant rules
 
         #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
@@ -448,12 +407,8 @@ class SirusMixin:
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
         #print('####'*5)
         res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
-        #**print('after paths_filtering_2d res : ',res['paths'])
-        #**print('####'*5)
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
-        #print('After all_possible_rules_list',res['paths'])
-        #print('n_rules after post-treatment : ', self.n_rules)
 
         # list_mask_by_rules = []
         list_probas_by_rules = []
@@ -714,7 +669,6 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        #print('array_quantile : ', array_quantile)
 
     #######################################################
     ################## Print rules   ######################
