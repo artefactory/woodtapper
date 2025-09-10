@@ -384,7 +384,17 @@ class SirusMixin:
             else:
                 raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
         
-    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule,X,y):
+    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule):
+        """
+            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+            Args:
+                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+                proba (list): Probabilities associated with each path/rule
+                num_rule (int): Max number of rules to keep
+            Returns:
+                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+
+        """
         paths_ftr = []
         proba_ftr = []
         #split_gen = []
@@ -495,7 +505,7 @@ class SirusMixin:
         #if len(paths) <= num_rule:
         #    return {'paths': paths, 'proba': proba}
         #else:
-        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule,X=X,y=y)
+        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule)
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
@@ -535,7 +545,7 @@ class SirusMixin:
         #print('####'*5)
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
         #print('####'*5)
-        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25,X=X,y=y) ## Maximum number of rule to keep=25
+        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
         #**print('after paths_filtering_2d res : ',res['paths'])
         #**print('####'*5)
         self.all_possible_rules_list = res['paths']
