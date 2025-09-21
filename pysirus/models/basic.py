@@ -643,6 +643,10 @@ class SirusMixin:
     #######################################################
 
     def fit_main_classifier(self, X, y, quantile=10, sample_weight=None,to_not_binarize_colindex=None):
+        """
+        fit method for SirusMixin. 
+        
+        """
         if to_not_binarize_colindex is None:
             X_bin = X.copy()
             list_quantile = [
