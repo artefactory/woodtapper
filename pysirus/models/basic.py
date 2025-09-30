@@ -559,9 +559,13 @@ class SirusMixin:
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
+        if len(all_possible_rules_list)==0:
+            raise ValueError("No rule found with the given p0 value. Try to decrease it.")
 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25        self.all_possible_rules_list = res['paths']
+        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25        
+        self.all_possible_rules_list = res['paths']
+        self.all_possible_rules_frequency_list = res['proba']
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
