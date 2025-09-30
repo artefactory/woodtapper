@@ -297,6 +297,7 @@ class SirusMixin:
 
     def _related_rule(self,curr_rule, relative_rule):
         """
+        !!!!!!! NOT USED CURRENTLY  !!!!!
         Check if two rules are related (i.e. share at least one single rule).
         Parameters
         ----------
@@ -405,9 +406,6 @@ class SirusMixin:
             Returns:
                 dict: {'paths': filtered_paths, 'proba': filtered_proba}
         """
-        #if len(paths) <= num_rule:
-        #    return {'paths': paths, 'proba': proba}
-        #else:
         return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule)
     #######################################################
     ############ Classification fit and predict  ##########
@@ -436,9 +434,10 @@ class SirusMixin:
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
-        print('proportions_count_sort : ',proportions_count_sort)
         proportions_count_sort = proportions_count_sort[:n_rules_to_keep]
-        print('proportions_count_sort : ',proportions_count_sort)
+        if len(all_possible_rules_list)==0:
+            raise ValueError("No rule found with the given p0 value. Try to decrease it.")
+        
         #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         #print('####'*5)
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
