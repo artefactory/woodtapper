@@ -206,43 +206,7 @@ class SirusMixin:
                         all_paths_list.extend(list_sub_path)
         return all_paths_list
 
-    def from_rules_to_constraint(self, rule):
-        """
-        Extract informations from a single rule.
-        Auxiliar function for  generate_single_rule_mask.
-
-        Parameters
-        ----------
-        rule : tuple
-            A single rule (dimension, treshold, sign)
-
-        Returns
-        ----------
-        dimension : int
-            The feature indice of the rule.
-        treshold : float
-            The treshold of the rule.
-        sign : str
-            The sign of the rule ('L' for less or equal and 'R' for greater)
-        """
-        dimension = rule[0]
-        treshold = rule[1]
-        sign = rule[2]
-        return dimension, treshold, sign
-
-    def generate_single_rule_mask(self, X, dimension, treshold, sign):
-        """
-        Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
-
-        Parameters
-        ----------
-        """
-        if sign == "L":
-            return X[:, dimension] <= treshold  # .mean()
-        else:
-            return X[:, dimension] > treshold  # .mean()
-
-
+    
     def extract_single_tree_rules(self, tree):
         """
         Extract all possible rules (single and multiple) from a single tree.
@@ -269,9 +233,55 @@ class SirusMixin:
         )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
     
+    def generate_single_rule_mask(self, X, dimension, treshold, sign):
+        """
+        Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
+
+        Parameters
+        ----------
+        """
+        if sign == "L":
+            return X[:, dimension] <= treshold  # .mean()
+        else:
+            return X[:, dimension] > treshold  # .mean()
+        
+    def from_rules_to_constraint(self, rule):
+        """
+        Extract informations from a single rule.
+        Auxiliar function for  generate_single_rule_mask.
+
+        Parameters
+        ----------
+        rule : tuple
+            A single rule (dimension, treshold, sign)
+
+        Returns
+        ----------
+        dimension : int
+            The feature indice of the rule.
+        treshold : float
+            The treshold of the rule.
+        sign : str
+            The sign of the rule ('L' for less or equal and 'R' for greater)
+        """
+        dimension = rule[0]
+        treshold = rule[1]
+        sign = rule[2]
+        return dimension, treshold, sign
+    
     def generate_mask_rule(self,X,rules):
         """
         Generate the mask associated to a rule of len >=1.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        rules : list of tuples
+            A rule (list of single rules).
+        Returns
+        ----------
+        final_mask : array-like, shape (n_samples,)
+            Boolean mask indicating which samples satisfy the rule.
         """
         list_mask=[]
         for j in range(len(rules)):
@@ -282,15 +292,19 @@ class SirusMixin:
         return final_mask
     
 
-            
-        return data
     def _related_rule(self,curr_rule, relative_rule):
         """
-        Check if the current rule is related to relative_rule.
-        Args:
-            curr_rule (tuple): Current rule to check.
-            A (tuple): First single rule.
-            B (tuple): Second single rule.
+        Check if two rules are related (i.e. share at least one single rule).
+        Parameters
+        ----------
+        curr_rule : list of tuples
+            The current rule to check.  
+        relative_rule : list of tuples
+            The rule to compare with.
+        Returns
+        ----------
+        bool
+            True if the two rules are related, False otherwise.
         """
         
         if len(relative_rule)==1:
@@ -314,14 +328,7 @@ class SirusMixin:
         
     def paths_filtering_matrix_stochastic(self,paths, proba, num_rule):
         """
-            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
-            Args:
-                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
-                proba (list): Probabilities associated with each path/rule
-                num_rule (int): Max number of rules to keep
-            Returns:
-                dict: {'paths': filtered_paths, 'proba': filtered_proba}
-
+        Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         """
         paths_ftr = []
         proba_ftr = []
