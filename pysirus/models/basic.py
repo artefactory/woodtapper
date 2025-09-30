@@ -353,9 +353,9 @@ class SirusMixin:
                 num_rule_temp = len(paths_ftr)
                 continue
             elif len(paths_ftr) != 0: ## If there are already filtered paths
-                list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
-                related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
-                #**print('related_paths_ftr :',related_paths_ftr)
+                #list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
+                #related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
+                related_paths_ftr = paths_ftr # We comlpare the new rule to all the previous ones already selected.
                 if len(related_paths_ftr) == 0: ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
@@ -433,12 +433,12 @@ class SirusMixin:
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
-        #### APPLY POST TREATMEANT : remove redundant rules
-
         #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         #print('####'*5)
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
         #print('####'*5)
+
+        #### APPLY POST TREATMEANT : remove redundant rules
         res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
