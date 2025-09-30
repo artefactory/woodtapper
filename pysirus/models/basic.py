@@ -451,19 +451,7 @@ class SirusMixin:
 
         for current_rules in self.all_possible_rules_list:
             # for loop for getting all the values in train (X) passing the rules
-            list_mask = []
-            for j in range(
-                len(current_rules)
-            ):  ## iteraation on each signle rule of the potentail multiple rule
-                dimension, treshold, sign = self.from_rules_to_constraint(
-                    rule=current_rules[j]
-                )
-                mask = self.generate_single_rule_mask(
-                    X=X, dimension=dimension, treshold=treshold, sign=sign
-                )  # I do it on X and not on X_bin
-                list_mask.append(mask)
-            final_mask = reduce(and_, list_mask)
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
             y_train_rule = y[final_mask] 
             y_train_outside_rule = y[~final_mask] * sample_weight[~final_mask]
             sample_weight_rule = sample_weight[final_mask]
@@ -500,20 +488,7 @@ class SirusMixin:
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            list_mask = []
-            for j in range(
-                len(current_rules)
-            ):  ## iteration on each signle rule of the potentail multiple rule
-                dimension, treshold, sign = self.from_rules_to_constraint(
-                    rule=current_rules[j]
-                )
-                mask = self.generate_single_rule_mask(
-                    X=X, dimension=dimension, treshold=treshold, sign=sign
-                )  # I do it on X and not on X_bin
-                list_mask.append(mask)
-            final_mask = reduce(
-                and_, list_mask
-            )  ## test samples that verify the current multiple rule
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
             y_pred_probas[final_mask] += self.list_probas_by_rules[
                 indice
             ]  ## add the asociated rule probability
@@ -575,10 +550,9 @@ class SirusMixin:
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
+
         #### APPLY POST TREATMEANT : remove redundant rules
-        #res = self.paths_filter_2depth(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
-        res=self.paths_filtering_2d(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25)
-        self.all_possible_rules_list = res['paths']
+        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25        self.all_possible_rules_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
@@ -588,18 +562,7 @@ class SirusMixin:
             self.all_possible_rules_list
         ):
             # for loop for getting all the values in train (X) passing the rules
-            list_mask = []
-            for j in range(
-                len(current_rules)
-            ):  ## iteraation on each signle rule of the potentail multiple rule
-                dimension, treshold, sign = self.from_rules_to_constraint(
-                    rule=current_rules[j]
-                )
-                mask = self.generate_single_rule_mask(
-                    X=X, dimension=dimension, treshold=treshold, sign=sign
-                )  # I do it on X and not on X_bin
-                list_mask.append(mask)
-            final_mask = reduce(and_, list_mask)
+            final_mask = self.generate_mask_rule(X=X,rules=rule_number) #On X and not on X_bin ???,
             y_train_rule = y[final_mask]
             y_train_outside_rule = y[~final_mask]
 
@@ -618,7 +581,6 @@ class SirusMixin:
 
             gamma_array[final_mask, rule_number ] = output_value
             gamma_array[ ~final_mask, rule_number] = output_outside_value
-
             # list_mask_by_rules.append(final_mask) # uselesss
 
         # self.list_mask_by_rules = list_mask_by_rules
@@ -642,30 +604,15 @@ class SirusMixin:
         """
         predict_proba method for SirusMixin.
         """
-        # y_pred = np.zeros((len(X),self.n_classes_))
         gamma_array = np.zers((X.shape[0], self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            list_mask = []
-            for j in range(
-                len(current_rules)
-            ):  ## iteration on each signle rule of the potentail multiple rule
-                dimension, treshold, sign = self.from_rules_to_constraint(
-                    rule=current_rules[j]
-                )
-                mask = self.generate_single_rule_mask(
-                    X=X, dimension=dimension, treshold=treshold, sign=sign
-                )  # I do it on X and not on X_bin
-                list_mask.append(mask)
-            final_mask = reduce(
-                and_, list_mask
-            )  ## test samples that verify the current multiple rule
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
             gamma_array[indice, final_mask] = self.list_output_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
                 gamma_array[indice, final_mask] = self.list_output_outside_by_rules[
                     indice
                 ]
-
         ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
         gamma_array = np.hstack((gamma_array,ones_vector))
         y_pred = self.ridge.predict(gamma_array)
