@@ -10,6 +10,8 @@ from sklearn.utils._param_validation import StrOptions
 
 from pysirus.models.basic import SirusMixin
 
+from sklearn.linear_model import Ridge,RidgeCV,MultiTaskLassoCV
+
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     """
     SIRUS class applied with a DecisionTreeClassifier
@@ -338,7 +340,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
+    
     def fit(self, X, y, p0=0.0, quantile=10, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, quantile, sample_weight)
         all_possible_rules_list = []
@@ -347,8 +349,30 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             dtree = self.estimators_[i,0]  
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        #self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
         self.fit_forest_rules(X, y, all_possible_rules_list, p0,sample_weight)
+        array_probas_by_rules = np.array(self.list_probas_by_rules)
+        array_probas_outside_by_rules = np.array(self.list_probas_outside_by_rules)
+        print('array_probas_by_rules shape : ', array_probas_by_rules.shape)
+        gamma_array = np.zeros((X.shape[0], 2*self.n_rules))
+        for indice in range(self.n_rules):
+            current_rules = self.all_possible_rules_list[indice]
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
+            gamma_array[final_mask,indice] = 1
+            gamma_array[ ~final_mask,indice+self.n_rules] = 1  ## NOT the current rule
+        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array,ones_vector))
+        self.ridge = RidgeCV(
+            alphas=np.arange(0.01,1,0.1),cv=5,scoring='neg_mean_squared_error', fit_intercept=True,
+        )
+        #self.ridge = MultiTaskLassoCV(
+        #    alphas=np.arange(0.01,1,0.1),cv=5, fit_intercept=True,
+        #)
+        from sklearn.preprocessing import OneHotEncoder
+        self.enc = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+        y_enc = self.enc.fit_transform(y.reshape(-1, 1))
+        self.ridge.fit(gamma_array, y_enc,sample_weight=sample_weight)
+
+        
         M = self.n_estimators
         list_p0 = np.arange(0.1,1,0.08)
         list_epsilon = []
@@ -359,6 +383,19 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             epsilon = epsilon_numerator/epsilon_denominator if epsilon_denominator>0 else 0
             list_epsilon.append(epsilon)
         print('***** \n Stability criterion value:', np.mean(list_epsilon), '\n*****')
+
+    def predict_proba(self, X, to_add_probas_outside_rules=True):
+        gamma_array = np.zeros((X.shape[0], 2*self.n_rules))
+        for indice in range(self.n_rules):
+            current_rules = self.all_possible_rules_list[indice]
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
+            gamma_array[final_mask,indice] = 1
+            gamma_array[ ~final_mask,indice+self.n_rules] = 1 ## NOT the current rule
+        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array,ones_vector))
+        y_pred_enc = self.ridge.predict(gamma_array)
+        #y_pred = self.enc.inverse_transform(y_pred_enc)
+        return y_pred_enc
 
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
