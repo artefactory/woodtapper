@@ -3,6 +3,7 @@ from operator import and_
 from math import isclose
 
 import numpy as np
+from scipy.stats import binom
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
@@ -32,7 +33,10 @@ class Node:
        Current  Node id
     children : list of Node
         Child Nodes if not a leaf node
-
+    Returns
+    ----------
+    Node: Node
+        The current Node instance
     """
 
     def __init__(self, feature=None, treshold=-1, side=None, node_id=-1, *children):
@@ -441,6 +445,7 @@ class SirusMixin:
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res['paths']
+        self.all_possible_rules_frequency_list = res['paths']
         self.n_rules = len(self.all_possible_rules_list)
 
         # list_mask_by_rules = []
@@ -480,6 +485,9 @@ class SirusMixin:
         self.list_probas_by_rules = list_probas_by_rules
         self.list_probas_outside_by_rules = list_probas_outside_by_rules
         self.type_target = y.dtype
+
+        
+        
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         """
