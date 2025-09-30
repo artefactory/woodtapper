@@ -156,12 +156,17 @@ class SirusMixin:
     def generate_all_possible_rules_(self, tree_structure):
         """
         Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
-
+        Auxiliar function for extract_single_tree_rules.
+        
         Parameters
         ----------
-
+        tree_structure : list
+            list of longest paths, i.e a list of rules that all starts FROM root node TO a leaf
+            
         Returns
         ----------
+        all_paths_list : list
+            List of all possible rules (single and multiple) extracted from the tree.
         """
         all_paths_list = []
         for i in range(len(tree_structure)):
@@ -208,9 +213,17 @@ class SirusMixin:
 
         Parameters
         ----------
+        rule : tuple
+            A single rule (dimension, treshold, sign)
 
         Returns
         ----------
+        dimension : int
+            The feature indice of the rule.
+        treshold : float
+            The treshold of the rule.
+        sign : str
+            The sign of the rule ('L' for less or equal and 'R' for greater)
         """
         dimension = rule[0]
         treshold = rule[1]
@@ -232,7 +245,20 @@ class SirusMixin:
 
     def extract_single_tree_rules(self, tree):
         """
-        Fit method for SirusMixin.
+        Extract all possible rules (single and multiple) from a single tree.
+        Parameters
+        ----------
+        tree : sklearn DecisionTree instance
+            The tree from which to extract rules.
+        Returns
+        ----------
+        all_possible_rules_list : list
+            List of all possible rules (single and multiple) extracted from the tree.
+        1. Explore the tree structure and create Node instances.
+        2. Generate the tree structure with Node instances.
+        3. Explore the tree structure to extract the longest rules (rules from root to a leaf).
+        4. Generate all possible rules (single and multiple) from the tree structure.
+        5. Return the list of all possible rules.
         """
         root = self.explore_tree_(0, "Root", tree)  ## Root node
         tree_structure = self.construct_longest_paths_(
