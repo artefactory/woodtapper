@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import binom
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, RandomForestRegressor
 from sklearn.ensemble._forest import ForestClassifier,ForestRegressor
@@ -136,6 +137,17 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
         self.fit_forest_rules(X, y, all_possible_rules_list, p0,sample_weight)
+        #Compute stability criterion:
+        M = self.n_estimators
+        list_p0 = np.arange(0.1,1,0.08)
+        list_epsilon = []
+        print('Computing stability criterion...')
+        for p0_curr in list_p0:
+            epsilon_numerator = np.sum([binom.cdf(k=p0_curr*M,n=M,p=pm) * (1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
+            epsilon_denominator =  np.sum([(1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
+            epsilon = epsilon_numerator/epsilon_denominator if epsilon_denominator>0 else 0
+            list_epsilon.append(epsilon)
+        print('***** \n Stability criterion value:', np.mean(list_epsilon), '\n*****')
 
 
 ######### Regressor ############
@@ -337,6 +349,16 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
         #self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,batch_size_post_treatment)
         self.fit_forest_rules(X, y, all_possible_rules_list, p0,sample_weight)
+        M = self.n_estimators
+        list_p0 = np.arange(0.1,1,0.08)
+        list_epsilon = []
+        print('Computing stability criterion...')
+        for p0_curr in list_p0:
+            epsilon_numerator = np.sum([binom.cdf(k=p0_curr*M,n=M,p=pm) * (1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
+            epsilon_denominator =  np.sum([(1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
+            epsilon = epsilon_numerator/epsilon_denominator if epsilon_denominator>0 else 0
+            list_epsilon.append(epsilon)
+        print('***** \n Stability criterion value:', np.mean(list_epsilon), '\n*****')
 
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
