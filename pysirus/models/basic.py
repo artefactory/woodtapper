@@ -3,7 +3,6 @@ from operator import and_
 from math import isclose
 
 import numpy as np
-from scipy.stats import binom
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
@@ -422,7 +421,7 @@ class SirusMixin:
             all_possible_rules_list_str, return_counts=True, return_index=True
         )  # get the unique rules and count
         proportions_count = count_rules / len(
-            count_rules
+            all_possible_rules_list_str
         )  # Get frequency of each rules
         proportions_count_sort = -np.sort(
             -proportions_count
@@ -432,11 +431,14 @@ class SirusMixin:
         )  # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (
             proportions_count_sort > p0
-        ).sum()  ## not necssary to sort proportions_count...
+        ).sum()  
         all_possible_rules_list = [
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
         ]#all possible rules reindexed 
+        print('proportions_count_sort : ',proportions_count_sort)
+        proportions_count_sort = proportions_count_sort[:n_rules_to_keep]
+        print('proportions_count_sort : ',proportions_count_sort)
         #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
         #print('####'*5)
         #print('25 proportions_count_sort : ',proportions_count_sort[:25])
@@ -445,7 +447,7 @@ class SirusMixin:
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res['paths']
-        self.all_possible_rules_frequency_list = res['paths']
+        self.all_possible_rules_frequency_list = res['proba']
         self.n_rules = len(self.all_possible_rules_list)
 
         # list_mask_by_rules = []
