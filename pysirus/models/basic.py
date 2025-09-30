@@ -515,8 +515,19 @@ class SirusMixin:
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin.
+        predict_proba method for SirusMixin.    
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        to_add_probas_outside_rules : bool, optional (default=True)
+            Whether to include probabilities from samples not satisfying the rules.
+        Returns
+        ----------
+        y_pred : array-like, shape (n_samples,)
+            The predicted classes for each sample.
         """
+        print('SIRUSMixin predict')
         y_pred_probas = self.predict_proba(
             X=X, to_add_probas_outside_rules=to_add_probas_outside_rules
         )
@@ -536,7 +547,7 @@ class SirusMixin:
     #######################################################
     ############# Regressor fit and predict  ##############
     #######################################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0):
+    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -575,7 +586,7 @@ class SirusMixin:
             self.all_possible_rules_list
         ):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self.generate_mask_rule(X=X,rules=rule_number) #On X and not on X_bin ???,
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
             y_train_rule = y[final_mask]
             y_train_outside_rule = y[~final_mask]
 
@@ -603,27 +614,27 @@ class SirusMixin:
 
         ## final predictor fitting :
         #self.ridge = Ridge(
-        #    alpha=1, fit_intercept=True, positive=True, random_state=self.random_state
+        #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         #)
         self.ridge = RidgeCV(
             alphas=np.arange(0.01,1,0.1),cv=5,scoring='neg_mean_squared_error', fit_intercept=True,
         )
         ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
         gamma_array = np.hstack((gamma_array,ones_vector))
-        self.ridge.fit(gamma_array, y)
+        self.ridge.fit(gamma_array, y,sample_weight=sample_weight)
         # self.gamma_array = gamma_array
 
     def predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
         predict_proba method for SirusMixin.
         """
-        gamma_array = np.zers((X.shape[0], self.n_rules))
+        gamma_array = np.zeros((X.shape[0], self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
             final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
-            gamma_array[indice, final_mask] = self.list_output_by_rules[indice]
+            gamma_array[final_mask,indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                gamma_array[indice, final_mask] = self.list_output_outside_by_rules[
+                gamma_array[ ~final_mask,indice] = self.list_probas_outside_by_rules[
                     indice
                 ]
         ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
@@ -673,6 +684,13 @@ class SirusMixin:
     #######################################################
 
     def print_rules(self, max_rules=10):
+        """
+        Print the rules in a human-readable format.
+        Parameters
+        ----------
+        max_rules : int, optional (default=10)
+            The maximum number of rules to print.
+        """
         if self.feature_names_in_ is None:
             self.feature_names_in_ = np.arange(self.n_features_in_)
         for indice in range(max_rules):
@@ -690,6 +708,15 @@ class SirusMixin:
                 print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
     
     def show_rules(self, max_rules=9, target_class_index=1):
+        """
+        Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
+        Parameters
+        ----------
+        max_rules : int, optional (default=9)
+            The maximum number of rules to display.
+            target_class_index : int, optional (default=1)
+            The index of the target class for which to display probabilities.
+        """
         if not hasattr(self, 'all_possible_rules_list') or \
            not hasattr(self, 'list_probas_by_rules') or \
            not hasattr(self, 'list_probas_outside_by_rules'):
