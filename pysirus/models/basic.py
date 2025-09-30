@@ -463,6 +463,7 @@ class SirusMixin:
                 )  # I do it on X and not on X_bin
                 list_mask.append(mask)
             final_mask = reduce(and_, list_mask)
+            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin
             y_train_rule = y[final_mask] 
             y_train_outside_rule = y[~final_mask] * sample_weight[~final_mask]
             sample_weight_rule = sample_weight[final_mask]
