@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 
 
-def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid=np.linspace(0.01, 0.05, 15),verbose=0):
+def get_rules_grid_p0(clf,X_train,y_train,quantile=10,p0_exploration_grid=np.linspace(0.01, 0.05, 15),verbose=0):
     """
     From grdi of pO values (p0_exploration_grid), compute the associated number of rules.
     """
@@ -24,8 +24,7 @@ def get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid=np.linspace(0.01, 
             sirus_model_explore = clf
             sirus_model_explore.fit(
                 X_train, y_train,
-                quantile=10,                      
-                batch_size_post_treatment=50,     
+                quantile=quantile,                        
                 p0=p0_val
             )
 
@@ -96,7 +95,7 @@ def get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=0):
 
 def train_optimal_extractor_p0(clf,X_train,y_train,quantile,scoring,scoring_on_probas=True,p0_exploration_grid=np.linspace(0.01, 0.05, 15),n_cv_splits=5,n_cv_repeats=5):
     # --- Tuning Configuration ---
-    results_exploration_df = get_rules_grid_p0(clf,X_train,y_train,p0_exploration_grid)
+    results_exploration_df = get_rules_grid_p0(clf,X_train,y_train,quantile,p0_exploration_grid)
     p0_grid = get_grid_nrules(results_exploration_df,n_rules_max=25,verbose=1) 
     p0_results_list = []
 
@@ -123,7 +122,6 @@ def train_optimal_extractor_p0(clf,X_train,y_train,quantile,scoring,scoring_on_p
                     sirus_model.fit(
                         X_fold_train, y_fold_train,
                         quantile=quantile,
-                        batch_size_post_treatment=50,
                         p0=p0_val
                     )
 
@@ -198,7 +196,7 @@ def train_optimal_extractor_p0(clf,X_train,y_train,quantile,scoring,scoring_on_p
             print("\nRetraining final model with optimal p0 on full training data...")
             final_sirus_model = clf
             final_sirus_model.fit(
-                X_train, y_train, quantile=10, batch_size_post_treatment=50, p0=optimal_p0
+                X_train, y_train, quantile=quantile, p0=optimal_p0
             )
             print("Final model trained.")
             return final_sirus_model

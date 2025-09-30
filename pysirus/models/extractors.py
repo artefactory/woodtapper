@@ -169,8 +169,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
-    ----------
-
+    Used for GradientBoostingClassifier in SirusGBClassifier
     """
 
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
@@ -180,8 +179,14 @@ class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
 
 class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
     """
-    SIRUS class applied with a RandomForestClassifier
-
+    Class for rules extraction from  a GradientBoostingClassifier
+    Parameters
+    ----------
+    splitter : {"best", "random", "quantile"}, default="quantile"
+        The strategy used to choose the split at each node. Supported strategies
+        are "best" to choose the best split and "random" to choose the best random
+        split. "quantile" is similar to "best" but the split point is chosen to
+        be a a value in the training set and not the beetween to values as for best and random.
     """
 
     _parameter_constraints: dict = {**GradientBoostingClassifier._parameter_constraints}
@@ -407,7 +412,3 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
         self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,sample_weight)
-
-
-# TODO : filter redundant rules
-# TODO : CV for ridge regressor ?
