@@ -419,7 +419,7 @@ class SirusMixin:
             all_possible_rules_list_str, return_counts=True, return_index=True
         )  # get the unique rules and count
         proportions_count = count_rules / len(
-            all_possible_rules_list_str
+            unique_str_rules
         )  # Get frequency of each rules
         proportions_count_sort = -np.sort(
             -proportions_count
