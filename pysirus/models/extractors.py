@@ -19,11 +19,47 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     ----------
 
     """
+    def __init__(
+        self,
+        *,
+        criterion="gini",
+        splitter="best",
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        min_weight_fraction_leaf=0.0,
+        max_features=None,
+        random_state=None,
+        max_leaf_nodes=None,
+        min_impurity_decrease=0.0,
+        class_weight=None,
+        ccp_alpha=0.0,
+        monotonic_cst=None,
+        p0=0.01,
+        quantile=10,
+    ):
+        super().__init__(
+            criterion=criterion,
+            splitter=splitter,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            max_leaf_nodes=max_leaf_nodes,
+            class_weight=class_weight,
+            random_state=random_state,
+            min_impurity_decrease=min_impurity_decrease,
+            monotonic_cst=monotonic_cst,
+            ccp_alpha=ccp_alpha,
+        )
+        self.p0=p0
+        self.quantile=quantile
 
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
-    def fit(self, X, y, p0=0.01, quantile=10, sample_weight=None, check_input=True):
+    def fit(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
 
         Parameters
@@ -52,10 +88,11 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
-        self.fit_main_classifier(X, y, quantile, sample_weight)
+        print(self.quantile)
+        self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
-            X, y, all_possible_rules_list, p0, sample_weight
+            X, y, all_possible_rules_list, sample_weight
         )  ## Checker que cx'est bien sur X et non le X_bin
         return self
 
@@ -92,6 +129,8 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         max_samples=None,
         monotonic_cst=None,
         splitter="quantile",
+        p0=0.01,
+        quantile=10,
     ):
         super(ForestClassifier, self).__init__(
             estimator=DecisionTreeClassifier(),
@@ -131,14 +170,16 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.monotonic_cst = monotonic_cst
         self.ccp_alpha = ccp_alpha
         self.splitter = splitter
+        self.p0 = p0
+        self.quantile = quantile
 
-    def fit(self, X, y, p0=0.01, quantile=10, sample_weight=None, check_input=True):
-        self.fit_main_classifier(X, y, quantile, sample_weight)
+    def fit(self, X, y, sample_weight=None, check_input=True):
+        self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0,sample_weight)
+        self.fit_forest_rules(X, y, all_possible_rules_list,sample_weight)
         #Compute stability criterion:
         M = self.n_estimators
         list_p0 = np.arange(0.1,1,0.08)
@@ -167,13 +208,13 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
     def fit_forest_rules_regressor( 
-        self, X, y, p0=0.01, quantile=10, sample_weight=None, check_input=True
+        self, X, y, sample_weight=None, check_input=True
     ): 
         """Build a decision tree classifier from the training set (X, y)."""
-        self.fit_main_classifier(X, y, quantile, sample_weight)
+        self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
-            X, y, all_possible_rules_list, p0
+            X, y, all_possible_rules_list, sample_weight
         )  ## Checker que cx'est bien sur X et non le X_bin
         return self
 
@@ -230,6 +271,8 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         tol=1e-4,
         ccp_alpha=0.0,
         splitter="quantile",
+        p0=0.01,
+        quantile=10,
     ):
         super().__init__(
             loss=loss,
@@ -254,6 +297,8 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             ccp_alpha=ccp_alpha,
         )
         self.splitter = splitter
+        self.p0 = p0
+        self.quantile = quantile
 
     def _fit_stage(
         self,
@@ -341,15 +386,15 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
 
         return raw_predictions
     
-    def fit(self, X, y, p0=0.005, quantile=10, sample_weight=None, check_input=True):
-        self.fit_main_classifier(X, y, quantile, sample_weight)
+    def fit(self, X, y, sample_weight=None, check_input=True):
+        self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
             #print('self.estimators_.shape', self.estimators_.shape)
             dtree = self.estimators_[i,0]  
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, p0,sample_weight)
+        self.fit_forest_rules(X, y, all_possible_rules_list,sample_weight)
         array_probas_by_rules = np.array(self.list_probas_by_rules)
         array_probas_outside_by_rules = np.array(self.list_probas_outside_by_rules)
         gamma_array = np.zeros((X.shape[0], 2*self.n_rules))
@@ -423,6 +468,8 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         max_samples=None,
         monotonic_cst=None,
         splitter="quantile",
+        p0=0.01,
+        quantile=10,
     ):
         super(ForestRegressor, self).__init__(
             estimator=DecisionTreeRegressor(),
@@ -461,12 +508,14 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.ccp_alpha = ccp_alpha
         self.monotonic_cst = monotonic_cst
         self.splitter = splitter
+        self.p0 = p0
+        self.quantile = quantile
 
-    def fit(self, X, y, p0=0.01, quantile=10, sample_weight=None, check_input=True):
-        self.fit_main_classifier(X, y, quantile, sample_weight)
+    def fit(self, X, y, sample_weight=None, check_input=True):
+        self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
             dtree = self.estimators_[i]  
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, p0,sample_weight)
+        self.fit_forest_rules_regressor(X, y, all_possible_rules_list,sample_weight)

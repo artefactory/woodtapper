@@ -411,7 +411,7 @@ class SirusMixin:
     ############ Classification fit and predict  ##########
     #######################################################
 
-    def fit_forest_rules(self, X, y, all_possible_rules_list, p0=0.0,sample_weight=None):
+    def fit_forest_rules(self, X, y, all_possible_rules_list,sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -428,7 +428,7 @@ class SirusMixin:
             -count_rules
         )  # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (
-            proportions_count_sort > p0
+            proportions_count_sort > self.p0
         ).sum()  
         all_possible_rules_list = [
             eval(unique_str_rules[i])
@@ -547,7 +547,7 @@ class SirusMixin:
     #######################################################
     ############# Regressor fit and predict  ##############
     #######################################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list, p0=0.0,sample_weight=None):
+    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list,sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -564,7 +564,7 @@ class SirusMixin:
             -count_rules
         )  # Sort rules coubnt by descending order (same results as proportions)
         n_rules_to_keep = (
-            proportions_count_sort > p0
+            proportions_count_sort > self.p0
         ).sum()  ## not necssary to sort proportions_count...
         all_possible_rules_list = [ 
             eval(unique_str_rules[i])
@@ -647,7 +647,7 @@ class SirusMixin:
     ################ Fit main classiifer   ################
     #######################################################
 
-    def fit_main_classifier(self, X, y, quantile=10, sample_weight=None,to_not_binarize_colindex=None):
+    def fit_main_classifier(self, X, y, sample_weight=None,to_not_binarize_colindex=None):
         """
         fit method for SirusMixin. 
         
@@ -655,8 +655,8 @@ class SirusMixin:
         if to_not_binarize_colindex is None:
             X_bin = X.copy()
             list_quantile = [
-            np.percentile(X_bin, q=i * quantile, axis=0)
-            for i in range(int((100 // quantile) + 1))
+            np.percentile(X_bin, q=i * self.quantile, axis=0)
+            for i in range(int((100 // self.quantile) + 1))
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):
@@ -664,8 +664,8 @@ class SirusMixin:
                 X_bin[:, dim] = array_quantile[out, dim]
         else :
             list_quantile = [
-            np.percentile(X_bin[:,~to_not_binarize_colindex], q=i * quantile, axis=0)
-            for i in range(int((100 // quantile) + 1))
+            np.percentile(X_bin[:,~to_not_binarize_colindex], q=i * self.quantile, axis=0)
+            for i in range(int((100 // self.quantile) + 1))
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):
