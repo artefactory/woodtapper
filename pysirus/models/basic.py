@@ -656,8 +656,8 @@ class SirusMixin:
         if self.to_not_binarize_colindexes is None:
             
             list_quantile = [
-            np.percentile(X_bin, q=i * self.quantile, axis=0)
-            for i in range(int((100 // self.quantile) + 1))
+                np.quantile(X_bin, q=i , axis=0)
+                for i in np.linspace(0,1, self.quantile+1) 
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):
@@ -667,8 +667,8 @@ class SirusMixin:
             categorical = np.zeros((X.shape[1],), dtype=bool)
             categorical[self.to_not_binarize_colindexes] = True
             list_quantile = [
-            np.percentile(X_bin[:,~categorical], q=i * self.quantile, axis=0)
-            for i in range(int((100 // self.quantile) + 1))
+                np.quantile(X_bin[:,~categorical], q=i , axis=0)
+                for i in np.linspace(0,1, self.quantile+1) 
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):

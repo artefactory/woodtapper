@@ -90,7 +90,6 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
-        print(self.quantile)
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
