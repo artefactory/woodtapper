@@ -37,6 +37,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         monotonic_cst=None,
         p0=0.01,
         quantile=10,
+        to_not_binarize_colindexes=None,
     ):
         super().__init__(
             criterion=criterion,
@@ -55,6 +56,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         )
         self.p0=p0
         self.quantile=quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes  # list of indices of columns that are not binarized (for example categorical variables already encoded as integers)
 
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
@@ -131,6 +133,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         splitter="quantile",
         p0=0.01,
         quantile=10,
+        to_not_binarize_colindexes=None,
     ):
         super(ForestClassifier, self).__init__(
             estimator=DecisionTreeClassifier(),
@@ -172,6 +175,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.splitter = splitter
         self.p0 = p0
         self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
@@ -273,6 +277,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         splitter="quantile",
         p0=0.01,
         quantile=10,
+        to_not_binarize_colindexes=None,
     ):
         super().__init__(
             loss=loss,
@@ -299,6 +304,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.splitter = splitter
         self.p0 = p0
         self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
 
     def _fit_stage(
         self,
@@ -470,6 +476,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         splitter="quantile",
         p0=0.01,
         quantile=10,
+        to_not_binarize_colindexes=None,
     ):
         super(ForestRegressor, self).__init__(
             estimator=DecisionTreeRegressor(),
@@ -510,6 +517,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.splitter = splitter
         self.p0 = p0
         self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)

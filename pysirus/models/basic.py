@@ -647,12 +647,12 @@ class SirusMixin:
     ################ Fit main classiifer   ################
     #######################################################
 
-    def fit_main_classifier(self, X, y, sample_weight=None,to_not_binarize_colindex=None):
+    def fit_main_classifier(self, X, y, sample_weight=None): #to_not_binarize_colindex=None
         """
         fit method for SirusMixin. 
         
         """
-        if to_not_binarize_colindex is None:
+        if self.to_not_binarize_colindexes is None:
             X_bin = X.copy()
             list_quantile = [
             np.percentile(X_bin, q=i * self.quantile, axis=0)
@@ -664,12 +664,12 @@ class SirusMixin:
                 X_bin[:, dim] = array_quantile[out, dim]
         else :
             list_quantile = [
-            np.percentile(X_bin[:,~to_not_binarize_colindex], q=i * self.quantile, axis=0)
+            np.percentile(X_bin[:,~self.to_not_binarize_colindexes], q=i * self.quantile, axis=0)
             for i in range(int((100 // self.quantile) + 1))
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):
-                if dim not in to_not_binarize_colindex:
+                if dim not in self.to_not_binarize_colindexes:
                     out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
                     X_bin[:, dim] = array_quantile[out, dim]
         super().fit(
