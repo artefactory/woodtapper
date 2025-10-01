@@ -652,8 +652,9 @@ class SirusMixin:
         fit method for SirusMixin. 
         
         """
+        X_bin = X.copy()
         if self.to_not_binarize_colindexes is None:
-            X_bin = X.copy()
+            
             list_quantile = [
             np.percentile(X_bin, q=i * self.quantile, axis=0)
             for i in range(int((100 // self.quantile) + 1))
@@ -663,8 +664,10 @@ class SirusMixin:
                 out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
                 X_bin[:, dim] = array_quantile[out, dim]
         else :
+            categorical = np.zeros((X.shape[1],), dtype=bool)
+            categorical[self.to_not_binarize_colindexes] = True
             list_quantile = [
-            np.percentile(X_bin[:,~self.to_not_binarize_colindexes], q=i * self.quantile, axis=0)
+            np.percentile(X_bin[:,~categorical], q=i * self.quantile, axis=0)
             for i in range(int((100 // self.quantile) + 1))
             ]
             array_quantile = np.array(list_quantile)
