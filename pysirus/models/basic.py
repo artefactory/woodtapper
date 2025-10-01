@@ -671,10 +671,11 @@ class SirusMixin:
                 for i in np.linspace(0,1, self.quantile+1) 
             ]
             array_quantile = np.array(list_quantile)
-            for dim in range(X.shape[1]):
-                if dim not in self.to_not_binarize_colindexes:
-                    out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
-                    X_bin[:, dim] = array_quantile[out, dim]
+            array_dim_indices = np.arange(0,X.shape[1])
+            array_continuous_dim_indices = array_dim_indices[~categorical]
+            for cont_dim in array_continuous_dim_indices: 
+                out = np.searchsorted(array_quantile[:, cont_dim], X_bin[:, cont_dim], side="left")
+                X_bin[:, cont_dim] = array_quantile[out, cont_dim]
         super().fit(
             X_bin,
             y,
