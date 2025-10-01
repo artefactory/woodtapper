@@ -493,6 +493,16 @@ class SirusMixin:
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         """
         predict_proba method for SirusMixin.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        to_add_probas_outside_rules : bool, optional (default=True)
+            Whether to include probabilities from samples not satisfying the rules.
+        Returns
+        ----------
+        y_pred_probas : array-like, shape (n_samples, n_classes)
+            The predicted class probabilities for each sample.
         """
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         for indice in range(self.n_rules):
