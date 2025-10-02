@@ -730,7 +730,7 @@ class SirusMixin:
                     sign = ">"
                 print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
     
-    def show_rules(self, max_rules=9, target_class_index=1):
+    def show_rules(self, max_rules=9, target_class_index=1,list_indices_features_bin=None):
         """
         Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
         Parameters
@@ -804,9 +804,12 @@ class SirusMixin:
                 elif feature_mapping and isinstance(dimension, str) and dimension in feature_mapping.values():
                     # If dimension is already a name that's in the mapping's values (less common for index)
                     column_name = dimension 
-                
-                sign_display = "<=" if sign_internal == "L" else ">"
-                treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
+                if list_indices_features_bin is not None and dimension in list_indices_features_bin:
+                        sign_display = "is" if sign_internal == "L" else "is not"
+                        treshold_display = str(treshold)
+                else:
+                    sign_display = "<=" if sign_internal == "L" else ">"
+                    treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
                 condition_parts_str.append(f"{column_name} {sign_display} {treshold_display}")
             
             full_condition_str = " & ".join(condition_parts_str)
