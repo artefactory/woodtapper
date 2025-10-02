@@ -820,7 +820,7 @@ class SirusMixin:
         condition_col_width = max(max_condition_len, len(header_condition)) + 2
 
         print(f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}")
-        print("-" * (condition_col_width + 15 + 15 + 2))
+        print("-" * (condition_col_width + 15 + 15 + 2 +5))
 
         for i in range(num_rules_to_show):
             condition_str_formatted = condition_strings_for_rules[i]
@@ -839,4 +839,4 @@ class SirusMixin:
                 p_s_if_false = prob_if_false_list[target_class_index] * 100
                 else_val_str = f"{p_s_if_false:.0f}%"
 
-            print(f"if   {condition_str_formatted:<{condition_col_width - 5}} then {then_val_str:<12} else {else_val_str:<12}")
+            print(f"if   {condition_str_formatted:<{condition_col_width }} then {then_val_str:<18} else {else_val_str:<18}")
