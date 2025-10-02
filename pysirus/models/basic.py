@@ -1,6 +1,5 @@
 from functools import reduce
 from operator import and_
-from math import isclose
 
 import numpy as np
 from sklearn.tree import _tree

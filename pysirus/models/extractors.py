@@ -14,7 +14,7 @@ from sklearn.utils._param_validation import StrOptions
 
 from pysirus.models.basic import SirusMixin
 
-from sklearn.linear_model import Ridge, RidgeCV, MultiTaskLassoCV
+from sklearn.linear_model import Ridge, RidgeCV
 
 
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
