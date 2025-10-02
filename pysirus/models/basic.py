@@ -713,6 +713,8 @@ class SirusMixin:
             categorical = np.zeros((X.shape[1],), dtype=bool)
             if self.starting_index_one_hot is None:
                 final_list_categorical_indexes = self.to_not_binarize_colindexes
+            elif self.to_not_binarize_colindexes is None:
+                final_list_categorical_indexes = [i for i in range(self.starting_index_one_hot,X_bin.shape[1])]
             else:
                 final_list_categorical_indexes = self.to_not_binarize_colindexes + [i for i in range(self.starting_index_one_hot,X_bin.shape[1])]
             ## the last indexes of X must contains the one hot encoded variables !
