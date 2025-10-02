@@ -342,12 +342,19 @@ class SirusMixin:
         num_rule_temp = 0
         
         n_samples_indep = 10000
-        data_indep = np.zeros((n_samples_indep, self.array_quantile_.shape[1]), dtype=float)
-        for j in range(self.array_quantile_.shape[1]):
-            np.random.seed(j)
-            elem_low = self.array_quantile_[:,j].min()-1
-            elem_high = self.array_quantile_[:,j].max()+1
-            data_indep[:,j]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
+        data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
+        ind_dim_continuous_array_quantile=0 ## indice dans array_quantile des variables continues
+        ind_dim_categorcial_list_unique_elements=0 ## indice dans list_unique_categorical_values des variables catégorielles
+        for ind_dim_abs in range(self.n_features_in_):
+            np.random.seed(ind_dim_abs)
+            if (self.to_not_binarize_colindexes is not None) and (ind_dim_abs in self.to_not_binarize_colindexes):
+                data_indep[:,ind_dim_abs]=np.random.choice(np.unique(self.list_unique_categorical_values[ind_dim_categorcial_list_unique_elements]), size=n_samples_indep, replace=True)
+                ind_dim_categorcial_list_unique_elements += 1
+            else:
+                elem_low = self.array_quantile_[:,ind_dim_continuous_array_quantile].min()-1
+                elem_high = self.array_quantile_[:,ind_dim_continuous_array_quantile].max()+1
+                data_indep[:,ind_dim_abs]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
+                ind_dim_continuous_array_quantile += 1
         np.random.seed(self.random_state)
             
         while num_rule_temp < num_rule and ind < ind_max:
@@ -664,7 +671,6 @@ class SirusMixin:
         """
         X_bin = X.copy()
         if self.to_not_binarize_colindexes is None:
-            
             list_quantile = [
                 np.quantile(X_bin, q=i , axis=0)
                 for i in np.linspace(0,1, self.quantile+1) 
@@ -673,6 +679,7 @@ class SirusMixin:
             for dim in range(X.shape[1]):
                 out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
                 X_bin[:, dim] = array_quantile[out, dim]
+            list_unique_categorical_values = None # set these to None if all variables are continuous
         else :
             categorical = np.zeros((X.shape[1],), dtype=bool)
             categorical[self.to_not_binarize_colindexes] = True
@@ -680,18 +687,20 @@ class SirusMixin:
                 np.quantile(X_bin[:,~categorical], q=i , axis=0)
                 for i in np.linspace(0,1, self.quantile+1) 
             ]
+            list_unique_categorical_values = [np.unique(X_bin[:,i]) for i in self.to_not_binarize_colindexes]
             array_quantile = np.array(list_quantile)
-            array_dim_indices = np.arange(0,X.shape[1])
-            array_continuous_dim_indices = array_dim_indices[~categorical]
-            for cont_dim in array_continuous_dim_indices: 
-                out = np.searchsorted(array_quantile[:, cont_dim], X_bin[:, cont_dim], side="left")
-                X_bin[:, cont_dim] = array_quantile[out, cont_dim]
+            array_dim_indices_samples = np.arange(0,X.shape[1])
+            array_continuous_dim_indices_samples = array_dim_indices_samples[~categorical]
+            for ind_dim_quantile,cont_dim_samples in enumerate(array_continuous_dim_indices_samples): 
+                out = np.searchsorted(array_quantile[:, ind_dim_quantile], X_bin[:, cont_dim_samples], side="left")
+                X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
         super().fit(
             X_bin,
             y,
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
+        self.list_unique_categorical_values = list_unique_categorical_values
 
     #######################################################
     ################## Print rules   ######################
