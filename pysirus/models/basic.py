@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-from sklearn.linear_model import Ridge,RidgeCV
+from sklearn.linear_model import Ridge, RidgeCV
 
 from ._QuantileSplitter import QuantileBestSplitter
 
@@ -15,6 +15,7 @@ sklearn.tree._classes.DENSE_SPLITTERS = {
     "random": _splitter.BestSplitter,
     "quantile": QuantileBestSplitter,
 }
+
 
 class Node:
     """
@@ -53,6 +54,7 @@ class SirusMixin:
     """
     Mixin of SIRUS. Base of all SIRUS models.
     """
+
     #######################################################
     ##### Auxiliary function for path construction  #######
     #######################################################
@@ -160,12 +162,12 @@ class SirusMixin:
         """
         Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
         Auxiliar function for extract_single_tree_rules.
-        
+
         Parameters
         ----------
         tree_structure : list
             list of longest paths, i.e a list of rules that all starts FROM root node TO a leaf
-            
+
         Returns
         ----------
         all_paths_list : list
@@ -178,7 +180,7 @@ class SirusMixin:
 
             ## Single rules
             for k in range(max_size_curr_path):
-                if [curr_path[k]] not in all_paths_list :
+                if [curr_path[k]] not in all_paths_list:
                     all_paths_list.append([curr_path[k]])
 
             ## We take all the rules strating from a head node
@@ -191,7 +193,7 @@ class SirusMixin:
             ## More complexe cases : internal rules
             if max_size_curr_path == 1:
                 continue
-            else: 
+            else:
                 curr_path_size_pair = (max_size_curr_path % 2) == 0
                 if curr_path_size_pair:  ## PAIRS
                     for k in range(1, (max_size_curr_path // 2)):
@@ -209,7 +211,6 @@ class SirusMixin:
                         all_paths_list.extend(list_sub_path)
         return all_paths_list
 
-    
     def extract_single_tree_rules(self, tree):
         """
         Extract all possible rules (single and multiple) from a single tree.
@@ -235,7 +236,7 @@ class SirusMixin:
             tree_structure
         )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
-    
+
     def generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
         Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
@@ -247,7 +248,7 @@ class SirusMixin:
             return X[:, dimension] <= treshold  # .mean()
         else:
             return X[:, dimension] > treshold  # .mean()
-        
+
     def from_rules_to_constraint(self, rule):
         """
         Extract informations from a single rule.
@@ -271,8 +272,8 @@ class SirusMixin:
         treshold = rule[1]
         sign = rule[2]
         return dimension, treshold, sign
-    
-    def generate_mask_rule(self,X,rules):
+
+    def generate_mask_rule(self, X, rules):
         """
         Generate the mask associated to a rule of len >=1.
         Parameters
@@ -286,23 +287,24 @@ class SirusMixin:
         final_mask : array-like, shape (n_samples,)
             Boolean mask indicating which samples satisfy the rule.
         """
-        list_mask=[]
+        list_mask = []
         for j in range(len(rules)):
-            dimension,treshold,sign = self.from_rules_to_constraint(rule=rules[j])
-            mask = self.generate_single_rule_mask(X=X,dimension=dimension,treshold=treshold,sign=sign)
+            dimension, treshold, sign = self.from_rules_to_constraint(rule=rules[j])
+            mask = self.generate_single_rule_mask(
+                X=X, dimension=dimension, treshold=treshold, sign=sign
+            )
             list_mask.append(mask)
         final_mask = reduce(and_, list_mask)
         return final_mask
-    
 
-    def _related_rule(self,curr_rule, relative_rule):
+    def _related_rule(self, curr_rule, relative_rule):
         """
         !!!!!!! NOT USED CURRENTLY  !!!!!
         Check if two rules are related (i.e. share at least one single rule).
         Parameters
         ----------
         curr_rule : list of tuples
-            The current rule to check.  
+            The current rule to check.
         relative_rule : list of tuples
             The rule to compare with.
         Returns
@@ -310,115 +312,151 @@ class SirusMixin:
         bool
             True if the two rules are related, False otherwise.
         """
-        
-        if len(relative_rule)==1:
+
+        if len(relative_rule) == 1:
             A = relative_rule[0]
-            if len(curr_rule) == 1: ## Both are len = 1
-                return (curr_rule[0][0]== A[0])  and (curr_rule[0][1]== A[1])
+            if len(curr_rule) == 1:  ## Both are len = 1
+                return (curr_rule[0][0] == A[0]) and (curr_rule[0][1] == A[1])
             elif len(curr_rule) == 2:
-                l1,l2 = curr_rule[0], curr_rule[1]
-                return ((l1[0]== A[0])  and (l1[1]== A[1])) or ((l1[0]== A[0])  and (l1[1]== A[1]))
+                l1, l2 = curr_rule[0], curr_rule[1]
+                return ((l1[0] == A[0]) and (l1[1] == A[1])) or (
+                    (l1[0] == A[0]) and (l1[1] == A[1])
+                )
             else:
-                raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
+                raise ValueError(
+                    f"Rule {curr_rule} has more than two splits; this is not supported."
+                )
         else:
             A, B = relative_rule
             if len(curr_rule) == 1:
-                return ((curr_rule[0][0]== A[0])  and (curr_rule[0][1]== A[1])) or ((curr_rule[0][0]== B[0])  and (curr_rule[0][1]== B[1]))
+                return ((curr_rule[0][0] == A[0]) and (curr_rule[0][1] == A[1])) or (
+                    (curr_rule[0][0] == B[0]) and (curr_rule[0][1] == B[1])
+                )
             elif len(curr_rule) == 2:
-                l1,l2 = curr_rule[0], curr_rule[1]
-                return ((l1[0]== A[0])  and (l1[1]== A[1])) or ((l1[0]== B[0])  and (l1[1]== B[1])) or ((l1[0]== A[0])  and (l2[1]== A[1])) or ((l2[0]== B[0])  and (l2[1]== B[1]))
+                l1, l2 = curr_rule[0], curr_rule[1]
+                return (
+                    ((l1[0] == A[0]) and (l1[1] == A[1]))
+                    or ((l1[0] == B[0]) and (l1[1] == B[1]))
+                    or ((l1[0] == A[0]) and (l2[1] == A[1]))
+                    or ((l2[0] == B[0]) and (l2[1] == B[1]))
+                )
             else:
-                raise ValueError(f"Rule {curr_rule} has more than two splits; this is not supported.")
-        
-    def paths_filtering_matrix_stochastic(self,paths, proba, num_rule):
+                raise ValueError(
+                    f"Rule {curr_rule} has more than two splits; this is not supported."
+                )
+
+    def paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         """
         paths_ftr = []
         proba_ftr = []
-        #split_gen = []
+        # split_gen = []
         ind_max = len(paths)
         ind = 0
         num_rule_temp = 0
-        
+
         n_samples_indep = 10000
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
-        ind_dim_continuous_array_quantile=0 ## indice dans array_quantile des variables continues
-        ind_dim_categorcial_list_unique_elements=0 ## indice dans list_unique_categorical_values des variables catégorielles
+        ind_dim_continuous_array_quantile = (
+            0  ## indice dans array_quantile des variables continues
+        )
+        ind_dim_categorcial_list_unique_elements = (
+            0  ## indice dans list_unique_categorical_values des variables catégorielles
+        )
+        # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
-            if (self.final_list_categorical_indexes is not None) and (ind_dim_abs in self.final_list_categorical_indexes):
-                data_indep[:,ind_dim_abs]=np.random.choice(np.unique(self.list_unique_categorical_values[ind_dim_categorcial_list_unique_elements]), size=n_samples_indep, replace=True)
+            if (self.final_list_categorical_indexes is not None) and (
+                ind_dim_abs in self.final_list_categorical_indexes
+            ):  # Categorical variable
+                data_indep[:, ind_dim_abs] = np.random.choice(
+                    np.unique(
+                        self.list_unique_categorical_values[
+                            ind_dim_categorcial_list_unique_elements
+                        ]
+                    ),
+                    size=n_samples_indep,
+                    replace=True,
+                )
                 ind_dim_categorcial_list_unique_elements += 1
-            else:
-                elem_low = self.array_quantile_[:,ind_dim_continuous_array_quantile].min()-1
-                elem_high = self.array_quantile_[:,ind_dim_continuous_array_quantile].max()+1
-                data_indep[:,ind_dim_abs]=np.random.uniform(low=elem_low, high=elem_high,size=n_samples_indep)
+            else:  # Continuous variable
+                elem_low = (
+                    self.array_quantile_[:, ind_dim_continuous_array_quantile].min() - 1
+                )
+                elem_high = (
+                    self.array_quantile_[:, ind_dim_continuous_array_quantile].max() + 1
+                )
+                data_indep[:, ind_dim_abs] = np.random.uniform(
+                    low=elem_low, high=elem_high, size=n_samples_indep
+                )
                 ind_dim_continuous_array_quantile += 1
         np.random.seed(self.random_state)
-            
+
         while num_rule_temp < num_rule and ind < ind_max:
-            curr_path= paths[ind]
-            if curr_path in paths_ftr: ## Avoid duplicates
+            curr_path = paths[ind]
+            if curr_path in paths_ftr:  ## Avoid duplicates
                 ind += 1
                 num_rule_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr) != 0: ## If there are already filtered paths
-                #list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
-                #related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
-                related_paths_ftr = paths_ftr # We comlpare the new rule to all the previous ones already selected.
-                if len(related_paths_ftr) == 0: ## If there are no related paths
+            elif len(paths_ftr) != 0:  ## If there are already filtered paths
+                # list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
+                # related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
+                related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
+                if len(related_paths_ftr) == 0:  ## If there are no related paths
                     paths_ftr.append(curr_path)
                     proba_ftr.append(proba[ind])
                 else:
                     rules_ensemble = related_paths_ftr + [curr_path]
-                    #related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
+                    # related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
                     list_matrix = [[] for i in range(len(rules_ensemble))]
-                    for i,x in enumerate(rules_ensemble):
-                        mask_x = self.generate_mask_rule(X=data_indep,rules=x)
-                        list_matrix[i]=mask_x                       
+                    for i, x in enumerate(rules_ensemble):
+                        mask_x = self.generate_mask_rule(X=data_indep, rules=x)
+                        list_matrix[i] = mask_x
 
-                    if len(list_matrix) >0:
+                    if len(list_matrix) > 0:
                         # Check if the current rule is redundant with the previous ones trough matrix rank
                         matrix = np.array(list_matrix).T
-                        ones_vector = np.ones((len(matrix),1))  # Vector of ones
-                        matrix = np.hstack((matrix,ones_vector))
+                        ones_vector = np.ones((len(matrix), 1))  # Vector of ones
+                        matrix = np.hstack((matrix, ones_vector))
                         matrix_rank = np.linalg.matrix_rank(matrix)
                         n_rules_compared = len(rules_ensemble)
-                        if matrix_rank == (n_rules_compared) + 1:  
+                        if matrix_rank == (n_rules_compared) + 1:
                             # The current rule is not redundant with the previous ones
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
                 ind += 1
                 num_rule_temp = len(paths_ftr)
-                
-            else: ## If there are no filtered paths yet
+
+            else:  ## If there are no filtered paths yet
                 paths_ftr.append(curr_path)
                 proba_ftr.append(proba[ind])
                 ind += 1
                 num_rule_temp = len(paths_ftr)
-        
-        return {'paths': paths_ftr, 'proba': proba_ftr}
-                 
-        
-    def paths_filtering_stochastic(self,paths, proba, num_rule):
+
+        return {"paths": paths_ftr, "proba": proba_ftr}
+
+    def paths_filtering_stochastic(self, paths, proba, num_rule):
         """
-            Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
-            
-            Args:
-                paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
-                proba (list): Probabilities associated with each path/rule
-                num_rule (int): Max number of rules to keep
-            
-            Returns:
-                dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+
+        Args:
+            paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
+            proba (list): Probabilities associated with each path/rule
+            num_rule (int): Max number of rules to keep
+
+        Returns:
+            dict: {'paths': filtered_paths, 'proba': filtered_proba}
         """
-        return self.paths_filtering_matrix_stochastic(paths=paths, proba=proba, num_rule=num_rule)
+        return self.paths_filtering_matrix_stochastic(
+            paths=paths, proba=proba, num_rule=num_rule
+        )
+
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
 
-    def fit_forest_rules(self, X, y, all_possible_rules_list,sample_weight=None):
+    def fit_forest_rules(self, X, y, all_possible_rules_list, sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -434,38 +472,37 @@ class SirusMixin:
         proportions_count_sort_indices = np.argsort(
             -count_rules
         )  # Sort rules coubnt by descending order (same results as proportions)
-        n_rules_to_keep = (
-            proportions_count_sort > self.p0
-        ).sum()  
+        n_rules_to_keep = (proportions_count_sort > self.p0).sum()
         all_possible_rules_list = [
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]#all possible rules reindexed 
+        ]  # all possible rules reindexed
         proportions_count_sort = proportions_count_sort[:n_rules_to_keep]
-        if len(all_possible_rules_list)==0:
-            raise ValueError("No rule found with the given p0 value. Try to decrease it.")
-        
-        #print('25 all_possible_rules_list : ',all_possible_rules_list[:25])
-        #print('####'*5)
-        #print('25 proportions_count_sort : ',proportions_count_sort[:25])
-        #print('####'*5)
+        if len(all_possible_rules_list) == 0:
+            raise ValueError(
+                "No rule found with the given p0 value. Try to decrease it."
+            )
 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25
-        self.all_possible_rules_list = res['paths']
-        self.all_possible_rules_frequency_list = res['proba']
+        res = self.paths_filtering_stochastic(
+            paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
+        )  ## Maximum number of rule to keep=25
+        self.all_possible_rules_list = res["paths"]
+        self.all_possible_rules_frequency_list = res["proba"]
         self.n_rules = len(self.all_possible_rules_list)
 
         # list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
-        if sample_weight is  None:
-            sample_weight = np.full((len(y),),1)## vector of ones
+        if sample_weight is None:
+            sample_weight = np.full((len(y),), 1)  ## vector of ones
 
         for current_rules in self.all_possible_rules_list:
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
-            y_train_rule = y[final_mask] 
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
+            y_train_rule = y[final_mask]
             y_train_outside_rule = y[~final_mask] * sample_weight[~final_mask]
             sample_weight_rule = sample_weight[final_mask]
             sample_weight_outside_rule = sample_weight[~final_mask]
@@ -476,12 +513,18 @@ class SirusMixin:
                 if len(y_train_rule) == 0:
                     curr_probas = 0
                 else:
-                    curr_probas = sample_weight_rule[y_train_rule == cl].sum() / sample_weight_rule.sum()
+                    curr_probas = (
+                        sample_weight_rule[y_train_rule == cl].sum()
+                        / sample_weight_rule.sum()
+                    )
                 if len(y_train_outside_rule) == 0:
                     curr_probas_outside_rules = 0
                 else:
-                    curr_probas_outside_rules = sample_weight_outside_rule[y_train_outside_rule == cl].sum() / sample_weight_outside_rule.sum()
-    
+                    curr_probas_outside_rules = (
+                        sample_weight_outside_rule[y_train_outside_rule == cl].sum()
+                        / sample_weight_outside_rule.sum()
+                    )
+
                 list_probas.append(curr_probas)
                 list_probas_outside_rules.append(curr_probas_outside_rules)
 
@@ -493,9 +536,6 @@ class SirusMixin:
         self.list_probas_by_rules = list_probas_by_rules
         self.list_probas_outside_by_rules = list_probas_outside_by_rules
         self.type_target = y.dtype
-
-        
-        
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         """
@@ -514,7 +554,9 @@ class SirusMixin:
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
             y_pred_probas[final_mask] += self.list_probas_by_rules[
                 indice
             ]  ## add the asociated rule probability
@@ -527,12 +569,15 @@ class SirusMixin:
             return (1 / self.n_rules) * (y_pred_probas)
         else:
             scaling_coeffs = y_pred_probas.sum(axis=1)
-            y_pred_probas = y_pred_probas / np.array([scaling_coeffs,scaling_coeffs,scaling_coeffs]).T
+            y_pred_probas = (
+                y_pred_probas
+                / np.array([scaling_coeffs, scaling_coeffs, scaling_coeffs]).T
+            )
             return y_pred_probas
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin.    
+        predict_proba method for SirusMixin.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -544,7 +589,6 @@ class SirusMixin:
         y_pred : array-like, shape (n_samples,)
             The predicted classes for each sample.
         """
-        print('SIRUSMixin predict')
         y_pred_probas = self.predict_proba(
             X=X, to_add_probas_outside_rules=to_add_probas_outside_rules
         )
@@ -564,7 +608,9 @@ class SirusMixin:
     #######################################################
     ############# Regressor fit and predict  ##############
     #######################################################
-    def fit_forest_rules_regressor(self, X, y, all_possible_rules_list,sample_weight=None):
+    def fit_forest_rules_regressor(
+        self, X, y, all_possible_rules_list, sample_weight=None
+    ):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -583,27 +629,31 @@ class SirusMixin:
         n_rules_to_keep = (
             proportions_count_sort > self.p0
         ).sum()  ## not necssary to sort proportions_count...
-        all_possible_rules_list = [ 
+        all_possible_rules_list = [
             eval(unique_str_rules[i])
             for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]#all possible rules reindexed 
-        if len(all_possible_rules_list)==0:
-            raise ValueError("No rule found with the given p0 value. Try to decrease it.")
+        ]  # all possible rules reindexed
+        if len(all_possible_rules_list) == 0:
+            raise ValueError(
+                "No rule found with the given p0 value. Try to decrease it."
+            )
 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filtering_stochastic(paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25) ## Maximum number of rule to keep=25        
-        self.all_possible_rules_list = res['paths']
-        self.all_possible_rules_frequency_list = res['proba']
+        res = self.paths_filtering_stochastic(
+            paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
+        )  ## Maximum number of rule to keep=25
+        self.all_possible_rules_list = res["paths"]
+        self.all_possible_rules_frequency_list = res["proba"]
         self.n_rules = len(self.all_possible_rules_list)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zeros((X.shape[0], self.n_rules))
-        for rule_number, current_rules in enumerate(
-            self.all_possible_rules_list
-        ):
+        for rule_number, current_rules in enumerate(self.all_possible_rules_list):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
             y_train_rule = y[final_mask]
             y_train_outside_rule = y[~final_mask]
 
@@ -620,8 +670,8 @@ class SirusMixin:
             list_output_by_rules.append(output_value)
             list_output_outside_by_rules.append(output_outside_value)
 
-            gamma_array[final_mask, rule_number ] = output_value
-            gamma_array[ ~final_mask, rule_number] = output_outside_value
+            gamma_array[final_mask, rule_number] = output_value
+            gamma_array[~final_mask, rule_number] = output_outside_value
             # list_mask_by_rules.append(final_mask) # uselesss
 
         # self.list_mask_by_rules = list_mask_by_rules
@@ -630,15 +680,18 @@ class SirusMixin:
         self.type_target = y.dtype
 
         ## final predictor fitting :
-        #self.ridge = Ridge(
+        # self.ridge = Ridge(
         #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
-        #)
+        # )
         self.ridge = RidgeCV(
-            alphas=np.arange(0.01,1,0.1),cv=5,scoring='neg_mean_squared_error', fit_intercept=True,
+            alphas=np.arange(0.01, 1, 0.1),
+            cv=5,
+            scoring="neg_mean_squared_error",
+            fit_intercept=True,
         )
-        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array,ones_vector))
-        self.ridge.fit(gamma_array, y,sample_weight=sample_weight)
+        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array, ones_vector))
+        self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
         # self.gamma_array = gamma_array
 
     def predict_regressor(self, X, to_add_probas_outside_rules=True):
@@ -648,25 +701,29 @@ class SirusMixin:
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
-            gamma_array[final_mask,indice] = self.list_probas_by_rules[indice]
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
+            gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                gamma_array[ ~final_mask,indice] = self.list_probas_outside_by_rules[
+                gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
                     indice
                 ]
-        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array,ones_vector))
+        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array, ones_vector))
         y_pred = self.ridge.predict(gamma_array)
 
         return y_pred
-    
+
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
 
-    def fit_main_classifier(self, X, y, sample_weight=None): #to_not_binarize_colindex=None
+    def fit_main_classifier(
+        self, X, y, sample_weight=None
+    ):  # to_not_binarize_colindex=None
         """
-        fit method for SirusMixin. 
+        fit method for SirusMixin.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -683,7 +740,7 @@ class SirusMixin:
         Returns
         ----------
         self : object
-            Returns the instance itself.    
+            Returns the instance itself.
         1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
         2. Fit the main classifier using the modified dataset.
         3. Store quantile information and categorical feature details for future use.
@@ -698,38 +755,60 @@ class SirusMixin:
         12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
         X_bin = X.copy()
-        if (self.to_not_binarize_colindexes is None) and (self.starting_index_one_hot is None): # All variables are continuous
+        if (self.to_not_binarize_colindexes is None) and (
+            self.starting_index_one_hot is None
+        ):  # All variables are continuous
             list_quantile = [
-                np.quantile(X_bin, q=i , axis=0)
-                for i in np.linspace(0,1, self.quantile+1) 
+                np.quantile(X_bin, q=i, axis=0)
+                for i in np.linspace(0, 1, self.quantile + 1)
             ]
             array_quantile = np.array(list_quantile)
             for dim in range(X.shape[1]):
-                out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
+                out = np.searchsorted(
+                    array_quantile[:, dim], X_bin[:, dim], side="left"
+                )
                 X_bin[:, dim] = array_quantile[out, dim]
-            list_unique_categorical_values = None # set these to None if all variables are continuous
-            final_list_categorical_indexes=None # set these to None if all variables are continuous
-        else :
+            list_unique_categorical_values = (
+                None  # set these to None if all variables are continuous
+            )
+            final_list_categorical_indexes = (
+                None  # set these to None if all variables are continuous
+            )
+        else:
             categorical = np.zeros((X.shape[1],), dtype=bool)
             if self.starting_index_one_hot is None:
                 final_list_categorical_indexes = self.to_not_binarize_colindexes
             elif self.to_not_binarize_colindexes is None:
-                final_list_categorical_indexes = [i for i in range(self.starting_index_one_hot,X_bin.shape[1])]
+                final_list_categorical_indexes = [
+                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
+                ]
             else:
-                final_list_categorical_indexes = self.to_not_binarize_colindexes + [i for i in range(self.starting_index_one_hot,X_bin.shape[1])]
+                final_list_categorical_indexes = self.to_not_binarize_colindexes + [
+                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
+                ]
             ## the last indexes of X must contains the one hot encoded variables !
             categorical[final_list_categorical_indexes] = True
             list_quantile = [
-                np.quantile(X_bin[:,~categorical], q=i , axis=0)
-                for i in np.linspace(0,1, self.quantile+1) 
+                np.quantile(X_bin[:, ~categorical], q=i, axis=0)
+                for i in np.linspace(0, 1, self.quantile + 1)
             ]
-            list_unique_categorical_values = [np.unique(X_bin[:,i]) for i in final_list_categorical_indexes]
+            list_unique_categorical_values = [
+                np.unique(X_bin[:, i]) for i in final_list_categorical_indexes
+            ]
             array_quantile = np.array(list_quantile)
 
-            array_dim_indices_samples = np.arange(0,X.shape[1])
-            array_continuous_dim_indices_samples = array_dim_indices_samples[~categorical]
-            for ind_dim_quantile,cont_dim_samples in enumerate(array_continuous_dim_indices_samples): 
-                out = np.searchsorted(array_quantile[:, ind_dim_quantile], X_bin[:, cont_dim_samples], side="left")
+            array_dim_indices_samples = np.arange(0, X.shape[1])
+            array_continuous_dim_indices_samples = array_dim_indices_samples[
+                ~categorical
+            ]
+            for ind_dim_quantile, cont_dim_samples in enumerate(
+                array_continuous_dim_indices_samples
+            ):
+                out = np.searchsorted(
+                    array_quantile[:, ind_dim_quantile],
+                    X_bin[:, cont_dim_samples],
+                    side="left",
+                )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
         super().fit(
             X_bin,
@@ -737,8 +816,8 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        self.list_unique_categorical_values = list_unique_categorical_values #list of each categorical features containing unique values for each of them
-        self.final_list_categorical_indexes = final_list_categorical_indexes # indices of each categorical features, including the one hot encoded
+        self.list_unique_categorical_values = list_unique_categorical_values  # list of each categorical features containing unique values for each of them
+        self.final_list_categorical_indexes = final_list_categorical_indexes  # indices of each categorical features, including the one hot encoded
 
     #######################################################
     ################## Print rules   ######################
@@ -766,9 +845,15 @@ class SirusMixin:
                     sign = "<="
                 else:
                     sign = ">"
-                print("       &( {} {} {} )".format(self.feature_names_in_[dimension], sign, treshold))
-    
-    def show_rules(self, max_rules=9, target_class_index=1,list_indices_features_bin=None):
+                print(
+                    "       &( {} {} {} )".format(
+                        self.feature_names_in_[dimension], sign, treshold
+                    )
+                )
+
+    def show_rules(
+        self, max_rules=9, target_class_index=1, list_indices_features_bin=None
+    ):
         """
         Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
         Parameters
@@ -778,10 +863,14 @@ class SirusMixin:
             target_class_index : int, optional (default=1)
             The index of the target class for which to display probabilities.
         """
-        if not hasattr(self, 'all_possible_rules_list') or \
-           not hasattr(self, 'list_probas_by_rules') or \
-           not hasattr(self, 'list_probas_outside_by_rules'):
-            print("Model does not have the required rule attributes. Ensure it's fitted.")
+        if (
+            not hasattr(self, "all_possible_rules_list")
+            or not hasattr(self, "list_probas_by_rules")
+            or not hasattr(self, "list_probas_outside_by_rules")
+        ):
+            print(
+                "Model does not have the required rule attributes. Ensure it's fitted."
+            )
             return
 
         rules_all = self.all_possible_rules_list
@@ -799,31 +888,41 @@ class SirusMixin:
 
         # Attempt to build/use feature mapping
         feature_mapping = None
-        if hasattr(self, 'feature_names_in_'): # Standard scikit-learn attribute
+        if hasattr(self, "feature_names_in_"):  # Standard scikit-learn attribute
             # Create a mapping from index to name if feature_names_in_ is a list
             feature_mapping = {i: name for i, name in enumerate(self.feature_names_in_)}
-        elif hasattr(self, 'feature_names_'): # Custom attribute for feature names
+        elif hasattr(self, "feature_names_"):  # Custom attribute for feature names
             if isinstance(self.feature_names_, dict):
-                feature_mapping = self.feature_names_ # Assumes it's already index:name
+                feature_mapping = self.feature_names_  # Assumes it's already index:name
             elif isinstance(self.feature_names_, list):
-                feature_mapping = {i: name for i, name in enumerate(self.feature_names_)}
+                feature_mapping = {
+                    i: name for i, name in enumerate(self.feature_names_)
+                }
         # If no mapping, column_name will default to using indices.
 
         base_ps_text = ""
-        if probas_if_false_all and probas_if_false_all[0] and len(probas_if_false_all[0]) > target_class_index:
+        if (
+            probas_if_false_all
+            and probas_if_false_all[0]
+            and len(probas_if_false_all[0]) > target_class_index
+        ):
             avg_outside_target_probas = [
-                p[target_class_index] for p in probas_if_false_all if p and len(p) > target_class_index
+                p[target_class_index]
+                for p in probas_if_false_all
+                if p and len(p) > target_class_index
             ]
             if avg_outside_target_probas:
                 estimated_avg_target_prob = np.mean(avg_outside_target_probas) * 100
-                base_ps_text = (f"Estimated average rate for target class {target_class_index} (from 'else' clauses) p_s = {estimated_avg_target_prob:.0f}%.\n"
-                                f"(Note: True average rate should be P(Class={target_class_index}) from training data).\n")
-        
+                base_ps_text = (
+                    f"Estimated average rate for target class {target_class_index} (from 'else' clauses) p_s = {estimated_avg_target_prob:.0f}%.\n"
+                    f"(Note: True average rate should be P(Class={target_class_index}) from training data).\n"
+                )
+
         print(base_ps_text)
         header_condition = "IF Condition"
-        header_then = f"     THEN P(C{target_class_index})" 
-        header_else = f"     ELSE P(C{target_class_index})" 
-        
+        header_then = f"     THEN P(C{target_class_index})"
+        header_else = f"     ELSE P(C{target_class_index})"
+
         max_condition_len = 0
         condition_strings_for_rules = []
 
@@ -831,25 +930,37 @@ class SirusMixin:
             current_rule_conditions = rules_all[i]
             condition_parts_str = []
             for j in range(len(current_rule_conditions)):
-                
                 dimension, treshold, sign_internal = self.from_rules_to_constraint(
                     rule=current_rule_conditions[j]
                 )
-                
-                column_name = f"Feature[{dimension}]" # Default if no mapping
+
+                column_name = f"Feature[{dimension}]"  # Default if no mapping
                 if feature_mapping and dimension in feature_mapping:
                     column_name = feature_mapping[dimension]
-                elif feature_mapping and isinstance(dimension, str) and dimension in feature_mapping.values():
+                elif (
+                    feature_mapping
+                    and isinstance(dimension, str)
+                    and dimension in feature_mapping.values()
+                ):
                     # If dimension is already a name that's in the mapping's values (less common for index)
-                    column_name = dimension 
-                if list_indices_features_bin is not None and dimension in list_indices_features_bin:
-                        sign_display = "is" if sign_internal == "L" else "is not"
-                        treshold_display = str(treshold)
+                    column_name = dimension
+                if (
+                    list_indices_features_bin is not None
+                    and dimension in list_indices_features_bin
+                ):
+                    sign_display = "is" if sign_internal == "L" else "is not"
+                    treshold_display = str(treshold)
                 else:
                     sign_display = "<=" if sign_internal == "L" else ">"
-                    treshold_display = f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
-                condition_parts_str.append(f"{column_name} {sign_display} {treshold_display}")
-            
+                    treshold_display = (
+                        f"{treshold:.2f}"
+                        if isinstance(treshold, float)
+                        else str(treshold)
+                    )
+                condition_parts_str.append(
+                    f"{column_name} {sign_display} {treshold_display}"
+                )
+
             full_condition_str = " & ".join(condition_parts_str)
             condition_strings_for_rules.append(full_condition_str)
             if len(full_condition_str) > max_condition_len:
@@ -857,12 +968,14 @@ class SirusMixin:
 
         condition_col_width = max(max_condition_len, len(header_condition)) + 2
 
-        print(f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}")
-        print("-" * (condition_col_width + 15 + 15 + 2 +5))
+        print(
+            f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}"
+        )
+        print("-" * (condition_col_width + 15 + 15 + 2 + 5))
 
         for i in range(num_rules_to_show):
             condition_str_formatted = condition_strings_for_rules[i]
-            
+
             prob_if_true_list = probas_if_true_all[i]
             prob_if_false_list = probas_if_false_all[i]
 
@@ -872,9 +985,11 @@ class SirusMixin:
             if prob_if_true_list and len(prob_if_true_list) > target_class_index:
                 p_s_if_true = prob_if_true_list[target_class_index] * 100
                 then_val_str = f"{p_s_if_true:.0f}%"
-            
+
             if prob_if_false_list and len(prob_if_false_list) > target_class_index:
                 p_s_if_false = prob_if_false_list[target_class_index] * 100
                 else_val_str = f"{p_s_if_false:.0f}%"
 
-            print(f"if   {condition_str_formatted:<{condition_col_width }} then {then_val_str:<18} else {else_val_str:<18}")
+            print(
+                f"if   {condition_str_formatted:<{condition_col_width }} then {then_val_str:<18} else {else_val_str:<18}"
+            )

@@ -1,8 +1,12 @@
 import numpy as np
 from scipy.stats import binom
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, RandomForestRegressor
-from sklearn.ensemble._forest import ForestClassifier,ForestRegressor
+from sklearn.ensemble import (
+    RandomForestClassifier,
+    GradientBoostingClassifier,
+    RandomForestRegressor,
+)
+from sklearn.ensemble._forest import ForestClassifier, ForestRegressor
 from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
@@ -10,7 +14,8 @@ from sklearn.utils._param_validation import StrOptions
 
 from pysirus.models.basic import SirusMixin
 
-from sklearn.linear_model import Ridge,RidgeCV,MultiTaskLassoCV
+from sklearn.linear_model import Ridge, RidgeCV, MultiTaskLassoCV
+
 
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     """
@@ -19,6 +24,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     ----------
 
     """
+
     def __init__(
         self,
         *,
@@ -55,10 +61,10 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
             monotonic_cst=monotonic_cst,
             ccp_alpha=ccp_alpha,
         )
-        self.p0=p0
-        self.quantile=quantile
+        self.p0 = p0
+        self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes  # list of indices of columns that are not binarized (for example categorical variables already encoded as integers)
-        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
@@ -178,7 +184,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
-        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
@@ -186,18 +192,33 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list,sample_weight)
-        #Compute stability criterion:
+        self.fit_forest_rules(X, y, all_possible_rules_list, sample_weight)
+        # Compute stability criterion:
         M = self.n_estimators
-        list_p0 = np.arange(0.1,1,0.08)
+        list_p0 = np.arange(0.1, 1, 0.08)
         list_epsilon = []
-        print('Computing stability criterion...')
+        print("Computing stability criterion...")
         for p0_curr in list_p0:
-            epsilon_numerator = np.sum([binom.cdf(k=p0_curr*M,n=M,p=pm) * (1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
-            epsilon_denominator =  np.sum([(1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
-            epsilon = epsilon_numerator/epsilon_denominator if epsilon_denominator>0 else 0
+            epsilon_numerator = np.sum(
+                [
+                    binom.cdf(k=p0_curr * M, n=M, p=pm)
+                    * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon_denominator = np.sum(
+                [
+                    (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon = (
+                epsilon_numerator / epsilon_denominator
+                if epsilon_denominator > 0
+                else 0
+            )
             list_epsilon.append(epsilon)
-        print('***** \n Stability criterion value:', np.mean(list_epsilon), '\n*****')
+        print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
 
 
 ######### Regressor ############
@@ -251,11 +272,9 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
-        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
-    def fit_forest_rules_regressor( 
-        self, X, y, sample_weight=None, check_input=True
-    ): 
+    def fit_forest_rules_regressor(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y)."""
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
@@ -266,7 +285,8 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 
     def predict(self, X, to_add_probas_outside_rules=True):
         return self.predict_regressor(X, to_add_probas_outside_rules)
-    
+
+
 class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
@@ -275,7 +295,6 @@ class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
 
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
-
 
 
 class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
@@ -321,7 +340,6 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
-        
     ):
         super().__init__(
             loss=loss,
@@ -349,7 +367,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
-        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def _fit_stage(
         self,
@@ -436,60 +454,82 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-    
+
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            #print('self.estimators_.shape', self.estimators_.shape)
-            dtree = self.estimators_[i,0]  
+            # print('self.estimators_.shape', self.estimators_.shape)
+            dtree = self.estimators_[i, 0]
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list,sample_weight)
+        self.fit_forest_rules(X, y, all_possible_rules_list, sample_weight)
         array_probas_by_rules = np.array(self.list_probas_by_rules)
         array_probas_outside_by_rules = np.array(self.list_probas_outside_by_rules)
-        gamma_array = np.zeros((X.shape[0], 2*self.n_rules))
+        gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
-            gamma_array[final_mask,indice] = 1
-            gamma_array[ ~final_mask,indice+self.n_rules] = 1  ## NOT the current rule
-        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array,ones_vector))
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
+            gamma_array[final_mask, indice] = 1
+            gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
+        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array, ones_vector))
         self.ridge = RidgeCV(
-            alphas=np.arange(0.01,1,0.1),cv=5,scoring='neg_mean_squared_error', fit_intercept=True,
+            alphas=np.arange(0.01, 1, 0.1),
+            cv=5,
+            scoring="neg_mean_squared_error",
+            fit_intercept=True,
         )
-        #self.ridge = MultiTaskLassoCV(
+        # self.ridge = MultiTaskLassoCV(
         #    alphas=np.arange(0.01,1,0.1),cv=5, fit_intercept=True,
-        #)
+        # )
         from sklearn.preprocessing import OneHotEncoder
-        self.enc = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-        y_enc = self.enc.fit_transform(y.reshape(-1, 1))
-        self.ridge.fit(gamma_array, y_enc,sample_weight=sample_weight)
 
-        
+        self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+        y_enc = self.enc.fit_transform(y.reshape(-1, 1))
+        self.ridge.fit(gamma_array, y_enc, sample_weight=sample_weight)
+
         M = self.n_estimators
-        list_p0 = np.arange(0.1,1,0.08)
+        list_p0 = np.arange(0.1, 1, 0.08)
         list_epsilon = []
-        print('Computing stability criterion...')
+        print("Computing stability criterion...")
         for p0_curr in list_p0:
-            epsilon_numerator = np.sum([binom.cdf(k=p0_curr*M,n=M,p=pm) * (1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
-            epsilon_denominator =  np.sum([(1-binom.cdf(k=p0_curr*M,n=M,p=pm)) for pm in self.all_possible_rules_frequency_list])
-            epsilon = epsilon_numerator/epsilon_denominator if epsilon_denominator>0 else 0
+            epsilon_numerator = np.sum(
+                [
+                    binom.cdf(k=p0_curr * M, n=M, p=pm)
+                    * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon_denominator = np.sum(
+                [
+                    (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon = (
+                epsilon_numerator / epsilon_denominator
+                if epsilon_denominator > 0
+                else 0
+            )
             list_epsilon.append(epsilon)
-        print('***** \n Stability criterion value:', np.mean(list_epsilon), '\n*****')
+        print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
-        gamma_array = np.zeros((X.shape[0], 2*self.n_rules))
+        gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(X=X,rules=current_rules) #On X and not on X_bin ???,
-            gamma_array[final_mask,indice] = 1
-            gamma_array[ ~final_mask,indice+self.n_rules] = 1 ## NOT the current rule
-        ones_vector = np.ones((len(gamma_array),1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array,ones_vector))
+            final_mask = self.generate_mask_rule(
+                X=X, rules=current_rules
+            )  # On X and not on X_bin ???,
+            gamma_array[final_mask, indice] = 1
+            gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
+        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
+        gamma_array = np.hstack((gamma_array, ones_vector))
         y_pred_enc = self.ridge.predict(gamma_array)
-        #y_pred = self.enc.inverse_transform(y_pred_enc)
+        # y_pred = self.enc.inverse_transform(y_pred_enc)
         return y_pred_enc
 
 
@@ -564,13 +604,13 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
-        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
-            dtree = self.estimators_[i]  
+            dtree = self.estimators_[i]
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules_regressor(X, y, all_possible_rules_list,sample_weight)
+        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, sample_weight)
