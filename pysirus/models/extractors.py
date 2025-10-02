@@ -38,6 +38,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         p0=0.01,
         quantile=10,
         to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
     ):
         super().__init__(
             criterion=criterion,
@@ -57,6 +58,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self.p0=p0
         self.quantile=quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes  # list of indices of columns that are not binarized (for example categorical variables already encoded as integers)
+        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
@@ -133,6 +135,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         p0=0.01,
         quantile=10,
         to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
     ):
         super(ForestClassifier, self).__init__(
             estimator=DecisionTreeClassifier(),
@@ -175,6 +178,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
@@ -209,6 +213,45 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+
+    def __init__(
+        self,
+        *,
+        criterion="squared_error",
+        splitter="best",
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        min_weight_fraction_leaf=0.0,
+        max_features=None,
+        random_state=None,
+        max_leaf_nodes=None,
+        min_impurity_decrease=0.0,
+        ccp_alpha=0.0,
+        monotonic_cst=None,
+        p0=0.01,
+        quantile=10,
+        to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
+    ):
+        super().__init__(
+            criterion=criterion,
+            splitter=splitter,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
+            min_impurity_decrease=min_impurity_decrease,
+            ccp_alpha=ccp_alpha,
+            monotonic_cst=monotonic_cst,
+        )
+        self.p0 = p0
+        self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit_forest_rules_regressor( 
         self, X, y, sample_weight=None, check_input=True
@@ -277,6 +320,8 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         p0=0.01,
         quantile=10,
         to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
+        
     ):
         super().__init__(
             loss=loss,
@@ -304,6 +349,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def _fit_stage(
         self,
@@ -476,6 +522,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         p0=0.01,
         quantile=10,
         to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
     ):
         super(ForestRegressor, self).__init__(
             estimator=DecisionTreeRegressor(),
@@ -517,6 +564,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.p0 = p0
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)

@@ -347,7 +347,7 @@ class SirusMixin:
         ind_dim_categorcial_list_unique_elements=0 ## indice dans list_unique_categorical_values des variables catégorielles
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
-            if (self.to_not_binarize_colindexes is not None) and (ind_dim_abs in self.to_not_binarize_colindexes):
+            if (self.final_list_categorical_indexes is not None) and (ind_dim_abs in self.final_list_categorical_indexes):
                 data_indep[:,ind_dim_abs]=np.random.choice(np.unique(self.list_unique_categorical_values[ind_dim_categorcial_list_unique_elements]), size=n_samples_indep, replace=True)
                 ind_dim_categorcial_list_unique_elements += 1
             else:
@@ -667,10 +667,38 @@ class SirusMixin:
     def fit_main_classifier(self, X, y, sample_weight=None): #to_not_binarize_colindex=None
         """
         fit method for SirusMixin. 
-        
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+
+            The target values (class labels in classification, real numbers in regression).
+        sample_weight : array-like, shape (n_samples,), optional
+            Sample weights. If None, then samples are equally weighted.
+        to_not_binarize_colindexes : list of int, optional (default=None)
+            List of column indices in X that should not be binarized (i.e., treated as categorical).
+        starting_index_one_hot : int, optional (default=None)
+            If provided, all columns from this index onward are treated as one-hot encoded categorical features.
+        Returns
+        ----------
+        self : object
+            Returns the instance itself.    
+        1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
+        2. Fit the main classifier using the modified dataset.
+        3. Store quantile information and categorical feature details for future use.
+        4. Return the fitted instance.
+        5. If no columns are specified for exclusion from binarization, treat all features as continuous.
+        6. If columns are specified for exclusion, treat those as categorical and binarize only the continuous features.
+        7. Handle one-hot encoded features if a starting index is provided, treating all features from that index onward as categorical.
+        8. Use quantiles to binarize continuous features, ensuring that the binarization respects the distribution of the data.
+        9. Store the quantiles used for binarization, unique values of categorical features, and their indices for future reference.
+        10. Fit the main classifier with the modified dataset, ensuring that it can handle both continuous and categorical features appropriately.
+        11. Ensure that sample weights are appropriately handled during the fitting process.
+        12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
         X_bin = X.copy()
-        if self.to_not_binarize_colindexes is None:
+        if (self.to_not_binarize_colindexes is None) and (self.starting_index_one_hot is None): # All variables are continuous
             list_quantile = [
                 np.quantile(X_bin, q=i , axis=0)
                 for i in np.linspace(0,1, self.quantile+1) 
@@ -680,15 +708,22 @@ class SirusMixin:
                 out = np.searchsorted(array_quantile[:, dim], X_bin[:, dim], side="left")
                 X_bin[:, dim] = array_quantile[out, dim]
             list_unique_categorical_values = None # set these to None if all variables are continuous
+            final_list_categorical_indexes=None # set these to None if all variables are continuous
         else :
             categorical = np.zeros((X.shape[1],), dtype=bool)
-            categorical[self.to_not_binarize_colindexes] = True
+            if self.starting_index_one_hot is None:
+                final_list_categorical_indexes = self.to_not_binarize_colindexes
+            else:
+                final_list_categorical_indexes = self.to_not_binarize_colindexes + [i for i in range(self.starting_index_one_hot,X_bin.shape[1])]
+            ## the last indexes of X must contains the one hot encoded variables !
+            categorical[final_list_categorical_indexes] = True
             list_quantile = [
                 np.quantile(X_bin[:,~categorical], q=i , axis=0)
                 for i in np.linspace(0,1, self.quantile+1) 
             ]
-            list_unique_categorical_values = [np.unique(X_bin[:,i]) for i in self.to_not_binarize_colindexes]
+            list_unique_categorical_values = [np.unique(X_bin[:,i]) for i in final_list_categorical_indexes]
             array_quantile = np.array(list_quantile)
+
             array_dim_indices_samples = np.arange(0,X.shape[1])
             array_continuous_dim_indices_samples = array_dim_indices_samples[~categorical]
             for ind_dim_quantile,cont_dim_samples in enumerate(array_continuous_dim_indices_samples): 
@@ -700,7 +735,8 @@ class SirusMixin:
             sample_weight=sample_weight,
         )
         self.array_quantile_ = array_quantile
-        self.list_unique_categorical_values = list_unique_categorical_values
+        self.list_unique_categorical_values = list_unique_categorical_values #list of each categorical features containing unique values for each of them
+        self.final_list_categorical_indexes = final_list_categorical_indexes # indices of each categorical features, including the one hot encoded
 
     #######################################################
     ################## Print rules   ######################
