@@ -947,8 +947,9 @@ class SirusMixin:
                     list_indices_features_bin is not None
                     and dimension in list_indices_features_bin
                 ):
-                    sign_display = "is" if sign_internal == "L" else "is not"
-                    treshold_display = str(treshold)
+                    sign_display = "is" #if sign_internal == "L" else "is not"
+                    #treshold_display = str(treshold)
+                    treshold_display = str(0) if sign_internal == "L" else str(1)
                 else:
                     sign_display = "<=" if sign_internal == "L" else ">"
                     treshold_display = (
@@ -980,7 +981,7 @@ class SirusMixin:
 
             then_val_str = "N/A"
             else_val_str = "N/A"
-
+            
             if prob_if_true_list and len(prob_if_true_list) > target_class_index:
                 p_s_if_true = prob_if_true_list[target_class_index] * 100
                 then_val_str = f"{p_s_if_true:.0f}%"
