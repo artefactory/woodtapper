@@ -2,6 +2,7 @@ from functools import reduce
 from operator import and_
 
 import numpy as np
+import pandas as pd
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
@@ -753,6 +754,13 @@ class SirusMixin:
         11. Ensure that sample weights are appropriately handled during the fitting process.
         12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
+        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+            y = y.values
+        elif not isinstance(X, np.ndarray):
+            raise Exception('Wrong type for X')      
+        
         X_bin = X.copy()
         if (self.to_not_binarize_colindexes is None) and (
             self.starting_index_one_hot is None
