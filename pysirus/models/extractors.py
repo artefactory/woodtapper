@@ -11,10 +11,11 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
+from sklearn.linear_model import Ridge, RidgeCV
 
 from pysirus.models.basic import SirusMixin
+from pysirus.models.basic import timing
 
-from sklearn.linear_model import Ridge, RidgeCV
 
 
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
@@ -69,6 +70,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
+    
     def fit(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
 
@@ -185,7 +187,8 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
-
+   
+    @timing
     def fit(self, X, y, sample_weight=None, check_input=True):
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []

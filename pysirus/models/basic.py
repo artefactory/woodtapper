@@ -7,6 +7,7 @@ from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge, RidgeCV
+import time
 
 from ._QuantileSplitter import QuantileBestSplitter
 
@@ -16,6 +17,14 @@ sklearn.tree._classes.DENSE_SPLITTERS = {
     "quantile": QuantileBestSplitter,
 }
 
+def timing(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} took {end - start:.4f} seconds")
+        return result
+    return wrapper
 
 class Node:
     """
@@ -245,9 +254,9 @@ class SirusMixin:
         ----------
         """
         if sign == "L":
-            return X[:, dimension] <= treshold  # .mean()
+            return X[:, dimension] <= treshold
         else:
-            return X[:, dimension] > treshold  # .mean()
+            return X[:, dimension] > treshold
 
     def from_rules_to_constraint(self, rule):
         """
@@ -436,6 +445,7 @@ class SirusMixin:
 
         return {"paths": paths_ftr, "proba": proba_ftr}
 
+    @timing
     def paths_filtering_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
@@ -455,7 +465,7 @@ class SirusMixin:
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
-
+    @timing
     def fit_forest_rules(self, X, y, all_possible_rules_list, sample_weight=None):
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
@@ -718,7 +728,7 @@ class SirusMixin:
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
-
+    @timing
     def fit_main_classifier(
         self, X, y, sample_weight=None
     ):  # to_not_binarize_colindex=None
@@ -754,6 +764,7 @@ class SirusMixin:
         11. Ensure that sample weights are appropriately handled during the fitting process.
         12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
+        start = time.time()
         if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
@@ -817,6 +828,8 @@ class SirusMixin:
                     side="left",
                 )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
+        end = time.time()
+        print(f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds")
         super().fit(
             X_bin,
             y,
