@@ -12,9 +12,10 @@ from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 from sklearn.linear_model import Ridge, RidgeCV
+import time
 
 from pysirus.models.basic import SirusMixin
-from pysirus.models.basic import timing
+#from pysirus.models.basic import timing
 
 
 
@@ -188,14 +189,17 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
    
-    @timing
+
     def fit(self, X, y, sample_weight=None, check_input=True):
+        start = time.time()
         self.fit_main_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
         self.fit_forest_rules(X, y, all_possible_rules_list, sample_weight)
+        end = time.time()
+        print(f"All fit took {end - start:.4f} seconds")
         # Compute stability criterion:
         M = self.n_estimators
         list_p0 = np.arange(0.1, 1, 0.08)

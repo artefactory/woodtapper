@@ -445,7 +445,6 @@ class SirusMixin:
 
         return {"paths": paths_ftr, "proba": proba_ftr}
 
-    @timing
     def paths_filtering_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
@@ -465,8 +464,8 @@ class SirusMixin:
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
-    @timing
     def fit_forest_rules(self, X, y, all_possible_rules_list, sample_weight=None):
+        start = time.time()
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -494,12 +493,17 @@ class SirusMixin:
             )
 
         #### APPLY POST TREATMEANT : remove redundant rules
+        start_lin_dep = time.time()
         res = self.paths_filtering_stochastic(
             paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
         )  ## Maximum number of rule to keep=25
+        end_lin_dep = time.time()
+        print(f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds")
         self.all_possible_rules_list = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
         self.n_rules = len(self.all_possible_rules_list)
+        end = time.time()
+        print(f"Rules extraction took {end - start:.4f} seconds")
 
         # list_mask_by_rules = []
         list_probas_by_rules = []
@@ -728,7 +732,6 @@ class SirusMixin:
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
-    @timing
     def fit_main_classifier(
         self, X, y, sample_weight=None
     ):  # to_not_binarize_colindex=None
@@ -830,11 +833,15 @@ class SirusMixin:
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
         end = time.time()
         print(f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds")
+
+        start = time.time()
         super().fit(
             X_bin,
             y,
             sample_weight=sample_weight,
         )
+        end = time.time()
+        print(f"Grow forest took {end - start:.4f} seconds")
         self.array_quantile_ = array_quantile
         self.list_unique_categorical_values = list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self.final_list_categorical_indexes = final_list_categorical_indexes  # indices of each categorical features, including the one hot encoded
