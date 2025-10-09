@@ -22,9 +22,6 @@ from pysirus.models.basic import SirusMixin
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     """
     SIRUS class applied with a DecisionTreeClassifier
-    Parameters
-    ----------
-
     """
 
     def __init__(
@@ -111,8 +108,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
 
 class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClassifier
     """
-    SIRUS class applied with a RandomForestClassifier
-
+    SIRUS class applied with a RandomForestClassifier.
     """
 
     _parameter_constraints: dict = {**RandomForestClassifier._parameter_constraints}
