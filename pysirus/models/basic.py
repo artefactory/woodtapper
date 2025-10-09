@@ -62,6 +62,60 @@ class Node:
 class SirusMixin:
     """
     Mixin of SIRUS. Base of all SIRUS models.
+
+    Attributes
+    ----------
+    p0 : float, optional (default=0.01)
+        Frequency threshold for rule selection.
+    random_state : int, optional (default=None)
+        Random seed for reproducibility.
+    n_jobs : int, optional (default=1)
+        Number of parallel jobs for tree construction.
+    n_features_in_ : int
+        Number of features in the input data.
+    n_classes_ : int    
+        Number of classes in the target variable (for classification tasks).
+    classes_ : array-like
+        Unique classes in the target variable (for classification tasks).
+    n_rules : int
+        Number of rules extracted from the ensemble.
+    all_possible_rules_list : list
+        List of all possible rules extracted from the ensemble.
+    all_possible_rules_frequency_list : list
+        List of frequencies associated with each rule.
+    list_probas_by_rules : list
+        List of probabilities associated with each rule (for classification tasks).
+    list_probas_outside_by_rules : list
+        List of probabilities for samples not satisfying each rule (for classification tasks).
+    type_target : dtype
+        Data type of the target variable.
+    ridge : Ridge or RidgeCV instance
+        Ridge regression model for final prediction (for regression tasks).
+    list_unique_categorical_values : list
+        List of unique values for each categorical feature.
+    final_list_categorical_indexes : list
+        List of indexes of categorical features.
+    array_quantile_ : array-like
+        Array of quantiles for continuous features.
+    Returns
+    ----------
+    SirusMixin: SirusMixin
+        The current SirusMixin instance.
+    Note
+    ----
+    This mixin provides core functionalities for SIRUS models, including rule extraction from decision trees,
+    rule filtering, and prediction methods for both classification and regression tasks.
+    It is designed to be inherited by specific SIRUS model classes.
+    1. Tree exploration and rule extraction using a custom Node class.
+    2. Generation of masks for data samples based on extracted rules.
+    3. Filtering of redundant rules based on linear dependence.
+    4. Fit and predict methods for classification and regression tasks.
+    5. Integration with Ridge regression for regression tasks.
+    6. Handling of both continuous and categorical features.
+    7. Efficient memory and time management for large datasets.
+    8. Compatibility with scikit-learn's decision tree structures.
+    9. Customizable parameters for rule selection and model fitting.
+    10. Designed for interpretability and simplicity in model predictions.
     """
 
     #######################################################
@@ -151,9 +205,22 @@ class SirusMixin:
 
         Parameters
         ----------
+        path : list
+            A multiple rule (list of single rules).
+        is_removing_singleton : bool, optional (default=False)
+            Whether to exclude single rules from the sub-rules.
 
         Returns
         ----------
+        list_sub_path : list
+            List of sub-rules extracted from the given multiple rule.
+        1. Iterate through the given path to generate sub-rules.
+        2. Depending on the is_removing_singleton flag, include or exclude single rules.
+        3. Return the list of generated sub-rules.
+        4. The function ensures that only valid sub-rules (with at least two conditions) are included when required.
+        5. This method is essential for expanding the rule set derived from decision trees.
+        6. It helps in capturing more granular patterns within the data by considering all possible combinations of conditions.
+        7. The generated sub-rules can be used for further analysis or model fitting.
         """
         list_sub_path = []
         max_size_curr_path = len(path)
@@ -252,6 +319,23 @@ class SirusMixin:
 
         Parameters
         ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        dimension : int
+            The feature indice of the rule.
+        treshold : float
+            The treshold of the rule.
+        sign : str
+            The sign of the rule ('L' for less or equal and 'R' for greater)
+        Returns
+        ----------
+        mask : array-like, shape (n_samples,)
+            Boolean mask indicating which samples satisfy the single rule.
+        1. Generate a boolean mask based on the rule's dimension, threshold, and sign.
+        2. The mask indicates which samples in X satisfy the condition defined by the rule.
+        3. Return the generated mask.
+        4. The function supports two types of conditions: 'L' for less than or equal to the threshold, and 'R' for greater than the threshold.
+        5. This method is essential for filtering data samples based on specific rule conditions.
         """
         if sign == "L":
             return X[:, dimension] <= treshold
@@ -357,6 +441,25 @@ class SirusMixin:
     def paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+        Parameters
+        ----------
+        paths : list
+            List of rules (each rule is a list of splits; each split [var, thr, dir])
+        proba : list
+            Probabilities associated with each path/rule
+        num_rule : int
+            Max number of rules to keep
+        Returns
+        ----------
+        dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        1. Generate an independent dataset for checking rule redundancy.
+        2. Iterate through the paths and apply redundancy checks.
+        3. Return the filtered paths and their associated probabilities.
+        4. The redundancy check is based on the rank of a matrix formed by the masks of the rules.
+        5. If the rank of the matrix increases when adding a new rule, it is considered non-redundant and kept.
+        6. This method ensures that the selected rules are diverse and not linearly dependent.
+        7. The process continues until the desired number of rules is reached or all paths are evaluated.
+        8. The function returns a dictionary containing the filtered paths and their probabilities.
         """
         paths_ftr = []
         proba_ftr = []
@@ -465,6 +568,29 @@ class SirusMixin:
     ############ Classification fit and predict  ##########
     #######################################################
     def fit_forest_rules(self, X, y, all_possible_rules_list, sample_weight=None):
+        """
+        Fit method for SirusMixin in classification case.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,)
+            The target values (class labels).
+        all_possible_rules_list : list
+            List of all possible rules extracted from the ensemble of trees.
+        sample_weight : array-like, shape (n_samples,), optional (default=None)
+            Sample weights for each instance.
+        Returns
+        ----------
+        None
+        1. Validate input data and initialize parameters.
+        2. Count unique rules and their frequencies.
+        3. Apply post-treatment to filter redundant rules.
+        4. Calculate probabilities for each rule based on the training data.
+        5. Store the extracted rules and their associated probabilities.
+        6. The method ensures that only relevant and non-redundant rules are retained for the final model.
+        7. It handles both the presence and absence of sample weights during probability calculations.
+        """
         start = time.time()
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
@@ -553,7 +679,7 @@ class SirusMixin:
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin.
+        predict_proba method for SirusMixin. in classification case
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -591,7 +717,7 @@ class SirusMixin:
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin.
+        predict_proba method for SirusMixin in classification case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -625,6 +751,30 @@ class SirusMixin:
     def fit_forest_rules_regressor(
         self, X, y, all_possible_rules_list, sample_weight=None
     ):
+        """
+        Fit method for SirusMixin in regression case.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,)
+            The target values (real numbers).
+        all_possible_rules_list : list
+            List of all possible rules extracted from the ensemble of trees.
+        sample_weight : array-like, shape (n_samples,), optional (default=None)
+            Sample weights for each instance.
+        Returns
+        ----------
+        None
+        1. Validate input data and initialize parameters.
+        2. Count unique rules and their frequencies.
+        3. Apply post-treatment to filter redundant rules.
+        4. Calculate mean target values for samples satisfying and not satisfying each rule.
+        5. Store the extracted rules and their associated mean target values.
+        6. Fit a Ridge regression model using the rule-based features.
+        7. The method ensures that only relevant and non-redundant rules are retained for the final model.
+        8. It handles both the presence and absence of sample weights during model fitting.
+        """
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
@@ -710,7 +860,25 @@ class SirusMixin:
 
     def predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin.
+        predict_proba method for SirusMixin for regression case.
+        Parameters
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        to_add_probas_outside_rules : bool, optional (default=True)
+            Whether to include probabilities from samples not satisfying the rules.
+        Returns
+        ----------
+        y_pred : array-like, shape (n_samples,)
+            The predicted values for each sample.
+        1. Generate the feature matrix based on the rules for the input samples.
+        2. Use the fitted Ridge regression model to predict target values.
+        3. Return the predicted values.
+        4. The method constructs the feature matrix by evaluating each rule on the input samples.
+        5. It includes an intercept term in the feature matrix for the Ridge regression model.
+        6. The predictions are made using the linear combination of the rule-based features and the learned coefficients from the Ridge model.
+        7. The function supports the option to include or exclude probabilities for samples not satisfying the rules, although in this implementation it is always included in the feature matrix.
+        8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
+        9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         for indice in range(self.n_rules):
@@ -889,6 +1057,22 @@ class SirusMixin:
             The maximum number of rules to display.
             target_class_index : int, optional (default=1)
             The index of the target class for which to display probabilities.
+        list_indices_features_bin : list of int, optional (default=None)
+            List of feature indices that are binary (0/1) for special formatting.
+        Returns
+        ----------
+        None
+        1. Validate the presence of necessary attributes in the model.
+        2. Extract rules and their associated probabilities.
+        3. Format and display the rules in a tabular format.
+        4. Include estimated average rates for the specified target class.
+        5. Handle feature names for better readability, using provided mappings if available.
+        6. Adjust formatting for binary features if specified.
+        7. Ensure that the display is clear and informative, with appropriate headers and alignment.
+        8. If the model lacks the required attributes, print an error message and exit.
+        9. If there are no rules to display, print a corresponding message and exit.
+        10. Calculate and display the estimated average probability for the target class based on 'else' clauses.
+        11. Print the rules along with their conditions, 'then' probabilities, and 'else' probabilities in a structured table.
         """
         if (
             not hasattr(self, "all_possible_rules_list")
