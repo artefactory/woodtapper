@@ -97,9 +97,9 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
-        self.fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
-        self.fit_forest_rules(
+        self._fit_quantile_classifier(X, y, sample_weight)
+        all_possible_rules_list = self._extract_single_tree_rules(self.tree_)
+        self._fit_rules(
             X, y, all_possible_rules_list, sample_weight
         )  ## Checker que cx'est bien sur X et non le X_bin
         return self
@@ -187,12 +187,12 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         start = time.time()
-        self.fit_quantile_classifier(X, y, sample_weight)
+        self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, sample_weight)
+            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
+        self._fit_rules(X, y, all_possible_rules_list, sample_weight)
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
         # Compute stability criterion:
@@ -223,70 +223,6 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
 
 
-######### Regressor ############
-
-
-class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
-    """
-    SIRUS class applied with a DecisionTreeClassifier
-    Parameters
-    ----------
-
-    """
-
-    _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
-    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
-
-    def __init__(
-        self,
-        *,
-        criterion="squared_error",
-        splitter="best",
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        min_weight_fraction_leaf=0.0,
-        max_features=None,
-        random_state=None,
-        max_leaf_nodes=None,
-        min_impurity_decrease=0.0,
-        ccp_alpha=0.0,
-        monotonic_cst=None,
-        p0=0.01,
-        quantile=10,
-        to_not_binarize_colindexes=None,
-        starting_index_one_hot=None,
-    ):
-        super().__init__(
-            criterion=criterion,
-            splitter=splitter,
-            max_depth=max_depth,
-            min_samples_split=min_samples_split,
-            min_samples_leaf=min_samples_leaf,
-            min_weight_fraction_leaf=min_weight_fraction_leaf,
-            max_features=max_features,
-            max_leaf_nodes=max_leaf_nodes,
-            random_state=random_state,
-            min_impurity_decrease=min_impurity_decrease,
-            ccp_alpha=ccp_alpha,
-            monotonic_cst=monotonic_cst,
-        )
-        self.p0 = p0
-        self.quantile = quantile
-        self.to_not_binarize_colindexes = to_not_binarize_colindexes
-        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
-
-    def fit_forest_rules_regressor(self, X, y, sample_weight=None, check_input=True):
-        """Build a decision tree classifier from the training set (X, y)."""
-        self.fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
-        self.fit_forest_rules(
-            X, y, all_possible_rules_list, sample_weight
-        )  ## Checker que cx'est bien sur X et non le X_bin
-        return self
-
-    def predict(self, X, to_add_probas_outside_rules=True):
-        return self.predict_regressor(X, to_add_probas_outside_rules)
 
 
 class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
@@ -458,20 +394,20 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        self.fit_quantile_classifier(X, y, sample_weight)
+        self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
             # print('self.estimators_.shape', self.estimators_.shape)
             dtree = self.estimators_[i, 0]
             tree = dtree.tree_
-            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules(X, y, all_possible_rules_list, sample_weight)
+            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
+        self._fit_rules(X, y, all_possible_rules_list, sample_weight)
         array_probas_by_rules = np.array(self.list_probas_by_rules)
         array_probas_outside_by_rules = np.array(self.list_probas_outside_by_rules)
         gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin ???,
             gamma_array[final_mask, indice] = 1
@@ -523,7 +459,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin ???,
             gamma_array[final_mask, indice] = 1
@@ -534,6 +470,72 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         # y_pred = self.enc.inverse_transform(y_pred_enc)
         return y_pred_enc
 
+
+######### Regressor ############
+
+
+class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
+    """
+    SIRUS class applied with a DecisionTreeClassifier
+    Parameters
+    ----------
+
+    """
+
+    _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
+    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+
+    def __init__(
+        self,
+        *,
+        criterion="squared_error",
+        splitter="best",
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        min_weight_fraction_leaf=0.0,
+        max_features=None,
+        random_state=None,
+        max_leaf_nodes=None,
+        min_impurity_decrease=0.0,
+        ccp_alpha=0.0,
+        monotonic_cst=None,
+        p0=0.01,
+        quantile=10,
+        to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
+    ):
+        super().__init__(
+            criterion=criterion,
+            splitter=splitter,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
+            min_impurity_decrease=min_impurity_decrease,
+            ccp_alpha=ccp_alpha,
+            monotonic_cst=monotonic_cst,
+        )
+        self.p0 = p0
+        self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+
+    def _fit_rules_regressor(self, X, y, sample_weight=None, check_input=True):
+        """Build a decision tree classifier from the training set (X, y)."""
+        self._fit_quantile_classifier(X, y, sample_weight)
+        all_possible_rules_list = self._extract_single_tree_rules(self.tree_)
+        self._fit_rules(
+            X, y, all_possible_rules_list, sample_weight
+        )  ## Checker que cx'est bien sur X et non le X_bin
+        return self
+
+    def predict(self, X, to_add_probas_outside_rules=True):
+        return self._predict_regressor(X, to_add_probas_outside_rules)
+    
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
     _parameter_constraints: dict = {**RandomForestRegressor._parameter_constraints}
@@ -609,10 +611,12 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        self.fit_quantile_classifier(X, y, sample_weight)
+        self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
             dtree = self.estimators_[i]
             tree = dtree.tree_
-            all_possible_rules_list.extend(self.extract_single_tree_rules(tree))
-        self.fit_forest_rules_regressor(X, y, all_possible_rules_list, sample_weight)
+            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
+        self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
+    def predict(self, X, to_add_probas_outside_rules=True):
+        return self._predict_regressor(X, to_add_probas_outside_rules)

@@ -229,7 +229,7 @@ class SirusMixin:
     def generate_all_possible_rules_(self, tree_structure):
         """
         Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
-        Auxiliar function for extract_single_tree_rules.
+        Auxiliar function for _extract_single_tree_rules.
 
         Parameters
         ----------
@@ -279,7 +279,7 @@ class SirusMixin:
                         all_paths_list.extend(list_sub_path)
         return all_paths_list
 
-    def extract_single_tree_rules(self, tree):
+    def _extract_single_tree_rules(self, tree):
         """
         Extract all possible rules (single and multiple) from a single tree.
         Parameters
@@ -358,7 +358,7 @@ class SirusMixin:
         sign = rule[2]
         return dimension, treshold, sign
 
-    def generate_mask_rule(self, X, rules):
+    def _generate_mask_rule(self, X, rules):
         """
         Generate the mask associated to a rule of len >=1.
         Parameters
@@ -382,7 +382,7 @@ class SirusMixin:
         final_mask = reduce(and_, list_mask)
         return final_mask
 
-    def paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
+    def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         Parameters
@@ -465,7 +465,7 @@ class SirusMixin:
                     # related_paths_ftr = paths_ftr## WARNINGS on compare toutes les règles finalement !!!! #####
                     list_matrix = [[] for i in range(len(rules_ensemble))]
                     for i, x in enumerate(rules_ensemble):
-                        mask_x = self.generate_mask_rule(X=data_indep, rules=x)
+                        mask_x = self._generate_mask_rule(X=data_indep, rules=x)
                         list_matrix[i] = mask_x
 
                     if len(list_matrix) > 0:
@@ -490,7 +490,7 @@ class SirusMixin:
 
         return {"paths": paths_ftr, "proba": proba_ftr}
 
-    def paths_filtering_stochastic(self, paths, proba, num_rule):
+    def _paths_filtering_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
 
@@ -502,14 +502,14 @@ class SirusMixin:
         Returns:
             dict: {'paths': filtered_paths, 'proba': filtered_proba}
         """
-        return self.paths_filtering_matrix_stochastic(
+        return self._paths_filtering_matrix_stochastic(
             paths=paths, proba=proba, num_rule=num_rule
         )
 
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
-    def fit_forest_rules(self, X, y, all_possible_rules_list, sample_weight=None):
+    def _fit_rules(self, X, y, all_possible_rules_list, sample_weight=None):
         """
         Fit method for SirusMixin in classification case.
         Parameters
@@ -562,7 +562,7 @@ class SirusMixin:
 
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
-        res = self.paths_filtering_stochastic(
+        res = self._paths_filtering_stochastic(
             paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
@@ -581,7 +581,7 @@ class SirusMixin:
 
         for current_rules in self.all_possible_rules_list:
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin 
             y_train_rule = y[final_mask]
@@ -636,7 +636,7 @@ class SirusMixin:
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin
             y_pred_probas[final_mask] += self.list_probas_by_rules[
@@ -690,7 +690,7 @@ class SirusMixin:
     #######################################################
     ############# Regressor fit and predict  ##############
     #######################################################
-    def fit_forest_rules_regressor(
+    def _fit_rules_regressor(
         self, X, y, all_possible_rules_list, sample_weight=None
     ):
         """
@@ -745,7 +745,7 @@ class SirusMixin:
             )
 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self.paths_filtering_stochastic(
+        res = self._paths_filtering_stochastic(
             paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
         )  ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res["paths"]
@@ -757,7 +757,7 @@ class SirusMixin:
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         for rule_number, current_rules in enumerate(self.all_possible_rules_list):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin ???,
             y_train_rule = y[final_mask]
@@ -800,7 +800,7 @@ class SirusMixin:
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
         # self.gamma_array = gamma_array
 
-    def predict_regressor(self, X, to_add_probas_outside_rules=True):
+    def _predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
         predict_proba method for SirusMixin for regression case.
         Parameters
@@ -825,7 +825,7 @@ class SirusMixin:
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
-            final_mask = self.generate_mask_rule(
+            final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin 
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
@@ -842,7 +842,7 @@ class SirusMixin:
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
-    def fit_quantile_classifier(
+    def _fit_quantile_classifier(
         self, X, y, sample_weight=None
     ):  
         """
