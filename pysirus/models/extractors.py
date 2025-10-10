@@ -97,7 +97,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
-        self.fit_main_classifier(X, y, sample_weight)
+        self.fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
             X, y, all_possible_rules_list, sample_weight
@@ -187,7 +187,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         start = time.time()
-        self.fit_main_classifier(X, y, sample_weight)
+        self.fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
@@ -278,7 +278,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 
     def fit_forest_rules_regressor(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y)."""
-        self.fit_main_classifier(X, y, sample_weight)
+        self.fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = self.extract_single_tree_rules(self.tree_)
         self.fit_forest_rules(
             X, y, all_possible_rules_list, sample_weight
@@ -458,7 +458,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        self.fit_main_classifier(X, y, sample_weight)
+        self.fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
             # print('self.estimators_.shape', self.estimators_.shape)
@@ -609,7 +609,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        self.fit_main_classifier(X, y, sample_weight)
+        self.fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
             dtree = self.estimators_[i]

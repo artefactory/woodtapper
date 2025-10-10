@@ -892,7 +892,7 @@ class SirusMixin:
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
-    def fit_main_classifier(
+    def fit_quantile_classifier(
         self, X, y, sample_weight=None
     ):  # to_not_binarize_colindex=None
         """
