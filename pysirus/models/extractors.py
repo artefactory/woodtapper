@@ -14,8 +14,7 @@ from sklearn.utils._param_validation import StrOptions
 from sklearn.linear_model import Ridge, RidgeCV
 import time
 
-from pysirus.models.basic import SirusMixin
-#from pysirus.models.basic import timing
+from pysirus.models.base import SirusMixin
 
 
 
