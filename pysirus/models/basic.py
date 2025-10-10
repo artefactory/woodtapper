@@ -641,9 +641,9 @@ class SirusMixin:
             # for loop for getting all the values in train (X) passing the rules
             final_mask = self.generate_mask_rule(
                 X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
+            )  # On X and not on X_bin 
             y_train_rule = y[final_mask]
-            y_train_outside_rule = y[~final_mask] * sample_weight[~final_mask]
+            y_train_outside_rule = y[~final_mask] 
             sample_weight_rule = sample_weight[final_mask]
             sample_weight_outside_rule = sample_weight[~final_mask]
 
@@ -696,7 +696,7 @@ class SirusMixin:
             current_rules = self.all_possible_rules_list[indice]
             final_mask = self.generate_mask_rule(
                 X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
+            )  # On X and not on X_bin
             y_pred_probas[final_mask] += self.list_probas_by_rules[
                 indice
             ]  ## add the asociated rule probability
@@ -885,7 +885,7 @@ class SirusMixin:
             current_rules = self.all_possible_rules_list[indice]
             final_mask = self.generate_mask_rule(
                 X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
+            )  # On X and not on X_bin 
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
                 gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
