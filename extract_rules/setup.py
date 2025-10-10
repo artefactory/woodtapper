@@ -5,14 +5,14 @@ import numpy
 
 extensions = [
     Extension(
-        "QuantileSplitter.QuantileSplitter",       # Full module path
-        ["QuantileSplitter/_QuantileSplitter.pyx"], # Path to .pyx file
+        "Splitter.QuantileSplitter",       # Full module path
+        ["Splitter/_QuantileSplitter.pyx"], # Path to .pyx file
     )
 ]
 
 setup(
-    name='QuantileSplitter',
-    packages=["QuantileSplitter"],
+    name='Splitter',
+    packages=["Splitter"],
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()]
 )

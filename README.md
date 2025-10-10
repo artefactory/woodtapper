@@ -27,11 +27,10 @@ And install the required packages into your environment (conda, mamba or pip):
 pip install -r requirements.txt
 ```
 
-> ⚠️ **Warning** Then, you **need** to run the following command inside models folder : 
+> ⚠️ **Warning** Then, you **need** to run the following command inside extract_rules folder : 
 ```
 python setup.py build_ext --inplace
 ```
-> Finally, you have to move the generated file file *models/build/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so* into *models/_QuantileSplitter.cpython-311-x86_64-linux-gnu.so*
 
 ## 🚀 How to use pySIRUS
 

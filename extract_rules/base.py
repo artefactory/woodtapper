@@ -9,7 +9,7 @@ import sklearn.tree._classes
 from sklearn.linear_model import Ridge, RidgeCV
 import time
 
-from QuantileSplitter.QuantileSplitter import QuantileBestSplitter
+from .Splitter.QuantileSplitter import QuantileBestSplitter
 
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
