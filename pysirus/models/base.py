@@ -382,54 +382,6 @@ class SirusMixin:
         final_mask = reduce(and_, list_mask)
         return final_mask
 
-    def _related_rule(self, curr_rule, relative_rule):
-        """
-        !!!!!!! NOT USED CURRENTLY  !!!!!
-        Check if two rules are related (i.e. share at least one single rule).
-        Parameters
-        ----------
-        curr_rule : list of tuples
-            The current rule to check.
-        relative_rule : list of tuples
-            The rule to compare with.
-        Returns
-        ----------
-        bool
-            True if the two rules are related, False otherwise.
-        """
-
-        if len(relative_rule) == 1:
-            A = relative_rule[0]
-            if len(curr_rule) == 1:  ## Both are len = 1
-                return (curr_rule[0][0] == A[0]) and (curr_rule[0][1] == A[1])
-            elif len(curr_rule) == 2:
-                l1, l2 = curr_rule[0], curr_rule[1]
-                return ((l1[0] == A[0]) and (l1[1] == A[1])) or (
-                    (l1[0] == A[0]) and (l1[1] == A[1])
-                )
-            else:
-                raise ValueError(
-                    f"Rule {curr_rule} has more than two splits; this is not supported."
-                )
-        else:
-            A, B = relative_rule
-            if len(curr_rule) == 1:
-                return ((curr_rule[0][0] == A[0]) and (curr_rule[0][1] == A[1])) or (
-                    (curr_rule[0][0] == B[0]) and (curr_rule[0][1] == B[1])
-                )
-            elif len(curr_rule) == 2:
-                l1, l2 = curr_rule[0], curr_rule[1]
-                return (
-                    ((l1[0] == A[0]) and (l1[1] == A[1]))
-                    or ((l1[0] == B[0]) and (l1[1] == B[1]))
-                    or ((l1[0] == A[0]) and (l2[1] == A[1]))
-                    or ((l2[0] == B[0]) and (l2[1] == B[1]))
-                )
-            else:
-                raise ValueError(
-                    f"Rule {curr_rule} has more than two splits; this is not supported."
-                )
-
     def paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
@@ -504,8 +456,6 @@ class SirusMixin:
                 num_rule_temp = len(paths_ftr)
                 continue
             elif len(paths_ftr) != 0:  ## If there are already filtered paths
-                # list_bool_related_rules = [self._related_rule(curr_path, x) for x in paths_ftr]
-                # related_paths_ftr = [path for path, boolean in zip(paths_ftr, list_bool_related_rules) if boolean]
                 related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
                 if len(related_paths_ftr) == 0:  ## If there are no related paths
                     paths_ftr.append(curr_path)
