@@ -87,7 +87,7 @@ class SirusMixin:
         List of unique values for each categorical feature.
     final_list_categorical_indexes : list
         List of indexes of categorical features.
-    array_quantile_ : array-like
+    _array_quantile : array-like
         Array of quantiles for continuous features.
     Returns
     ----------
@@ -486,10 +486,10 @@ class SirusMixin:
                 ind_dim_categorcial_list_unique_elements += 1
             else:  # Continuous variable
                 elem_low = (
-                    self.array_quantile_[:, ind_dim_continuous_array_quantile].min() - 1
+                    self._array_quantile[:, ind_dim_continuous_array_quantile].min() - 1
                 )
                 elem_high = (
-                    self.array_quantile_[:, ind_dim_continuous_array_quantile].max() + 1
+                    self._array_quantile[:, ind_dim_continuous_array_quantile].max() + 1
                 )
                 data_indep[:, ind_dim_abs] = np.random.uniform(
                     low=elem_low, high=elem_high, size=n_samples_indep
@@ -1002,7 +1002,7 @@ class SirusMixin:
         )
         end = time.time()
         print(f"Grow forest took {end - start:.4f} seconds")
-        self.array_quantile_ = array_quantile
+        self._array_quantile = array_quantile
         self.list_unique_categorical_values = list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self.final_list_categorical_indexes = final_list_categorical_indexes  # indices of each categorical features, including the one hot encoded
 
