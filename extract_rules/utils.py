@@ -32,3 +32,14 @@ class Node:
             self.children = children
         else:
             self.children = []
+
+def get_top_rules(all_possible_rules_list_str,p0):
+    unique_str_rules, indices_rules, frequence_rules = np.unique(
+    all_possible_rules_list_str, return_counts=True, return_index=True
+    )  # get the unique rules and count
+    frequence_rules = frequence_rules / frequence_rules.sum()  # convert to frequency
+    unique_str_rules_and_freq = zip(unique_str_rules, frequence_rules) # combine rules and frequency
+    all_rules_sorted = sorted(unique_str_rules_and_freq, key=lambda x: x[1], reverse=True) # sort by frequency
+    all_possible_rules_and_freq_list = [(eval(unique_str_rule),freq) for unique_str_rule, freq in all_rules_sorted if freq > p0] # filter by p0
+    all_possible_rules_list, all_possible_freq_list =zip(*all_possible_rules_and_freq_list) # unzip
+    return all_possible_rules_list, all_possible_freq_list

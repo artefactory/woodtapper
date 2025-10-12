@@ -12,6 +12,7 @@ from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.preprocessing import OneHotEncoder
 import time
 
 from .base import SirusMixin
@@ -420,14 +421,15 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             scoring="neg_mean_squared_error",
             fit_intercept=True,
         )
-        # self.ridge = MultiTaskLassoCV(
-        #    alphas=np.arange(0.01,1,0.1),cv=5, fit_intercept=True,
-        # )
-        from sklearn.preprocessing import OneHotEncoder
 
         self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
         y_enc = self.enc.fit_transform(y.reshape(-1, 1))
         self.ridge.fit(gamma_array, y_enc, sample_weight=sample_weight)
+        for indice in range(self.n_rules):
+            coeff_rule = self.ridge.coef_[:,indice]
+            coeff_outside_rule = self.ridge.coef_[:,indice + self.n_rules]
+            self.list_probas_by_rules[indice] = (coeff_rule * self.list_probas_by_rules[indice]).tolist()
+            self.list_probas_outside_by_rules[indice] = (coeff_outside_rule * self.list_probas_outside_by_rules[indice]).tolist()
 
         M = self.n_estimators
         list_p0 = np.arange(0.1, 1, 0.08)

@@ -10,7 +10,7 @@ from sklearn.linear_model import Ridge, RidgeCV
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node
+from .utils import Node, get_top_rules
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -503,43 +503,24 @@ class SirusMixin:
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
-        unique_str_rules, indices_rules, count_rules = np.unique(
-            all_possible_rules_list_str, return_counts=True, return_index=True
-        )  # get the unique rules and count
-        proportions_count = count_rules / len(
-            unique_str_rules
-        )  # Get frequency of each rules
-        proportions_count_sort = -np.sort(
-            -proportions_count
-        )  # Sort rules frequency by descending order
-        proportions_count_sort_indices = np.argsort(
-            -count_rules
-        )  # Sort rules coubnt by descending order (same results as proportions)
-        n_rules_to_keep = (proportions_count_sort > self.p0).sum()
-        all_possible_rules_list = [
-            eval(unique_str_rules[i])
-            for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]  # all possible rules reindexed
-        proportions_count_sort = proportions_count_sort[:n_rules_to_keep]
+        all_possible_rules_list, all_possible_freq_list = get_top_rules(all_possible_rules_list_str=all_possible_rules_list_str,p0=self.p0)
         if len(all_possible_rules_list) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
-
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
+            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=25
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
         print(f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds")
         self.all_possible_rules_list = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"]
+        self.all_possible_rules_frequency_list = res["proba"] # usefull ?
         self.n_rules = len(self.all_possible_rules_list)
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
 
-        # list_mask_by_rules = []
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
         if sample_weight is None:
@@ -558,21 +539,8 @@ class SirusMixin:
             list_probas = []
             list_probas_outside_rules = []
             for cl in range(self.n_classes_):  # iteration on each class of the target
-                if len(y_train_rule) == 0:
-                    curr_probas = 0
-                else:
-                    curr_probas = (
-                        sample_weight_rule[y_train_rule == cl].sum()
-                        / sample_weight_rule.sum()
-                    )
-                if len(y_train_outside_rule) == 0:
-                    curr_probas_outside_rules = 0
-                else:
-                    curr_probas_outside_rules = (
-                        sample_weight_outside_rule[y_train_outside_rule == cl].sum()
-                        / sample_weight_outside_rule.sum()
-                    )
-
+                curr_probas = sample_weight_rule[y_train_rule == cl].sum()/sample_weight_rule.sum() if len(y_train_rule) != 0 else 0
+                curr_probas_outside_rules = sample_weight_outside_rule[y_train_outside_rule == cl].sum()/sample_weight_outside_rule.sum() if len(y_train_outside_rule) != 0 else 0
                 list_probas.append(curr_probas) # len n_classes_ 
                 list_probas_outside_rules.append(curr_probas_outside_rules) # len n_classes_
 
@@ -684,25 +652,7 @@ class SirusMixin:
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
-        unique_str_rules, indices_rules, count_rules = np.unique(
-            all_possible_rules_list_str, return_counts=True, return_index=True
-        )  # get the unique rules and count
-        proportions_count = count_rules / len(
-            count_rules
-        )  # Get frequency of each rules
-        proportions_count_sort = -np.sort(
-            -proportions_count
-        )  # Sort rules frequency by descending order
-        proportions_count_sort_indices = np.argsort(
-            -count_rules
-        )  # Sort rules coubnt by descending order (same results as proportions)
-        n_rules_to_keep = (
-            proportions_count_sort > self.p0
-        ).sum()  ## not necssary to sort proportions_count...
-        all_possible_rules_list = [
-            eval(unique_str_rules[i])
-            for i in proportions_count_sort_indices[:n_rules_to_keep]
-        ]  # all possible rules reindexed
+        all_possible_rules_list, all_possible_freq_list = get_top_rules(all_possible_rules_list_str=all_possible_rules_list_str,p0=self.p0)
         if len(all_possible_rules_list) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
@@ -710,7 +660,7 @@ class SirusMixin:
 
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=proportions_count_sort, num_rule=25
+            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=25
         )  ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
@@ -742,9 +692,7 @@ class SirusMixin:
 
             gamma_array[final_mask, rule_number] = output_value
             gamma_array[~final_mask, rule_number] = output_outside_value
-            # list_mask_by_rules.append(final_mask) # uselesss
 
-        # self.list_mask_by_rules = list_mask_by_rules
         self.list_probas_by_rules = list_output_by_rules
         self.list_probas_outside_by_rules = list_output_outside_by_rules
         self.type_target = y.dtype
