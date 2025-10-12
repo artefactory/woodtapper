@@ -607,14 +607,12 @@ class SirusMixin:
                         / sample_weight_outside_rule.sum()
                     )
 
-                list_probas.append(curr_probas)
-                list_probas_outside_rules.append(curr_probas_outside_rules)
+                list_probas.append(curr_probas) # len n_classes_ 
+                list_probas_outside_rules.append(curr_probas_outside_rules) # len n_classes_
 
-            # list_mask_by_rules.append(final_mask) # uselesss
-            list_probas_by_rules.append(list_probas)
+            list_probas_by_rules.append(list_probas) # list of len n_rules of list of len n_classes_
             list_probas_outside_by_rules.append(list_probas_outside_rules)
 
-        # self.list_mask_by_rules = list_mask_by_rules
         self.list_probas_by_rules = list_probas_by_rules
         self.list_probas_outside_by_rules = list_probas_outside_by_rules
         self.type_target = y.dtype
