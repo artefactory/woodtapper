@@ -18,7 +18,7 @@ def show_rules(
         The fitted rules extraction model containing the rules and probabilities.
     max_rules : int, optional (default=9)
         The maximum number of rules to display.
-        target_class_index : int, optional (default=1)
+    target_class_index : int, optional (default=1)
         The index of the target class for which to display probabilities.
     list_indices_features_bin : list of int, optional (default=None)
         List of feature indices that are binary (0/1) for special formatting.
