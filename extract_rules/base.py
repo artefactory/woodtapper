@@ -10,7 +10,7 @@ from sklearn.linear_model import Ridge, RidgeCV
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-
+from .utils import Node
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -81,7 +81,7 @@ class SirusMixin:
     #######################################################
     ##### Auxiliary function for path construction  #######
     #######################################################
-    def explore_tree_(self, node_id, side, tree):
+    def _explore_tree(self, node_id, side, tree):
         """
         Whole tree structure recursive explorator (with Node class).
         Node class are associated to their childs if internal node.
@@ -105,8 +105,8 @@ class SirusMixin:
             id_left_child = tree.children_left[node_id]
             id_right_child = tree.children_right[node_id]
             children = [
-                self.explore_tree_(id_left_child, "L", tree),  # L for \leq
-                self.explore_tree_(id_right_child, "R", tree),
+                self._explore_tree(id_left_child, "L", tree),  # L for \leq
+                self._explore_tree(id_right_child, "R", tree),
             ]
         else:
             return Node(
@@ -120,7 +120,7 @@ class SirusMixin:
             tree.feature[node_id], tree.threshold[node_id], side, node_id, *children
         )
 
-    def construct_longest_paths_(self, root):
+    def _construct_longest_paths(self, root):
         """
         Generate tree_strucre, i.e a list of rules that all starts FROM root node TO a leaf.
         The lengh of this list is equal to the number of leaf.
@@ -154,14 +154,13 @@ class SirusMixin:
                 stack.append((curr_rule.children[0], indice_in_tree_struct))
                 stack.append((curr_rule.children[1], len(tree_structure) - 1))
             else:
-                # print('c')
                 continue
         return tree_structure
 
-    def split_sub_rules_(self, path, is_removing_singleton=False):
+    def _split_sub_rules(self, path, is_removing_singleton=False):
         """
         From a multiple rule, generate the associated sub multiple/single rules.
-        Auxiliar function for generate_all_possible_rules_.
+        Auxiliar function for _generate_all_possible_rules.
 
         Parameters
         ----------
@@ -194,7 +193,7 @@ class SirusMixin:
                 list_sub_path.append(curr_path)
         return list_sub_path
 
-    def generate_all_possible_rules_(self, tree_structure):
+    def _generate_all_possible_rules(self, tree_structure):
         """
         Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
         Auxiliar function for _extract_single_tree_rules.
@@ -221,7 +220,7 @@ class SirusMixin:
 
             ## We take all the rules strating from a head node
             for k in range(max_size_curr_path):
-                list_sub_path = self.split_sub_rules_(
+                list_sub_path = self._split_sub_rules(
                     curr_path[k:], is_removing_singleton=True
                 )
                 all_paths_list.extend(list_sub_path)
@@ -233,14 +232,14 @@ class SirusMixin:
                 curr_path_size_pair = (max_size_curr_path % 2) == 0
                 if curr_path_size_pair:  ## PAIRS
                     for k in range(1, (max_size_curr_path // 2)):
-                        list_sub_path = self.split_sub_rules_(
+                        list_sub_path = self._split_sub_rules(
                             curr_path[k : max_size_curr_path - k],
                             is_removing_singleton=True,
                         )
                         all_paths_list.extend(list_sub_path)
                 else:  ## IMPAIRS
                     for k in range(1, (max_size_curr_path // 2)):
-                        list_sub_path = self.split_sub_rules_(
+                        list_sub_path = self._split_sub_rules(
                             curr_path[k : max_size_curr_path - k],
                             is_removing_singleton=True,
                         )
@@ -264,16 +263,16 @@ class SirusMixin:
         4. Generate all possible rules (single and multiple) from the tree structure.
         5. Return the list of all possible rules.
         """
-        root = self.explore_tree_(0, "Root", tree)  ## Root node
-        tree_structure = self.construct_longest_paths_(
+        root = self._explore_tree(0, "Root", tree)  ## Root node
+        tree_structure = self._construct_longest_paths(
             root
         )  ## generate the tree structure with Node instances
-        all_possible_rules_list = self.generate_all_possible_rules_(
+        all_possible_rules_list = self._generate_all_possible_rules(
             tree_structure
         )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
 
-    def generate_single_rule_mask(self, X, dimension, treshold, sign):
+    def _generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
         Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
 
@@ -302,10 +301,10 @@ class SirusMixin:
         else:
             return X[:, dimension] > treshold
 
-    def from_rules_to_constraint(self, rule):
+    def _from_rules_to_constraint(self, rule):
         """
         Extract informations from a single rule.
-        Auxiliar function for  generate_single_rule_mask.
+        Auxiliar function for  _generate_single_rule_mask.
 
         Parameters
         ----------
@@ -342,8 +341,8 @@ class SirusMixin:
         """
         list_mask = []
         for j in range(len(rules)):
-            dimension, treshold, sign = self.from_rules_to_constraint(rule=rules[j])
-            mask = self.generate_single_rule_mask(
+            dimension, treshold, sign = self._from_rules_to_constraint(rule=rules[j])
+            mask = self._generate_single_rule_mask(
                 X=X, dimension=dimension, treshold=treshold, sign=sign
             )
             list_mask.append(mask)

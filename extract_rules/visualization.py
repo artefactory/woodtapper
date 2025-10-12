@@ -104,7 +104,7 @@ def show_rules(
         current_rule_conditions = rules_all[i]
         condition_parts_str = []
         for j in range(len(current_rule_conditions)):
-            dimension, treshold, sign_internal = RulesExtractorModel.from_rules_to_constraint(
+            dimension, treshold, sign_internal = RulesExtractorModel._from_rules_to_constraint(
                 rule=current_rule_conditions[j]
             )
 
