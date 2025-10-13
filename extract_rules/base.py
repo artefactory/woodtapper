@@ -701,6 +701,10 @@ class SirusMixin:
         ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
         gamma_array = np.hstack((gamma_array, ones_vector))
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
+        for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
+            coeff = self.ridge.coef_[:,indice]
+            self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
+            self.list_probas_outside_by_rules[indice] = (coeff * self.list_probas_outside_by_rules[indice]).tolist()
 
     def _predict_regressor(self, X, to_add_probas_outside_rules=True):
         """

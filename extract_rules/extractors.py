@@ -425,7 +425,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
         y_enc = self.enc.fit_transform(y.reshape(-1, 1))
         self.ridge.fit(gamma_array, y_enc, sample_weight=sample_weight)
-        for indice in range(self.n_rules):
+        for indice in range(self.n_rules): ## We weight the probabilities by the coefficients of the ridge
             self.list_probas_by_rules[indice] = (self.ridge.coef_[:,indice] * self.list_probas_by_rules[indice]).tolist()
             self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[:,indice + self.n_rules] * self.list_probas_outside_by_rules[indice]).tolist()
 
