@@ -7,6 +7,7 @@ from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge, RidgeCV,ElasticNetCV
+from sklearn.preprocessing import OneHotEncoder
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
@@ -624,7 +625,7 @@ class SirusMixin:
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
         if self.type_target != int:
             y_pred = y_pred_numeric.copy().astype(self.type_target)
-            for i, cls in zip(self.classes_):
+            for i, cls in enumerate(self.classes_):
                 y_pred[y_pred_numeric == i] = cls
             return y_pred.ravel().reshape(
                 -1,
@@ -638,7 +639,7 @@ class SirusMixin:
     ############# Regressor fit and predict  ##############
     #######################################################
     def _fit_rules_regressor(
-        self, X, y, all_possible_rules_list, sample_weight=None
+        self, X, y, all_possible_rules_list, sample_weight=None,to_encode_target=False,
     ):
         """
         Fit method for SirusMixin in regression case.
@@ -706,7 +707,7 @@ class SirusMixin:
         #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         #)
         self.ridge = RidgeCV(
-            alphas=np.arange(0.01, 1, 0.1),
+            alphas=np.arange(0.1, 10.0, 0.9),#np.arange(0.01, 1, 0.1),
             cv=5,
             scoring="neg_mean_squared_error",
             fit_intercept=True,
@@ -720,9 +721,12 @@ class SirusMixin:
         #    positive=True,
         #    random_state=self.random_state,
         #)
+        if to_encode_target:
+            self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+            y = self.enc.fit_transform(y.reshape(-1, 1))
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
         for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
-            coeff = self.ridge.coef_[indice]
+            coeff = self.ridge.coef_[indice] if self.ridge.coef_.ndim ==1 else self.ridge.coef_[:,indice]
             self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
             self.list_probas_outside_by_rules[indice] = (coeff * self.list_probas_outside_by_rules[indice]).tolist()
 
@@ -748,13 +752,13 @@ class SirusMixin:
         8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
-        gamma_array = np.zeros((X.shape[0], self.n_rules))
+        gamma_array = np.zeros((X.shape[0], self.n_rules,self.n_classes_))
         rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
-            gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
+            gamma_array[final_mask, indice, :] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
+                gamma_array[~final_mask, indice, :] = self.list_probas_outside_by_rules[
                     indice
                 ]
         #y_pred = self.ridge.predict(gamma_array)

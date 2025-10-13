@@ -15,6 +15,7 @@ import time
 
 from .base import SirusMixin
 from .extractors import QuantileDecisionTreeRegressor
+from .utils import compute_staibility_criterion
 
 
 
@@ -206,32 +207,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
         for indice in range(self.n_rules): ## We weight the probabilities by the coefficients of the ridge
             self.list_probas_by_rules[indice] = (self.ridge.coef_[:,indice]).tolist()
             self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[:,indice + self.n_rules]).tolist()
-
-        M = self.n_estimators
-        list_p0 = np.arange(0.1, 1, 0.08)
-        list_epsilon = []
-        print("Computing stability criterion...")
-        for p0_curr in list_p0:
-            epsilon_numerator = np.sum(
-                [
-                    binom.cdf(k=p0_curr * M, n=M, p=pm)
-                    * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                    for pm in self.all_possible_rules_frequency_list
-                ]
-            )
-            epsilon_denominator = np.sum(
-                [
-                    (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                    for pm in self.all_possible_rules_frequency_list
-                ]
-            )
-            epsilon = (
-                epsilon_numerator / epsilon_denominator
-                if epsilon_denominator > 0
-                else 0
-            )
-            list_epsilon.append(epsilon)
-        print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
+        compute_staibility_criterion(self)
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
@@ -427,32 +403,7 @@ class SirusGBRegressorDouble(SirusMixin,GradientBoostingRegressor):
         for indice in range(self.n_rules): ## We weight the probabilities by the coefficients of the ridge
             self.list_probas_by_rules[indice] = (self.ridge.coef_[indice] ).tolist()
             self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[indice + self.n_rules]).tolist()
-
-        M = self.n_estimators
-        list_p0 = np.arange(0.1, 1, 0.08)
-        list_epsilon = []
-        print("Computing stability criterion...")
-        for p0_curr in list_p0:
-            epsilon_numerator = np.sum(
-                [
-                    binom.cdf(k=p0_curr * M, n=M, p=pm)
-                    * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                    for pm in self.all_possible_rules_frequency_list
-                ]
-            )
-            epsilon_denominator = np.sum(
-                [
-                    (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                    for pm in self.all_possible_rules_frequency_list
-                ]
-            )
-            epsilon = (
-                epsilon_numerator / epsilon_denominator
-                if epsilon_denominator > 0
-                else 0
-            )
-            list_epsilon.append(epsilon)
-        print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
+        compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
         gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
