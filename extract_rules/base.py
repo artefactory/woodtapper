@@ -51,7 +51,7 @@ class SirusMixin:
         Data type of the target variable.
     ridge : Ridge or RidgeCV instance
         Ridge regression model for final prediction (for regression tasks).
-    __list_unique_categorical_values : list
+    _list_unique_categorical_values : list
         List of unique values for each categorical feature.
     final_list_categorical_indexes : list
         List of indexes of categorical features.
@@ -385,7 +385,7 @@ class SirusMixin:
             0  ## indice dans array_quantile des variables continues
         )
         ind_dim_categorcial_list_unique_elements = (
-            0  ## indice dans __list_unique_categorical_values des variables catégorielles
+            0  ## indice dans _list_unique_categorical_values des variables catégorielles
         )
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
@@ -395,7 +395,7 @@ class SirusMixin:
             ):  # Categorical variable
                 data_indep[:, ind_dim_abs] = np.random.choice(
                     np.unique(
-                        self.__list_unique_categorical_values[
+                        self._list_unique_categorical_values[
                             ind_dim_categorcial_list_unique_elements
                         ]
                     ),
@@ -811,7 +811,7 @@ class SirusMixin:
                     array_quantile[:, dim], X_bin[:, dim], side="left"
                 )
                 X_bin[:, dim] = array_quantile[out, dim]
-            __list_unique_categorical_values = (
+            _list_unique_categorical_values = (
                 None  # set these to None if all variables are continuous
             )
             final_list_categorical_indexes = (
@@ -835,7 +835,7 @@ class SirusMixin:
                 np.quantile(X_bin[:, ~categorical], q=i, axis=0)
                 for i in np.linspace(0, 1, self.quantile + 1)
             ]
-            __list_unique_categorical_values = [
+            _list_unique_categorical_values = [
                 np.unique(X_bin[:, i]) for i in final_list_categorical_indexes
             ]
             array_quantile = np.array(list_quantile)
@@ -865,6 +865,5 @@ class SirusMixin:
         end = time.time()
         print(f"Grow forest took {end - start:.4f} seconds")
         self._array_quantile = array_quantile
-        self.__list_unique_categorical_values = __list_unique_categorical_values  # list of each categorical features containing unique values for each of them
+        self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self.final_list_categorical_indexes = final_list_categorical_indexes  # indices of each categorical features, including the one hot encoded
-
