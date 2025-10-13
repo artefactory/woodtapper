@@ -43,6 +43,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         ccp_alpha=0.0,
         monotonic_cst=None,
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -63,6 +64,7 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
             ccp_alpha=ccp_alpha,
         )
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes  # list of indices of columns that are not binarized (for example categorical variables already encoded as integers)
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -140,6 +142,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -183,6 +186,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.ccp_alpha = ccp_alpha
         self.splitter = splitter
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -253,6 +257,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -281,6 +286,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         )
         self.splitter = splitter
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -417,6 +423,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
         ccp_alpha=0.0,
         monotonic_cst=None,
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -436,6 +443,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
             monotonic_cst=monotonic_cst,
         )
         self.p0 = p0
+        self.num_rule= num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -480,6 +488,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -522,6 +531,7 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.monotonic_cst = monotonic_cst
         self.splitter = splitter
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -572,6 +582,7 @@ class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -601,6 +612,7 @@ class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
         )
         self.splitter = splitter
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)

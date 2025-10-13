@@ -512,27 +512,22 @@ class SirusMixin:
         Returns
         ----------
         None
-        1. Validate p0 value.
-        2. Count unique rules and their frequencies.
-        3. Apply post-treatment to filter redundant rules.
-        4. Calculate probabilities for each rule based on the training data.
-        5. Store the extracted rules and their associated probabilities.
-        6. The method ensures that only relevant and non-redundant rules are retained for the final model.
-        7. It handles both the presence and absence of sample weights during probability calculations.
+        1. Count unique rules and their frequencies.
+        2. Apply post-treatment to filter redundant rules.
+        3. Calculate probabilities for each rule based on the training data.
+        4. Store the extracted rules and their associated probabilities.
+        5. The method ensures that only relevant and non-redundant rules are retained for the final model.
+        6. It handles both the presence and absence of sample weights during probability calculations.
         """
         start = time.time()
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
         all_possible_rules_list, all_possible_freq_list = get_top_rules(all_possible_rules_list_str=all_possible_rules_list_str,p0=self.p0)
-        if len(all_possible_rules_list) == 0:
-            raise ValueError(
-                "No rule found with the given p0 value. Try to decrease it."
-            )
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=25
+            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=self.num_rule
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
         print(f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds")
@@ -639,7 +634,7 @@ class SirusMixin:
     ############# Regressor fit and predict  ##############
     #######################################################
     def _fit_rules_regressor(
-        self, X, y, all_possible_rules_list, sample_weight=None,to_encode_target=False,
+        self, X, y, all_possible_rules_list, sample_weight=None,to_encode_target=False
     ):
         """
         Fit method for SirusMixin in regression case.
@@ -676,7 +671,7 @@ class SirusMixin:
 
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=25
+            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=self.num_rule
         )  ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
@@ -707,7 +702,7 @@ class SirusMixin:
         #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         #)
         self.ridge = RidgeCV(
-            alphas=np.arange(0.1, 10.0, 0.9),#np.arange(0.01, 1, 0.1),
+            alphas=np.arange(0.01, 1, 0.1),#np.arange(0.1, 10.0, 0.9),
             cv=5,
             scoring="neg_mean_squared_error",
             fit_intercept=True,
@@ -810,7 +805,16 @@ class SirusMixin:
             X = X.values
             y = y.values
         elif not isinstance(X, np.ndarray):
-            raise Exception('Wrong type for X')      
+            raise Exception('Wrong type for X') 
+        if len(self.p0) > 1.0 or self.p0 <= 0.0:
+            raise ValueError(
+                "Invalid value for p0: p0 must be in the range (0, 1]."
+            )  
+        if self.num_rule <= 0:
+            raise ValueError("num_rule must be a positive integer.")
+        if self.quantile <= 1:
+            raise ValueError("quantile must be an integer greater than 1.")
+
         
         X_bin = X.copy()
         if (self.to_not_binarize_colindexes is None) and (
