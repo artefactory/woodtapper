@@ -8,7 +8,7 @@ import numpy as np
 #######################################################
 
 def show_rules(
-    RulesExtractorModel, max_rules=9, target_class_index=1, list_indices_features_bin=None
+    RulesExtractorModel, max_rules=9, target_class_index=1, list_indices_features_bin=None,is_regression=False
 ):
     """
     Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
@@ -75,22 +75,23 @@ def show_rules(
     # If no mapping, column_name will default to using indices.
 
     base_ps_text = ""
-    if (
-        probas_if_false_all
-        and probas_if_false_all[0]
-        and len(probas_if_false_all[0]) > target_class_index
-    ):
-        avg_outside_target_probas = [
-            p[target_class_index]
-            for p in probas_if_false_all
-            if p and len(p) > target_class_index
-        ]
-        if avg_outside_target_probas:
-            estimated_avg_target_prob = np.mean(avg_outside_target_probas) * 100
-            base_ps_text = (
-                f"Estimated average rate for target class {target_class_index} (from 'else' clauses) p_s = {estimated_avg_target_prob:.0f}%.\n"
-                f"(Note: True average rate should be P(Class={target_class_index}) from training data).\n"
-            )
+    if not is_regression:
+        if (
+            probas_if_false_all
+            and probas_if_false_all[0]
+            and len(probas_if_false_all[0]) > target_class_index
+        ):
+            avg_outside_target_probas = [
+                p[target_class_index]
+                for p in probas_if_false_all
+                if p and len(p) > target_class_index
+            ]
+            if avg_outside_target_probas:
+                estimated_avg_target_prob = np.mean(avg_outside_target_probas) * 100
+                base_ps_text = (
+                    f"Estimated average rate for target class {target_class_index} (from 'else' clauses) p_s = {estimated_avg_target_prob:.0f}%.\n"
+                    f"(Note: True average rate should be P(Class={target_class_index}) from training data).\n"
+                )
 
     print(base_ps_text)
     header_condition = "IF Condition"
@@ -156,14 +157,20 @@ def show_rules(
 
         then_val_str = "N/A"
         else_val_str = "N/A"
-        
-        if prob_if_true_list and len(prob_if_true_list) > target_class_index:
-            p_s_if_true = prob_if_true_list[target_class_index] * 100
-            then_val_str = f"{p_s_if_true:.0f}%"
+        if is_regression:
+            p_s_if_true = prob_if_true_list
+            then_val_str = f"{p_s_if_true:.2f}"
+            p_s_if_false = prob_if_false_list
+            else_val_str = f"{p_s_if_false:.2f}"
 
-        if prob_if_false_list and len(prob_if_false_list) > target_class_index:
-            p_s_if_false = prob_if_false_list[target_class_index] * 100
-            else_val_str = f"{p_s_if_false:.0f}%"
+        else: # classification
+            if prob_if_true_list and len(prob_if_true_list) > target_class_index:
+                p_s_if_true = prob_if_true_list[target_class_index] * 100
+                then_val_str = f"{p_s_if_true:.0f}%"
+
+            if prob_if_false_list and len(prob_if_false_list) > target_class_index:
+                p_s_if_false = prob_if_false_list[target_class_index] * 100
+                else_val_str = f"{p_s_if_false:.0f}%"
 
         print(
             f"if   {condition_str_formatted:<{condition_col_width }} then {then_val_str:<18} else {else_val_str:<18}"
