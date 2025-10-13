@@ -675,18 +675,8 @@ class SirusMixin:
             final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
             )  # On X and not on X_bin ???,
-            y_train_rule = y[final_mask]
-            y_train_outside_rule = y[~final_mask]
-
-            if len(y_train_rule) == 0:
-                output_value = 0
-            else:
-                output_value = np.mean(y_train_rule)
-
-            if len(y_train_outside_rule) == 0:
-                output_outside_value = 0
-            else:
-                output_outside_value = np.mean(y_train_outside_rule)
+            output_value = y[final_mask].mean() if final_mask.any() else 0
+            output_outside_value = y[~final_mask].mean() if (~final_mask).any() else 0
 
             list_output_by_rules.append(output_value)
             list_output_outside_by_rules.append(output_outside_value)
@@ -711,7 +701,6 @@ class SirusMixin:
         ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
         gamma_array = np.hstack((gamma_array, ones_vector))
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
-        # self.gamma_array = gamma_array
 
     def _predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
