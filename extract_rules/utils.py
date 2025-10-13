@@ -43,7 +43,7 @@ def get_top_rules(all_possible_rules_list_str,p0):
     all_rules_sorted = sorted(unique_str_rules_and_freq, key=lambda x: x[1], reverse=True) # sort by frequency
     all_possible_rules_and_freq_list = [(eval(unique_str_rule),freq) for unique_str_rule, freq in all_rules_sorted if freq > p0] # filter by p0
     if len(all_possible_rules_and_freq_list) == 0:
-        if len(all_possible_rules_list) == 0:
+        if len(all_possible_rules_and_freq_list) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
