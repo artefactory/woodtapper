@@ -53,7 +53,7 @@ class SirusMixin:
         Ridge regression model for final prediction (for regression tasks).
     _list_unique_categorical_values : list
         List of unique values for each categorical feature.
-    final_list_categorical_indexes : list
+    _list_categorical_indexes : list
         List of indexes of categorical features.
     _array_quantile : array-like
         Array of quantiles for continuous features.
@@ -390,8 +390,8 @@ class SirusMixin:
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
-            if (self.final_list_categorical_indexes is not None) and (
-                ind_dim_abs in self.final_list_categorical_indexes
+            if (self._list_categorical_indexes is not None) and (
+                ind_dim_abs in self._list_categorical_indexes
             ):  # Categorical variable
                 data_indep[:, ind_dim_abs] = np.random.choice(
                     np.unique(
@@ -814,29 +814,29 @@ class SirusMixin:
             _list_unique_categorical_values = (
                 None  # set these to None if all variables are continuous
             )
-            final_list_categorical_indexes = (
+            _list_categorical_indexes = (
                 None  # set these to None if all variables are continuous
             )
         else:
             categorical = np.zeros((X.shape[1],), dtype=bool)
             if self.starting_index_one_hot is None:
-                final_list_categorical_indexes = self.to_not_binarize_colindexes
+                _list_categorical_indexes = self.to_not_binarize_colindexes
             elif self.to_not_binarize_colindexes is None:
-                final_list_categorical_indexes = [
+                _list_categorical_indexes = [
                     i for i in range(self.starting_index_one_hot, X_bin.shape[1])
                 ]
             else:
-                final_list_categorical_indexes = self.to_not_binarize_colindexes + [
+                _list_categorical_indexes = self.to_not_binarize_colindexes + [
                     i for i in range(self.starting_index_one_hot, X_bin.shape[1])
                 ]
             ## the last indexes of X must contains the one hot encoded variables !
-            categorical[final_list_categorical_indexes] = True
+            categorical[_list_categorical_indexes] = True
             list_quantile = [
                 np.quantile(X_bin[:, ~categorical], q=i, axis=0)
                 for i in np.linspace(0, 1, self.quantile + 1)
             ]
             _list_unique_categorical_values = [
-                np.unique(X_bin[:, i]) for i in final_list_categorical_indexes
+                np.unique(X_bin[:, i]) for i in _list_categorical_indexes
             ]
             array_quantile = np.array(list_quantile)
 
@@ -866,4 +866,4 @@ class SirusMixin:
         print(f"Grow forest took {end - start:.4f} seconds")
         self._array_quantile = array_quantile
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
-        self.final_list_categorical_indexes = final_list_categorical_indexes  # indices of each categorical features, including the one hot encoded
+        self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
