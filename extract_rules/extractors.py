@@ -413,8 +413,6 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             )  # On X and not on X_bin ???,
             gamma_array[final_mask, indice] = 1
             gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array, ones_vector))
         self.ridge = RidgeCV(
             alphas=np.arange(0.01, 1, 0.1),
             cv=5,
@@ -464,8 +462,6 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             )  # On X and not on X_bin ???,
             gamma_array[final_mask, indice] = 1
             gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array, ones_vector))
         y_pred_enc = self.ridge.predict(gamma_array)
         # y_pred = self.enc.inverse_transform(y_pred_enc)
         return y_pred_enc
@@ -618,5 +614,32 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
+
+        # Compute stability criterion:
+        M = self.n_estimators
+        list_p0 = np.arange(0.1, 1, 0.08)
+        list_epsilon = []
+        print("Computing stability criterion...")
+        for p0_curr in list_p0:
+            epsilon_numerator = np.sum(
+                [
+                    binom.cdf(k=p0_curr * M, n=M, p=pm)
+                    * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon_denominator = np.sum(
+                [
+                    (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                    for pm in self.all_possible_rules_frequency_list
+                ]
+            )
+            epsilon = (
+                epsilon_numerator / epsilon_denominator
+                if epsilon_denominator > 0
+                else 0
+            )
+            list_epsilon.append(epsilon)
+        print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
     def predict(self, X, to_add_probas_outside_rules=True):
         return self._predict_regressor(X, to_add_probas_outside_rules)
