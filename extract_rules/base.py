@@ -458,7 +458,7 @@ class SirusMixin:
 
     def _paths_filtering_stochastic(self, paths, proba, num_rule):
         """
-        Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+        Post-treatment for rules.
 
         Args:
             paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
@@ -491,7 +491,7 @@ class SirusMixin:
         Returns
         ----------
         None
-        1. Validate input data and initialize parameters.
+        1. Validate p0 value.
         2. Count unique rules and their frequencies.
         3. Apply post-treatment to filter redundant rules.
         4. Calculate probabilities for each rule based on the training data.
@@ -580,14 +580,15 @@ class SirusMixin:
                     indice
                 ]  ## If the rule is not verified we add the probas of the training samples not verifying the rule.
         if to_add_probas_outside_rules:
-            return (1 / self.n_rules) * (y_pred_probas)
+            y_pred_probas =  (1 / self.n_rules) * (y_pred_probas)
         else:
             scaling_coeffs = y_pred_probas.sum(axis=1)
             y_pred_probas = (
                 y_pred_probas
                 / np.array([scaling_coeffs, scaling_coeffs, scaling_coeffs]).T
             )
-            return y_pred_probas
+        
+        return y_pred_probas
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
