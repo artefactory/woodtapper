@@ -705,17 +705,22 @@ class SirusMixin:
         #self.ridge = Ridge(
         #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
         #)
-        self.ridge = ElasticNetCV(
-            l1_ratio = 0,
+        self.ridge = RidgeCV(
             alphas=np.arange(0.01, 1, 0.1),
             cv=5,
-            #scoring="neg_mean_squared_error",
+            scoring="neg_mean_squared_error",
             fit_intercept=True,
-            positive=True,
-            random_state=self.random_state,
         )
+        #self.ridge = ElasticNetCV(
+        #    l1_ratio = 0,
+        #    alphas=np.arange(0.01, 1, 0.1),
+        #    cv=5,
+        #    #scoring="neg_mean_squared_error",
+        #    fit_intercept=True,
+        #    positive=True,
+        #    random_state=self.random_state,
+        #)
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
-        print("self.ridge.coef_ : ", self.ridge.coef_)
         for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
             coeff = self.ridge.coef_[indice]
             self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
