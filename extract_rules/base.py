@@ -806,7 +806,7 @@ class SirusMixin:
             y = y.values
         elif not isinstance(X, np.ndarray):
             raise Exception('Wrong type for X') 
-        if len(self.p0) > 1.0 or self.p0 <= 0.0:
+        if self.p0 > 1.0 or self.p0 <= 0.0:
             raise ValueError(
                 "Invalid value for p0: p0 must be in the range (0, 1]."
             )  
