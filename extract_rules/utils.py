@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import binom
 
 
 class Node:
@@ -43,3 +44,31 @@ def get_top_rules(all_possible_rules_list_str,p0):
     all_possible_rules_and_freq_list = [(eval(unique_str_rule),freq) for unique_str_rule, freq in all_rules_sorted if freq > p0] # filter by p0
     all_possible_rules_list, all_possible_freq_list =zip(*all_possible_rules_and_freq_list) # unzip
     return all_possible_rules_list, all_possible_freq_list
+
+
+def compute_staibility_criterion(model):
+    M = model.n_estimators
+    list_p0 = np.arange(0.1, 1, 0.08)
+    list_epsilon = []
+    print("Computing stability criterion...")
+    for p0_curr in list_p0:
+        epsilon_numerator = np.sum(
+            [
+                binom.cdf(k=p0_curr * M, n=M, p=pm)
+                * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                for pm in model.all_possible_rules_frequency_list
+            ]
+        )
+        epsilon_denominator = np.sum(
+            [
+                (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
+                for pm in model.all_possible_rules_frequency_list
+            ]
+        )
+        epsilon = (
+            epsilon_numerator / epsilon_denominator
+            if epsilon_denominator > 0
+            else 0
+        )
+        list_epsilon.append(epsilon)
+    print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
