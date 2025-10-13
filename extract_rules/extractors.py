@@ -426,10 +426,8 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
         y_enc = self.enc.fit_transform(y.reshape(-1, 1))
         self.ridge.fit(gamma_array, y_enc, sample_weight=sample_weight)
         for indice in range(self.n_rules):
-            coeff_rule = self.ridge.coef_[:,indice]
-            coeff_outside_rule = self.ridge.coef_[:,indice + self.n_rules]
-            self.list_probas_by_rules[indice] = (coeff_rule * self.list_probas_by_rules[indice]).tolist()
-            self.list_probas_outside_by_rules[indice] = (coeff_outside_rule * self.list_probas_outside_by_rules[indice]).tolist()
+            self.list_probas_by_rules[indice] = (self.ridge.coef_[:,indice] * self.list_probas_by_rules[indice]).tolist()
+            self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[:,indice + self.n_rules] * self.list_probas_outside_by_rules[indice]).tolist()
 
         M = self.n_estimators
         list_p0 = np.arange(0.1, 1, 0.08)
