@@ -403,8 +403,6 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
-        array_probas_by_rules = np.array(self.list_probas_by_rules)
-        array_probas_outside_by_rules = np.array(self.list_probas_outside_by_rules)
         gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
         for indice in range(self.n_rules):
             current_rules = self.all_possible_rules_list[indice]
@@ -462,7 +460,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             )  # On X and not on X_bin ???,
             gamma_array[final_mask, indice] = 1
             gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        y_pred_enc = self.ridge.predict(gamma_array)
+        y_pred_enc = self.ridge.predict(gamma_array) # Do not sum() or mean() becaus it can be multiclass
         # y_pred = self.enc.inverse_transform(y_pred_enc)
         return y_pred_enc
 
