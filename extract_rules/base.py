@@ -274,7 +274,7 @@ class SirusMixin:
 
     def _generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
-        Uses constraints of a single rule (len 1) to generatye the associated mask for data set X.
+        Uses constraints of a unitary rule (len 1) to generate the associated mask for data set X.
 
         Parameters
         ----------
@@ -348,6 +348,26 @@ class SirusMixin:
             list_mask.append(mask)
         final_mask = reduce(and_, list_mask)
         return final_mask
+    def _generate_masks_rules(self,X):
+        """
+        Generate the masks associated to all the rules.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        Returns
+        ----------
+        rules_mask : array-like, shape (n_samples, n_rules)
+            Boolean mask matrix indicating which samples satisfy each rule.
+        """
+        rules_mask = np.zeros((X.shape[0], self.n_rules))
+        for rule_number, current_rules in enumerate(self.all_possible_rules_list):
+            # for loop for getting all the values in train (X) passing the rules
+            final_mask = self._generate_mask_rule(
+                X=X, rules=current_rules
+            )
+            rules_mask[:, rule_number] = final_mask
+        return rules_mask
 
     def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
@@ -525,16 +545,12 @@ class SirusMixin:
         list_probas_outside_by_rules = []
         if sample_weight is None:
             sample_weight = np.full((len(y),), 1)  ## vector of ones
-
-        for current_rules in self.all_possible_rules_list:
+        rules_mask = self._generate_masks_rules(X=X)
+        for i in range(self.n_rules):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin 
-            y_train_rule = y[final_mask]
-            y_train_outside_rule = y[~final_mask] 
-            sample_weight_rule = sample_weight[final_mask]
-            sample_weight_outside_rule = sample_weight[~final_mask]
+            final_mask = rules_mask[:, i].astype(bool)
+            y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask] 
+            sample_weight_rule, sample_weight_outside_rule = sample_weight[final_mask], sample_weight[~final_mask]
 
             list_probas = []
             list_probas_outside_rules = []
