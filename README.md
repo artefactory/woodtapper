@@ -38,6 +38,7 @@ python setup.py build_ext --inplace
 * [Pima](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database)
 * Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv 
 * Adult : https://archive.ics.uci.edu/dataset/2/adult
+* Houses sales : https://www.openml.org/d/44144
 
 * California : https://www.openml.org/d/44090
 * Titanic : https://www.kaggle.com/datasets/yasserh/titanic-dataset?resource=download
