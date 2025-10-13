@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.linear_model import Ridge, RidgeCV,ElasticNetCV
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
@@ -360,7 +360,7 @@ class SirusMixin:
         rules_mask : array-like, shape (n_samples, n_rules)
             Boolean mask matrix indicating which samples satisfy each rule.
         """
-        rules_mask = np.zeros((X.shape[0], self.n_rules))
+        rules_mask = np.zeros((X.shape[0], self.n_rules),dtype=bool)
         for rule_number, current_rules in enumerate(self.all_possible_rules_list):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = self._generate_mask_rule(
@@ -548,7 +548,7 @@ class SirusMixin:
         rules_mask = self._generate_masks_rules(X=X)
         for i in range(self.n_rules):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = rules_mask[:, i].astype(bool)
+            final_mask = rules_mask[:, i]
             y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask] 
             sample_weight_rule, sample_weight_outside_rule = sample_weight[final_mask], sample_weight[~final_mask]
 
@@ -582,11 +582,9 @@ class SirusMixin:
             The predicted class probabilities for each sample.
         """
         y_pred_probas = np.zeros((len(X), self.n_classes_))
+        rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
-            current_rules = self.all_possible_rules_list[indice]
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin
+            final_mask = rules_mask[:, indice]
             y_pred_probas[final_mask] += self.list_probas_by_rules[
                 indice
             ]  ## add the asociated rule probability
@@ -608,7 +606,7 @@ class SirusMixin:
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin in classification case.
+        Predict method for SirusMixin in classification case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -686,11 +684,10 @@ class SirusMixin:
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zeros((X.shape[0], self.n_rules))
+        rules_mask = self._generate_masks_rules(X=X)
         for rule_number, current_rules in enumerate(self.all_possible_rules_list):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
+            final_mask = rules_mask[:, rule_number]
             output_value = y[final_mask].mean() if final_mask.any() else 0
             output_outside_value = y[~final_mask].mean() if (~final_mask).any() else 0
 
@@ -705,20 +702,22 @@ class SirusMixin:
         self.type_target = y.dtype
 
         ## final predictor fitting :
-        # self.ridge = Ridge(
+        #self.ridge = Ridge(
         #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
-        # )
-        self.ridge = RidgeCV(
+        #)
+        self.ridge = ElasticNetCV(
+            l1_ratio = 0,
             alphas=np.arange(0.01, 1, 0.1),
             cv=5,
-            scoring="neg_mean_squared_error",
+            #scoring="neg_mean_squared_error",
             fit_intercept=True,
+            positive=True,
+            random_state=self.random_state,
         )
-        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array, ones_vector))
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
+        print("self.ridge.coef_ : ", self.ridge.coef_)
         for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
-            coeff = self.ridge.coef_[:,indice]
+            coeff = self.ridge.coef_[indice]
             self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
             self.list_probas_outside_by_rules[indice] = (coeff * self.list_probas_outside_by_rules[indice]).tolist()
 
@@ -745,19 +744,16 @@ class SirusMixin:
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
         gamma_array = np.zeros((X.shape[0], self.n_rules))
+        rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
-            current_rules = self.all_possible_rules_list[indice]
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin 
+            final_mask = rules_mask[:, indice]
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
                 gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
                     indice
                 ]
-        ones_vector = np.ones((len(gamma_array), 1))  # Vector of ones
-        gamma_array = np.hstack((gamma_array, ones_vector))
-        y_pred = self.ridge.predict(gamma_array)
+        #y_pred = self.ridge.predict(gamma_array)
+        y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
 
         return y_pred
 
