@@ -226,7 +226,7 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
 
 
 
-class DecisionTreeRegressor2(SirusMixin, DecisionTreeRegressor):
+class QuantileDecisionTreeRegressor(SirusMixin, DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in SirusGBClassifier
@@ -351,7 +351,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
                 y = np.array(original_y == k, dtype=np.float64)
 
             # induce regression tree on the negative gradient
-            tree = DecisionTreeRegressor2(
+            tree = QuantileDecisionTreeRegressor(
                 criterion=self.criterion,
                 splitter=self.splitter,  ## ici
                 max_depth=self.max_depth,
@@ -457,7 +457,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             current_rules = self.all_possible_rules_list[indice]
             final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
+            )  # On X and not on X_bin 
             gamma_array[final_mask, indice] = 1
             gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
         y_pred_enc = self.ridge.predict(gamma_array) # Do not sum() or mean() becaus it can be multiclass
