@@ -8,7 +8,7 @@ import numpy as np
 #######################################################
 
 def show_rules(
-    RulesExtractorModel, max_rules=9, target_class_index=1, list_indices_features_bin=None,is_regression=False
+    RulesExtractorModel, max_rules=9, target_class_index=1,is_regression=False
 ):
     """
     Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
@@ -46,6 +46,7 @@ def show_rules(
             "Model does not have the required rule attributes. Ensure it's fitted."
         )
         return
+    list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
 
     rules_all = RulesExtractorModel.all_possible_rules_list
     probas_if_true_all = RulesExtractorModel.list_probas_by_rules
