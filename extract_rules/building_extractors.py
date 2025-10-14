@@ -59,6 +59,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
+        num_rule=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -87,6 +88,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
         )
         self.splitter = splitter
         self.p0 = p0
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -176,7 +178,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
+    
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
@@ -186,41 +188,8 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
-        gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
-        for indice in range(self.n_rules):
-            current_rules = self.all_possible_rules_list[indice]
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin ???,
-            gamma_array[final_mask, indice] = 1
-            gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        self.ridge = RidgeCV(
-            alphas=np.arange(0.01, 1, 0.1),
-            cv=5,
-            scoring="neg_mean_squared_error",
-            fit_intercept=True,
-        )
-
-        self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-        y_enc = self.enc.fit_transform(y.reshape(-1, 1))
-        self.ridge.fit(gamma_array, y_enc, sample_weight=sample_weight)
-        for indice in range(self.n_rules): ## We weight the probabilities by the coefficients of the ridge
-            self.list_probas_by_rules[indice] = (self.ridge.coef_[:,indice]).tolist()
-            self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[:,indice + self.n_rules]).tolist()
         compute_staibility_criterion(self)
 
-    def predict_proba(self, X, to_add_probas_outside_rules=True):
-        gamma_array = np.zeros((X.shape[0], 2 * self.n_rules))
-        for indice in range(self.n_rules):
-            current_rules = self.all_possible_rules_list[indice]
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )  # On X and not on X_bin 
-            gamma_array[final_mask, indice] = 1
-            gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        y_pred_enc = self.ridge.predict(gamma_array) # Do not sum() or mean() becaus it can be multiclass
-        # y_pred = self.enc.inverse_transform(y_pred_enc)
-        return y_pred_enc
     
 
 class SirusGBRegressorDouble(SirusMixin,GradientBoostingRegressor):
