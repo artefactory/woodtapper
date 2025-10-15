@@ -538,6 +538,15 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+            if isinstance(y,(pd.core.series.Series,pd.core.frame.DataFrame)):
+                y = y.values
+            elif len(y.shape)>1:
+                y = y.ravel()
+        elif not isinstance(X, np.ndarray):
+            raise Exception('Wrong type for X. except numpy array, pandas dataframe or series')
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
@@ -548,6 +557,11 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
+        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+        elif not isinstance(X, np.ndarray):
+            raise Exception('Wrong type for X')
         return self._predict_regressor(X, to_add_probas_outside_rules)
     
 class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
