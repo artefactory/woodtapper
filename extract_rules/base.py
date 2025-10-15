@@ -716,9 +716,6 @@ class SirusMixin:
         #    positive=True,
         #    random_state=self.random_state,
         #)
-        if to_encode_target:
-            self.enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-            y = self.enc.fit_transform(y.reshape(-1, 1))
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
         for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
             coeff = self.ridge.coef_[indice] if self.ridge.coef_.ndim ==1 else self.ridge.coef_[:,indice]
@@ -747,13 +744,13 @@ class SirusMixin:
         8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
-        gamma_array = np.zeros((X.shape[0], self.n_rules,self.n_classes_))
+        gamma_array = np.zeros((X.shape[0], self.n_rules))
         rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
-            gamma_array[final_mask, indice, :] = self.list_probas_by_rules[indice]
+            gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                gamma_array[~final_mask, indice, :] = self.list_probas_outside_by_rules[
+                gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
                     indice
                 ]
         #y_pred = self.ridge.predict(gamma_array)
@@ -800,12 +797,6 @@ class SirusMixin:
         12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
         start = time.time()
-        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
-            self.feature_names_in_ = X.columns.to_numpy()
-            X = X.values
-            y = y.values
-        elif not isinstance(X, np.ndarray):
-            raise Exception('Wrong type for X') 
         if self.p0 > 1.0 or self.p0 < 0.0:
             raise ValueError(
                 "Invalid value for p0: p0 must be in the range (0, 1]."

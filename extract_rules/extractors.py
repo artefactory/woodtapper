@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.stats import binom
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (
@@ -704,6 +705,12 @@ class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+            y = y.values
+        elif not isinstance(X, np.ndarray):
+            raise Exception('Wrong type for X') 
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
