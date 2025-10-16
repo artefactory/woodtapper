@@ -86,14 +86,12 @@ class SirusMixin:
         """
         Whole tree structure recursive explorator (with Node class).
         Node class are associated to their childs if internal node.
-
         Parameters
         ----------
         node_id : int
             Starting node id for the tree structure exploration.
         side : str
             Current node cutting side. 'L' for left and 'R' for right. 'root' for the root node.
-
         Returns
         ----------
         Node: Node
@@ -125,7 +123,6 @@ class SirusMixin:
         """
         Generate tree_strucre, i.e a list of rules that all starts FROM root node TO a leaf.
         The lengh of this list is equal to the number of leaf.
-
         Parameters
         ----------
         root : Node instance
@@ -167,20 +164,17 @@ class SirusMixin:
         ----------
         path : list
             A multiple rule (list of single rules).
-        is_removing_singleton : bool, optional (default=False)
-            Whether to exclude single rules from the sub-rules.
 
         Returns
         ----------
         list_sub_path : list
             List of sub-rules extracted from the given multiple rule.
         1. Iterate through the given path to generate sub-rules.
-        2. Depending on the is_removing_singleton flag, include or exclude single rules.
-        3. Return the list of generated sub-rules.
-        4. The function ensures that only valid sub-rules (with at least two conditions) are included when required.
-        5. This method is essential for expanding the rule set derived from decision trees.
-        6. It helps in capturing more granular patterns within the data by considering all possible combinations of conditions.
-        7. The generated sub-rules can be used for further analysis or model fitting.
+        2. Return the list of generated sub-rules.
+        3. The function ensures that only valid sub-rules (with at least two conditions) are included when required.
+        4. This method is essential for expanding the rule set derived from decision trees.
+        5. It helps in capturing more granular patterns within the data by considering all possible combinations of conditions.
+        8. The generated sub-rules can be used for further analysis or model fitting.
         """
         list_sub_path = []
         max_size_curr_path = len(path)
