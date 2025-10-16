@@ -158,7 +158,7 @@ class SirusMixin:
                 continue
         return tree_structure
 
-    def _split_sub_rules(self, path, is_removing_singleton=False):
+    def _split_sub_rules(self, path):
         """
         From a multiple rule, generate the associated sub multiple/single rules.
         Auxiliar function for _generate_all_possible_rules.
@@ -184,11 +184,7 @@ class SirusMixin:
         """
         list_sub_path = []
         max_size_curr_path = len(path)
-        if is_removing_singleton:
-            int_to_add = 1
-        else:
-            int_to_add = 0
-        for j in range(max_size_curr_path - int_to_add):
+        for j in range(max_size_curr_path):
             curr_path = path[: (max_size_curr_path - j)]
             if len(curr_path) >= 2:
                 list_sub_path.append(curr_path)
@@ -213,7 +209,7 @@ class SirusMixin:
         for i in range(len(tree_structure)):
             curr_path = tree_structure[i]
             list_sub_path = self._split_sub_rules(
-                    curr_path, is_removing_singleton=False
+                    curr_path
             )
             all_paths_list.extend(list_sub_path)
             all_paths_list.append([curr_path[0]])
