@@ -18,7 +18,6 @@ from .extractors import QuantileDecisionTreeRegressor
 from .utils import compute_staibility_criterion
 
 
-
 class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
@@ -178,7 +177,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-    
+
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
@@ -190,12 +189,12 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
         compute_staibility_criterion(self)
 
-    
 
-class SirusGBRegressorDouble(SirusMixin,GradientBoostingRegressor):
+class SirusGBRegressorDouble(SirusMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from  a GradientBoostingRegressor
     """
+
     _parameter_constraints: dict = {**GradientBoostingRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
@@ -369,9 +368,13 @@ class SirusGBRegressorDouble(SirusMixin,GradientBoostingRegressor):
         )
 
         self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
-        for indice in range(self.n_rules): ## We weight the probabilities by the coefficients of the ridge
-            self.list_probas_by_rules[indice] = (self.ridge.coef_[indice] ).tolist()
-            self.list_probas_outside_by_rules[indice] = (self.ridge.coef_[indice + self.n_rules]).tolist()
+        for indice in range(
+            self.n_rules
+        ):  ## We weight the probabilities by the coefficients of the ridge
+            self.list_probas_by_rules[indice] = (self.ridge.coef_[indice]).tolist()
+            self.list_probas_outside_by_rules[indice] = (
+                self.ridge.coef_[indice + self.n_rules]
+            ).tolist()
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
@@ -380,8 +383,10 @@ class SirusGBRegressorDouble(SirusMixin,GradientBoostingRegressor):
             current_rules = self.all_possible_rules_list[indice]
             final_mask = self._generate_mask_rule(
                 X=X, rules=current_rules
-            )  # On X and not on X_bin 
+            )  # On X and not on X_bin
             gamma_array[final_mask, indice] = 1
             gamma_array[~final_mask, indice + self.n_rules] = 1  ## NOT the current rule
-        y_pred = self.ridge.predict(gamma_array) # Do not sum() or mean() becaus it can be multiclass
+        y_pred = self.ridge.predict(
+            gamma_array
+        )  # Do not sum() or mean() becaus it can be multiclass
         return y_pred

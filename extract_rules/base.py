@@ -6,12 +6,12 @@ import pandas as pd
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-from sklearn.linear_model import Ridge, RidgeCV,ElasticNetCV
+from sklearn.linear_model import Ridge, RidgeCV, ElasticNetCV
 from sklearn.preprocessing import OneHotEncoder
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules,ridge_cv_positive
+from .utils import Node, get_top_rules, ridge_cv_positive
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -34,7 +34,7 @@ class SirusMixin:
         Number of parallel jobs for tree construction.
     n_features_in_ : int
         Number of features in the input data.
-    n_classes_ : int    
+    n_classes_ : int
         Number of classes in the target variable (for classification tasks).
     classes_ : array-like
         Unique classes in the target variable (for classification tasks).
@@ -202,9 +202,7 @@ class SirusMixin:
         all_paths_list = []
         for i in range(len(tree_structure)):
             curr_path = tree_structure[i]
-            list_sub_path = self._split_sub_rules(
-                    curr_path
-            )
+            list_sub_path = self._split_sub_rules(curr_path)
             all_paths_list.extend(list_sub_path)
             all_paths_list.append([curr_path[0]])
         return all_paths_list
@@ -311,7 +309,8 @@ class SirusMixin:
             list_mask.append(mask)
         final_mask = reduce(and_, list_mask)
         return final_mask
-    def _generate_masks_rules(self,X):
+
+    def _generate_masks_rules(self, X):
         """
         Generate the masks associated to all the rules.
         Parameters
@@ -323,12 +322,10 @@ class SirusMixin:
         rules_mask : array-like, shape (n_samples, n_rules)
             Boolean mask matrix indicating which samples satisfy each rule.
         """
-        rules_mask = np.zeros((X.shape[0], self.n_rules),dtype=bool)
+        rules_mask = np.zeros((X.shape[0], self.n_rules), dtype=bool)
         for rule_number, current_rules in enumerate(self.all_possible_rules_list):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self._generate_mask_rule(
-                X=X, rules=current_rules
-            )
+            final_mask = self._generate_mask_rule(X=X, rules=current_rules)
             rules_mask[:, rule_number] = final_mask
         return rules_mask
 
@@ -367,9 +364,7 @@ class SirusMixin:
         ind_dim_continuous_array_quantile = (
             0  ## indice dans array_quantile des variables continues
         )
-        ind_dim_categorcial_list_unique_elements = (
-            0  ## indice dans _list_unique_categorical_values des variables catégorielles
-        )
+        ind_dim_categorcial_list_unique_elements = 0  ## indice dans _list_unique_categorical_values des variables catégorielles
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
@@ -485,16 +480,22 @@ class SirusMixin:
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
-        all_possible_rules_list, all_possible_freq_list = get_top_rules(all_possible_rules_list_str=all_possible_rules_list_str,p0=self.p0)
+        all_possible_rules_list, all_possible_freq_list = get_top_rules(
+            all_possible_rules_list_str=all_possible_rules_list_str, p0=self.p0
+        )
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=self.num_rule
+            paths=all_possible_rules_list,
+            proba=all_possible_freq_list,
+            num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
-        print(f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds")
+        print(
+            f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
+        )
         self.all_possible_rules_list = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"] # usefull ?
+        self.all_possible_rules_frequency_list = res["proba"]  # usefull ?
         self.n_rules = len(self.all_possible_rules_list)
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
@@ -507,18 +508,35 @@ class SirusMixin:
         for i in range(self.n_rules):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, i]
-            y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask] 
-            sample_weight_rule, sample_weight_outside_rule = sample_weight[final_mask], sample_weight[~final_mask]
+            y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask]
+            sample_weight_rule, sample_weight_outside_rule = (
+                sample_weight[final_mask],
+                sample_weight[~final_mask],
+            )
 
             list_probas = []
             list_probas_outside_rules = []
             for cl in range(self.n_classes_):  # iteration on each class of the target
-                curr_probas = sample_weight_rule[y_train_rule == cl].sum()/sample_weight_rule.sum() if len(y_train_rule) != 0 else 0
-                curr_probas_outside_rules = sample_weight_outside_rule[y_train_outside_rule == cl].sum()/sample_weight_outside_rule.sum() if len(y_train_outside_rule) != 0 else 0
-                list_probas.append(curr_probas) # len n_classes_ 
-                list_probas_outside_rules.append(curr_probas_outside_rules) # len n_classes_
+                curr_probas = (
+                    sample_weight_rule[y_train_rule == cl].sum()
+                    / sample_weight_rule.sum()
+                    if len(y_train_rule) != 0
+                    else 0
+                )
+                curr_probas_outside_rules = (
+                    sample_weight_outside_rule[y_train_outside_rule == cl].sum()
+                    / sample_weight_outside_rule.sum()
+                    if len(y_train_outside_rule) != 0
+                    else 0
+                )
+                list_probas.append(curr_probas)  # len n_classes_
+                list_probas_outside_rules.append(
+                    curr_probas_outside_rules
+                )  # len n_classes_
 
-            list_probas_by_rules.append(list_probas) # list of len n_rules of list of len n_classes_
+            list_probas_by_rules.append(
+                list_probas
+            )  # list of len n_rules of list of len n_classes_
             list_probas_outside_by_rules.append(list_probas_outside_rules)
 
         self.list_probas_by_rules = list_probas_by_rules
@@ -552,14 +570,14 @@ class SirusMixin:
                     indice
                 ]  ## If the rule is not verified we add the probas of the training samples not verifying the rule.
         if to_add_probas_outside_rules:
-            y_pred_probas =  (1 / self.n_rules) * (y_pred_probas)
+            y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
         else:
             scaling_coeffs = y_pred_probas.sum(axis=1)
             y_pred_probas = (
                 y_pred_probas
                 / np.array([scaling_coeffs, scaling_coeffs, scaling_coeffs]).T
             )
-        
+
         return y_pred_probas
 
     def predict(self, X, to_add_probas_outside_rules=True):
@@ -596,7 +614,7 @@ class SirusMixin:
     ############# Regressor fit and predict  ##############
     #######################################################
     def _fit_rules_regressor(
-        self, X, y, all_possible_rules_list, sample_weight=None,to_encode_target=False
+        self, X, y, all_possible_rules_list, sample_weight=None, to_encode_target=False
     ):
         """
         Fit method for SirusMixin in regression case.
@@ -625,7 +643,9 @@ class SirusMixin:
         all_possible_rules_list_str = [
             str(elem) for elem in all_possible_rules_list
         ]  # Trick for np.unique
-        all_possible_rules_list, all_possible_freq_list = get_top_rules(all_possible_rules_list_str=all_possible_rules_list_str,p0=self.p0)
+        all_possible_rules_list, all_possible_freq_list = get_top_rules(
+            all_possible_rules_list_str=all_possible_rules_list_str, p0=self.p0
+        )
         if len(all_possible_rules_list) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
@@ -633,7 +653,9 @@ class SirusMixin:
 
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list, proba=all_possible_freq_list, num_rule=self.num_rule
+            paths=all_possible_rules_list,
+            proba=all_possible_freq_list,
+            num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
         self.all_possible_rules_list = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
@@ -660,15 +682,30 @@ class SirusMixin:
         self.type_target = y.dtype
 
         ## final predictor fitting : Ridge regression with positive coefficients
-        best_alpha, results = ridge_cv_positive(gamma_array,y,random_state=self.random_state)
-        self.ridge = Ridge(
-            alpha=best_alpha, fit_intercept=True, positive=True, random_state=self.random_state
+        best_alpha, results = ridge_cv_positive(
+            gamma_array, y, random_state=self.random_state
         )
-        self.ridge.fit(gamma_array, y) #sample_weight=sample_weight
-        for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
-            coeff = self.ridge.coef_[indice] if self.ridge.coef_.ndim ==1 else self.ridge.coef_[:,indice]
-            self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
-            self.list_probas_outside_by_rules[indice] = (coeff * self.list_probas_outside_by_rules[indice]).tolist()
+        self.ridge = Ridge(
+            alpha=best_alpha,
+            fit_intercept=True,
+            positive=True,
+            random_state=self.random_state,
+        )
+        self.ridge.fit(gamma_array, y)  # sample_weight=sample_weight
+        for indice in range(
+            self.n_rules
+        ):  # Scale the probabilities by the learned coefficients
+            coeff = (
+                self.ridge.coef_[indice]
+                if self.ridge.coef_.ndim == 1
+                else self.ridge.coef_[:, indice]
+            )
+            self.list_probas_by_rules[indice] = (
+                coeff * self.list_probas_by_rules[indice]
+            ).tolist()
+            self.list_probas_outside_by_rules[indice] = (
+                coeff * self.list_probas_outside_by_rules[indice]
+            ).tolist()
 
     def _predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
@@ -701,7 +738,7 @@ class SirusMixin:
                 gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
                     indice
                 ]
-        #y_pred = self.ridge.predict(gamma_array)
+        # y_pred = self.ridge.predict(gamma_array)
         y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
 
         return y_pred
@@ -709,9 +746,7 @@ class SirusMixin:
     #######################################################
     ################ Fit main classiifer   ################
     #######################################################
-    def _fit_quantile_classifier(
-        self, X, y, sample_weight=None
-    ):  
+    def _fit_quantile_classifier(self, X, y, sample_weight=None):
         """
         fit method for SirusMixin.
         Parameters
@@ -746,15 +781,12 @@ class SirusMixin:
         """
         start = time.time()
         if self.p0 > 1.0 or self.p0 < 0.0:
-            raise ValueError(
-                "Invalid value for p0: p0 must be in the range (0, 1]."
-            )  
+            raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
         if self.num_rule <= 0:
             raise ValueError("num_rule must be a positive integer.")
         if self.quantile <= 1:
             raise ValueError("quantile must be an integer greater than 1.")
 
-        
         X_bin = X.copy()
         if (self.to_not_binarize_colindexes is None) and (
             self.starting_index_one_hot is None
@@ -812,7 +844,9 @@ class SirusMixin:
                 )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
         end = time.time()
-        print(f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds")
+        print(
+            f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds"
+        )
 
         start = time.time()
         super().fit(

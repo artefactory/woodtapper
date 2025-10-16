@@ -21,7 +21,6 @@ from .base import SirusMixin
 from .utils import compute_staibility_criterion
 
 
-
 class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     """
     SIRUS class applied with a DecisionTreeClassifier
@@ -73,7 +72,6 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
     _parameter_constraints: dict = {**DecisionTreeClassifier._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
-    
     def fit(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
 
@@ -191,7 +189,6 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
-   
 
     def fit(self, X, y, sample_weight=None, check_input=True):
         start = time.time()
@@ -204,8 +201,6 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
         compute_staibility_criterion(self)
-
-
 
 
 class QuantileDecisionTreeRegressor(SirusMixin, DecisionTreeRegressor):
@@ -386,11 +381,13 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             dtree = self.estimators_[i, 0]
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
-        self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight,to_encode_target=True)
+        self._fit_rules_regressor(
+            X, y, all_possible_rules_list, sample_weight, to_encode_target=True
+        )
         compute_staibility_criterion(self)
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
-        y_pred_probas =self._predict_regressor(X, to_add_probas_outside_rules)
+        y_pred_probas = self._predict_regressor(X, to_add_probas_outside_rules)
         return y_pred_probas
 
 
@@ -444,7 +441,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
             monotonic_cst=monotonic_cst,
         )
         self.p0 = p0
-        self.num_rule= num_rule
+        self.num_rule = num_rule
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -460,7 +457,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
 
     def predict(self, X, to_add_probas_outside_rules=True):
         return self._predict_regressor(X, to_add_probas_outside_rules)
-    
+
 
 class SirusRFRegressor(SirusMixin, RandomForestRegressor):
     _parameter_constraints: dict = {**RandomForestRegressor._parameter_constraints}
@@ -538,15 +535,17 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
-            if isinstance(y,(pd.core.series.Series,pd.core.frame.DataFrame)):
+            if isinstance(y, (pd.core.series.Series, pd.core.frame.DataFrame)):
                 y = y.values
-            elif len(y.shape)>1:
+            elif len(y.shape) > 1:
                 y = y.ravel()
         elif not isinstance(X, np.ndarray):
-            raise Exception('Wrong type for X. except numpy array, pandas dataframe or series')
+            raise Exception(
+                "Wrong type for X. except numpy array, pandas dataframe or series"
+            )
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_outputs_):  ## extraction  of all trees rules
@@ -557,17 +556,19 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
-        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
         elif not isinstance(X, np.ndarray):
-            raise Exception('Wrong type for X')
+            raise Exception("Wrong type for X")
         return self._predict_regressor(X, to_add_probas_outside_rules)
-    
-class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
+
+
+class SirusGBRegressor(SirusMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from  a GradientBoostingRegressor
     """
+
     _parameter_constraints: dict = {**GradientBoostingRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
@@ -719,12 +720,12 @@ class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
-        if isinstance(X,(pd.core.series.Series,pd.core.frame.DataFrame)):
+        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
             y = y.values
         elif not isinstance(X, np.ndarray):
-            raise Exception('Wrong type for X') 
+            raise Exception("Wrong type for X")
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for i in range(self.n_estimators_):  ## extraction  of all trees rules
@@ -736,5 +737,5 @@ class SirusGBRegressor(SirusMixin,GradientBoostingRegressor):
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
-        y_pred =self._predict_regressor(X, to_add_probas_outside_rules)
+        y_pred = self._predict_regressor(X, to_add_probas_outside_rules)
         return y_pred

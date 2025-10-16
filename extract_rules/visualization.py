@@ -1,14 +1,13 @@
 import numpy as np
 
 
-
-
 #######################################################
 ################## Print rules   ######################
 #######################################################
 
+
 def show_rules(
-    RulesExtractorModel, max_rules=9, target_class_index=1,is_regression=False
+    RulesExtractorModel, max_rules=9, target_class_index=1, is_regression=False
 ):
     """
     Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
@@ -42,9 +41,7 @@ def show_rules(
         or not hasattr(RulesExtractorModel, "list_probas_by_rules")
         or not hasattr(RulesExtractorModel, "list_probas_outside_by_rules")
     ):
-        print(
-            "Model does not have the required rule attributes. Ensure it's fitted."
-        )
+        print("Model does not have the required rule attributes. Ensure it's fitted.")
         return
     list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
 
@@ -63,12 +60,20 @@ def show_rules(
 
     # Attempt to build/use feature mapping
     feature_mapping = None
-    if hasattr(RulesExtractorModel, "feature_names_in_"):  # Standard scikit-learn attribute
+    if hasattr(
+        RulesExtractorModel, "feature_names_in_"
+    ):  # Standard scikit-learn attribute
         # Create a mapping from index to name if feature_names_in_ is a list
-        feature_mapping = {i: name for i, name in enumerate(RulesExtractorModel.feature_names_in_)}
-    elif hasattr(RulesExtractorModel, "feature_names_"):  # Custom attribute for feature names
+        feature_mapping = {
+            i: name for i, name in enumerate(RulesExtractorModel.feature_names_in_)
+        }
+    elif hasattr(
+        RulesExtractorModel, "feature_names_"
+    ):  # Custom attribute for feature names
         if isinstance(RulesExtractorModel.feature_names_, dict):
-            feature_mapping = RulesExtractorModel.feature_names_  # Assumes it's already index:name
+            feature_mapping = (
+                RulesExtractorModel.feature_names_
+            )  # Assumes it's already index:name
         elif isinstance(RulesExtractorModel.feature_names_, list):
             feature_mapping = {
                 i: name for i, name in enumerate(RulesExtractorModel.feature_names_)
@@ -106,8 +111,10 @@ def show_rules(
         current_rule_conditions = rules_all[i]
         condition_parts_str = []
         for j in range(len(current_rule_conditions)):
-            dimension, treshold, sign_internal = RulesExtractorModel._from_rules_to_constraint(
-                rule=current_rule_conditions[j]
+            dimension, treshold, sign_internal = (
+                RulesExtractorModel._from_rules_to_constraint(
+                    rule=current_rule_conditions[j]
+                )
             )
 
             column_name = f"Feature[{dimension}]"  # Default if no mapping
@@ -124,15 +131,13 @@ def show_rules(
                 list_indices_features_bin is not None
                 and dimension in list_indices_features_bin
             ):
-                sign_display = "is" #if sign_internal == "L" else "is not"
-                #treshold_display = str(treshold)
+                sign_display = "is"  # if sign_internal == "L" else "is not"
+                # treshold_display = str(treshold)
                 treshold_display = str(0) if sign_internal == "L" else str(1)
             else:
                 sign_display = "<=" if sign_internal == "L" else ">"
                 treshold_display = (
-                    f"{treshold:.2f}"
-                    if isinstance(treshold, float)
-                    else str(treshold)
+                    f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
                 )
             condition_parts_str.append(
                 f"{column_name} {sign_display} {treshold_display}"
@@ -164,7 +169,7 @@ def show_rules(
             p_s_if_false = prob_if_false_list
             else_val_str = f"{p_s_if_false:.2f}"
 
-        else: # classification
+        else:  # classification
             if prob_if_true_list and len(prob_if_true_list) > target_class_index:
                 p_s_if_true = prob_if_true_list[target_class_index] * 100
                 then_val_str = f"{p_s_if_true:.0f}%"

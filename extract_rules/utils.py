@@ -39,7 +39,8 @@ class Node:
         else:
             self.children = []
 
-def get_top_rules(all_possible_rules_list_str,p0):
+
+def get_top_rules(all_possible_rules_list_str, p0):
     """
     Get the top rules with frequency greater than p0
     Parameters
@@ -60,18 +61,28 @@ def get_top_rules(all_possible_rules_list_str,p0):
         If no rule is found with the given p0 value
     """
     unique_str_rules, indices_rules, frequence_rules = np.unique(
-    all_possible_rules_list_str, return_counts=True, return_index=True
+        all_possible_rules_list_str, return_counts=True, return_index=True
     )  # get the unique rules and count
     frequence_rules = frequence_rules / frequence_rules.sum()  # convert to frequency
-    unique_str_rules_and_freq = zip(unique_str_rules, frequence_rules) # combine rules and frequency
-    all_rules_sorted = sorted(unique_str_rules_and_freq, key=lambda x: x[1], reverse=True) # sort by frequency
-    all_possible_rules_and_freq_list = [(eval(unique_str_rule),freq) for unique_str_rule, freq in all_rules_sorted if freq > p0] # filter by p0
+    unique_str_rules_and_freq = zip(
+        unique_str_rules, frequence_rules
+    )  # combine rules and frequency
+    all_rules_sorted = sorted(
+        unique_str_rules_and_freq, key=lambda x: x[1], reverse=True
+    )  # sort by frequency
+    all_possible_rules_and_freq_list = [
+        (eval(unique_str_rule), freq)
+        for unique_str_rule, freq in all_rules_sorted
+        if freq > p0
+    ]  # filter by p0
     if len(all_possible_rules_and_freq_list) == 0:
         if len(all_possible_rules_and_freq_list) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
-    all_possible_rules_list, all_possible_freq_list =zip(*all_possible_rules_and_freq_list) # unzip
+    all_possible_rules_list, all_possible_freq_list = zip(
+        *all_possible_rules_and_freq_list
+    )  # unzip
     return all_possible_rules_list, all_possible_freq_list
 
 
@@ -106,16 +117,20 @@ def compute_staibility_criterion(model):
             ]
         )
         epsilon = (
-            epsilon_numerator / epsilon_denominator
-            if epsilon_denominator > 0
-            else 0
+            epsilon_numerator / epsilon_denominator if epsilon_denominator > 0 else 0
         )
         list_epsilon.append(epsilon)
     print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
 
 
-
-def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_squared_error", cv=5, random_state=None):
+def ridge_cv_positive(
+    X,
+    y,
+    alphas=np.linspace(0, 1, 25),
+    scoring="neg_mean_squared_error",
+    cv=5,
+    random_state=None,
+):
     """
     Cross-validate Ridge regression with positive=True manually,
     and return the best model fitted on all data.
@@ -166,7 +181,9 @@ def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_square
 
     # Cross-validation loop
     for alpha in alphas:
-        model = Ridge(alpha=alpha, fit_intercept=True, positive=True, random_state=random_state)
+        model = Ridge(
+            alpha=alpha, fit_intercept=True, positive=True, random_state=random_state
+        )
         scores = []
 
         for train_idx, val_idx in cv_splitter.split(X, y):
@@ -176,7 +193,7 @@ def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_square
             m = clone(model)
             m.fit(X_train, y_train)
             y_pred = m.predict(X_val)
-            score = scorer._score_func(y_val,y_pred)
+            score = scorer._score_func(y_val, y_pred)
             scores.append(score)
 
         results[alpha] = np.mean(scores)
@@ -185,4 +202,3 @@ def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_square
     best_alpha = min(results, key=results.get)
 
     return best_alpha, results
-
