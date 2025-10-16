@@ -85,7 +85,7 @@ def compute_staibility_criterion(model):
 
 
 
-def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="roc_auc", cv=5, random_state=None):
+def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_squared_error", cv=5, random_state=None):
     """
     Cross-validate Ridge regression with positive=True manually,
     and return the best model fitted on all data.
@@ -145,13 +145,16 @@ def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="roc_auc", cv=5,
 
             m = clone(model)
             m.fit(X_train, y_train)
-            score = scorer(m, X_val, y_val)
+            y_pred = m.predict(X_val)
+            score = scorer._score_func(y_val,y_pred)
             scores.append(score)
 
         results[alpha] = np.mean(scores)
 
     # Select best alpha
-    best_alpha = max(results, key=results.get)
+    best_alpha = min(results, key=results.get)
+    print(results)
+    print("Best alpha:", best_alpha)
 
     return best_alpha, results
 
