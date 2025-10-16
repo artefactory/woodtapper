@@ -11,7 +11,7 @@ from sklearn.preprocessing import OneHotEncoder
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules
+from .utils import Node, get_top_rules,ridge_cv_positive
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -659,26 +659,12 @@ class SirusMixin:
         self.list_probas_outside_by_rules = list_output_outside_by_rules
         self.type_target = y.dtype
 
-        ## final predictor fitting :
-        #self.ridge = Ridge(
-        #    alpha=1.0, fit_intercept=True, positive=True, random_state=self.random_state
-        #)
-        self.ridge = RidgeCV(
-            alphas=np.arange(0.01, 1, 0.1),#np.arange(0.1, 10.0, 0.9),
-            cv=5,
-            scoring="neg_mean_squared_error",
-            fit_intercept=True,
+        ## final predictor fitting : Ridge regression with positive coefficients
+        best_alpha, results = ridge_cv_positive(gamma_array,y,random_state=self.random_state)
+        self.ridge = Ridge(
+            alpha=best_alpha, fit_intercept=True, positive=True, random_state=self.random_state
         )
-        #self.ridge = ElasticNetCV(
-        #    l1_ratio = 0,
-        #    alphas=np.arange(0.01, 1, 0.1),
-        #    cv=5,
-        #    #scoring="neg_mean_squared_error",
-        #    fit_intercept=True,
-        #    positive=True,
-        #    random_state=self.random_state,
-        #)
-        self.ridge.fit(gamma_array, y, sample_weight=sample_weight)
+        self.ridge.fit(gamma_array, y) #sample_weight=sample_weight
         for indice in range(self.n_rules): # Scale the probabilities by the learned coefficients
             coeff = self.ridge.coef_[indice] if self.ridge.coef_.ndim ==1 else self.ridge.coef_[:,indice]
             self.list_probas_by_rules[indice] = (coeff * self.list_probas_by_rules[indice]).tolist()
