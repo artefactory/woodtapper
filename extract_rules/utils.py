@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.stats import binom
-import numpy as np
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold
 from sklearn.base import clone

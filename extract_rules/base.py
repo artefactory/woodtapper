@@ -2,12 +2,10 @@ from functools import reduce
 from operator import and_
 
 import numpy as np
-import pandas as pd
 from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
-from sklearn.linear_model import Ridge, RidgeCV, ElasticNetCV
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.linear_model import Ridge
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter

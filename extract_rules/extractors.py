@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import binom
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (
     RandomForestClassifier,
@@ -13,8 +12,6 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
-from sklearn.linear_model import Ridge, RidgeCV
-from sklearn.preprocessing import OneHotEncoder
 import time
 
 from .base import SirusMixin
