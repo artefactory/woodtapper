@@ -40,6 +40,25 @@ class Node:
             self.children = []
 
 def get_top_rules(all_possible_rules_list_str,p0):
+    """
+    Get the top rules with frequency greater than p0
+    Parameters
+    ----------
+    all_possible_rules_list_str : list of str
+        List of all possible rules in string format
+    p0 : float
+        Minimum frequency threshold
+    Returns
+    ----------
+    all_possible_rules_list : list of list of tuples
+        List of all possible rules in tuple format
+    all_possible_freq_list : list of float
+        List of frequencies corresponding to the rules
+    Raises
+    ----------
+    ValueError
+        If no rule is found with the given p0 value
+    """
     unique_str_rules, indices_rules, frequence_rules = np.unique(
     all_possible_rules_list_str, return_counts=True, return_index=True
     )  # get the unique rules and count
@@ -57,6 +76,17 @@ def get_top_rules(all_possible_rules_list_str,p0):
 
 
 def compute_staibility_criterion(model):
+    """
+    Compute the stability criterion for a given model.
+    Parameters
+    ----------
+    model : SirusDTreeClassifier, SirusRFClassifier, SirusGBClassifier
+        The model instance with attributes n_estimators and all_possible_rules_frequency_list
+    Returns
+    -------
+    None
+        Prints the stability criterion value
+    """
     M = model.n_estimators
     list_p0 = np.arange(0.1, 1, 0.08)
     list_epsilon = []
@@ -153,8 +183,6 @@ def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="neg_mean_square
 
     # Select best alpha
     best_alpha = min(results, key=results.get)
-    print(results)
-    print("Best alpha:", best_alpha)
 
     return best_alpha, results
 
