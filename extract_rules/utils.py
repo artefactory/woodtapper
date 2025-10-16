@@ -1,5 +1,10 @@
 import numpy as np
 from scipy.stats import binom
+import numpy as np
+from sklearn.linear_model import Ridge
+from sklearn.model_selection import KFold
+from sklearn.base import clone
+from sklearn.metrics import get_scorer
 
 
 class Node:
@@ -77,3 +82,76 @@ def compute_staibility_criterion(model):
         )
         list_epsilon.append(epsilon)
     print("***** \n Stability criterion value:", np.mean(list_epsilon), "\n*****")
+
+
+
+def ridge_cv_positive(X, y, alphas=np.linspace(0,1,25), scoring="roc_auc", cv=5, random_state=None):
+    """
+    Cross-validate Ridge regression with positive=True manually,
+    and return the best model fitted on all data.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+        Training data.
+
+    y : array-like of shape (n_samples,)
+        Target values.
+
+    alphas : list or array-like
+        List of alpha (regularization strength) values to test.
+
+    scoring : str or callable
+        A scoring function name (from sklearn) or a callable with signature
+        `scoring(estimator, X_val, y_val)` returning a scalar score.
+
+    cv : int or cross-validation generator, default=5
+        Number of CV folds or a CV splitter.
+
+    random_state : int, optional
+        Random state for reproducibility (if cv is an integer).
+
+    Returns
+    -------
+    best_alpha : float
+        The alpha value that yields the best mean CV score.
+
+    best_model : sklearn.linear_model.Ridge
+        Ridge model (positive=True) trained on all data with best_alpha.
+
+    results : dict
+        Dictionary mapping alpha -> mean CV score.
+    """
+
+    # Handle scoring
+    scorer = get_scorer(scoring) if isinstance(scoring, str) else scoring
+
+    # Handle CV splitter
+    if isinstance(cv, int):
+        cv_splitter = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+    else:
+        cv_splitter = cv
+
+    results = {}
+
+    # Cross-validation loop
+    for alpha in alphas:
+        model = Ridge(alpha=alpha, fit_intercept=True, positive=True, random_state=random_state)
+        scores = []
+
+        for train_idx, val_idx in cv_splitter.split(X, y):
+            X_train, X_val = X[train_idx], X[val_idx]
+            y_train, y_val = y[train_idx], y[val_idx]
+
+            m = clone(model)
+            m.fit(X_train, y_train)
+            score = scorer(m, X_val, y_val)
+            scores.append(score)
+
+        results[alpha] = np.mean(scores)
+
+    # Select best alpha
+    best_alpha = max(results, key=results.get)
+
+    return best_alpha, results
+
