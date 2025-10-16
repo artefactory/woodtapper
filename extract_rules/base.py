@@ -216,42 +216,7 @@ class SirusMixin:
                     curr_path, is_removing_singleton=False
             )
             all_paths_list.extend(list_sub_path)
-            #print("curr_path[0] : ",curr_path[0])
-            #print("list_sub_path :", list_sub_path)
             all_paths_list.append([curr_path[0]])
-            #max_size_curr_path = len(curr_path)
-
-            ## Single rules
-            #for k in range(max_size_curr_path):
-            #    if [curr_path[k]] not in all_paths_list:
-            #        all_paths_list.append([curr_path[k]])
-
-            ## We take all the rules strating from a head node
-            #for k in range(max_size_curr_path):
-            #    list_sub_path = self._split_sub_rules(
-            #        curr_path[k:], is_removing_singleton=True
-            #    )
-            #    all_paths_list.extend(list_sub_path)
-
-            ## More complexe cases : internal rules
-            #if max_size_curr_path == 1:
-            #    continue
-            #else:
-            #    curr_path_size_pair = (max_size_curr_path % 2) == 0
-            #    if curr_path_size_pair:  ## PAIRS
-            #        for k in range(1, (max_size_curr_path // 2)):
-            #            list_sub_path = self._split_sub_rules(
-            #                curr_path[k : max_size_curr_path - k],
-            #                is_removing_singleton=True,
-            #            )
-            #            all_paths_list.extend(list_sub_path)
-            #    else:  ## IMPAIRS
-            #        for k in range(1, (max_size_curr_path // 2)):
-            #            list_sub_path = self._split_sub_rules(
-            #                curr_path[k : max_size_curr_path - k],
-            #                is_removing_singleton=True,
-            #            )
-            #            all_paths_list.extend(list_sub_path)
         return all_paths_list
 
     def _extract_single_tree_rules(self, tree):
