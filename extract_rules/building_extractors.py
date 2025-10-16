@@ -176,9 +176,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            # print('self.estimators_.shape', self.estimators_.shape)
-            dtree = self.estimators_[i, 0]
+        for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
@@ -341,9 +339,7 @@ class SirusGBRegressorDouble(SirusMixin, GradientBoostingRegressor):
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            # print('self.estimators_.shape', self.estimators_.shape)
-            dtree = self.estimators_[i, 0]
+        for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
