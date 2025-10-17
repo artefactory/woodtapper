@@ -176,7 +176,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for dtree in self.estimators_:  ## extraction  of all trees rules
+        for dtree in self.estimators_[:,0]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
             tree = dtree.tree_
             all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
