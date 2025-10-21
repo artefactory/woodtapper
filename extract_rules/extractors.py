@@ -369,23 +369,17 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for i in range(self.n_estimators_):  ## extraction  of all trees rules
-            # print('self.estimators_.shape', self.estimators_.shape)
-            dtree = self.estimators_[i, 0]
+        for dtree in self.estimators_[:,0]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
             tree = dtree.tree_
-            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
-        self._fit_rules_regressor(
-            X, y, all_possible_rules_list, sample_weight, to_encode_target=True
-        )
+            curr_tree_rules = self._extract_single_tree_rules(tree)
+            if len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0: # to avoid empty rules
+            #Boosting may produce trees with no splits, for example when the number of estimators is high
+                all_possible_rules_list.extend(curr_tree_rules)
+        self._fit_rules(X, y, all_possible_rules_list, sample_weight)
         compute_staibility_criterion(self)
-
-    def predict_proba(self, X, to_add_probas_outside_rules=True):
-        y_pred_probas = self._predict_regressor(X, to_add_probas_outside_rules)
-        return y_pred_probas
 
 
 ######### Regressor ############
@@ -726,7 +720,10 @@ class SirusGBRegressor(SirusMixin, GradientBoostingRegressor):
         all_possible_rules_list = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
+            curr_tree_rules = self._extract_single_tree_rules(tree)
+            if len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0: # to avoid empty rules
+            #Boosting may produce trees with no splits, for example when the number of estimators is high
+                all_possible_rules_list.extend(curr_tree_rules)
         self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
         compute_staibility_criterion(self)
 

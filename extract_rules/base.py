@@ -135,7 +135,7 @@ class SirusMixin:
         stack = [(root, 0)]  # start with the root node id (0) and its depth (0)
         while len(stack) > 0:
             curr_rule, indice_in_tree_struct = stack.pop()
-            is_split_node = curr_rule.feature != -2
+            is_split_node = curr_rule.feature != -2 #-2 means leaf node in sklearn
 
             if is_split_node:
                 rule_left = (curr_rule.feature, curr_rule.treshold, "L")
@@ -226,9 +226,13 @@ class SirusMixin:
         tree_structure = self._construct_longest_paths(
             root
         )  ## generate the tree structure with Node instances
-        all_possible_rules_list = self._generate_all_possible_rules(
-            tree_structure
-        )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
+        if len(tree_structure[0]) == 0 and root.feature == -2: #-2 means leaf node in sklearn
+            # case where root node is also a leaf
+            all_possible_rules_list = [[]]  # Tree with only one leaf
+        else:
+            all_possible_rules_list = self._generate_all_possible_rules(
+                tree_structure
+            )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return all_possible_rules_list
 
     def _generate_single_rule_mask(self, X, dimension, treshold, sign):
