@@ -59,6 +59,11 @@ def get_top_rules(all_possible_rules_list_str, p0):
     ValueError
         If no rule is found with the given p0 value
     """
+    if (
+        len(all_possible_rules_list_str) == 0
+        or len(all_possible_rules_list_str[0]) == 0
+    ):
+        raise ValueError("The input list of rules is empty.")
     unique_str_rules, indices_rules, frequence_rules = np.unique(
         all_possible_rules_list_str, return_counts=True, return_index=True
     )  # get the unique rules and count
@@ -75,7 +80,7 @@ def get_top_rules(all_possible_rules_list_str, p0):
         if freq > p0
     ]  # filter by p0
     if len(all_possible_rules_and_freq_list) == 0:
-        if len(all_possible_rules_and_freq_list) == 0:
+        if len(all_possible_rules_and_freq_list[0]) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
