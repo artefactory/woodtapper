@@ -33,7 +33,15 @@ python setup.py build_ext --inplace
 ```
 
 ## 🚀 How to use pySIRUS
+```python
+## RandomForestClassifier rules extraction
+from extract_rules.extractors import SirusRFClassifier
 
+SIRUS = SirusRFClassifier(n_estimators=1000,max_depth=2,
+                          quantile=10,p0=0.01, random_state=0)
+SIRUS.fit(X_train,y_train)
+y_pred_sirus = SIRUS.predict(X_test)
+```
 ## 💾 Data sets
 * [Pima](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database)
 * Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv
@@ -62,6 +70,6 @@ This work was done through a partenership between **Artefact Research Center** a
 </p>
 
 
-## ⭐ Citation
+## 📜 Citation
 
 If you find the code usefull, please consider citing us :
