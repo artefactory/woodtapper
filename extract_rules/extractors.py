@@ -369,14 +369,19 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
             self.estimators_[i, k] = tree
 
         return raw_predictions
+
     def fit(self, X, y, sample_weight=None, check_input=True):
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for dtree in self.estimators_[:,0]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
+        for dtree in self.estimators_[
+            :, 0
+        ]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
-            if len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0: # to avoid empty rules
-            #Boosting may produce trees with no splits, for example when the number of estimators is high
+            if (
+                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
+            ):  # to avoid empty rules
+                # Boosting may produce trees with no splits, for example when the number of estimators is high
                 all_possible_rules_list.extend(curr_tree_rules)
         self._fit_rules(X, y, all_possible_rules_list, sample_weight)
         compute_staibility_criterion(self)
@@ -721,8 +726,10 @@ class SirusGBRegressor(SirusMixin, GradientBoostingRegressor):
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
-            if len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0: # to avoid empty rules
-            #Boosting may produce trees with no splits, for example when the number of estimators is high
+            if (
+                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
+            ):  # to avoid empty rules
+                # Boosting may produce trees with no splits, for example when the number of estimators is high
                 all_possible_rules_list.extend(curr_tree_rules)
         self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
         compute_staibility_criterion(self)

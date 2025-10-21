@@ -4,7 +4,7 @@
 
 
 Abdoulaye SAKHO<sup>1, 2</sup>, Emmanuel MALHERBE<sup>1</sup></sup>, Erwan SCORNET<sup>2</sup> <br>
- <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université</sub> 
+ <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université</sub>
 
 Preprint. <br>
 [[Full Paper]]() <br>
@@ -27,7 +27,7 @@ And install the required packages into your environment (conda, mamba or pip):
 pip install -r requirements.txt
 ```
 
-> ⚠️ **Warning** Then, you **need** to run the following command inside extract_rules folder : 
+> ⚠️ **Warning** Then, you **need** to run the following command inside extract_rules folder :
 ```
 python setup.py build_ext --inplace
 ```
@@ -36,7 +36,7 @@ python setup.py build_ext --inplace
 
 ## 💾 Data sets
 * [Pima](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database)
-* Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv 
+* Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv
 * Adult : https://archive.ics.uci.edu/dataset/2/adult
 * Houses sales : https://www.openml.org/d/44144
 

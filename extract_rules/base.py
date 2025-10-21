@@ -135,7 +135,7 @@ class SirusMixin:
         stack = [(root, 0)]  # start with the root node id (0) and its depth (0)
         while len(stack) > 0:
             curr_rule, indice_in_tree_struct = stack.pop()
-            is_split_node = curr_rule.feature != -2 #-2 means leaf node in sklearn
+            is_split_node = curr_rule.feature != -2  # -2 means leaf node in sklearn
 
             if is_split_node:
                 rule_left = (curr_rule.feature, curr_rule.treshold, "L")
@@ -226,7 +226,9 @@ class SirusMixin:
         tree_structure = self._construct_longest_paths(
             root
         )  ## generate the tree structure with Node instances
-        if len(tree_structure[0]) == 0 and root.feature == -2: #-2 means leaf node in sklearn
+        if (
+            len(tree_structure[0]) == 0 and root.feature == -2
+        ):  # -2 means leaf node in sklearn
             # case where root node is also a leaf
             all_possible_rules_list = [[]]  # Tree with only one leaf
         else:
@@ -600,7 +602,7 @@ class SirusMixin:
             X=X, to_add_probas_outside_rules=to_add_probas_outside_rules
         )
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
-        if self.type_target != int:
+        if self.type_target is not int:
             y_pred = y_pred_numeric.copy().astype(self.type_target)
             for i, cls in enumerate(self.classes_):
                 y_pred[y_pred_numeric == i] = cls

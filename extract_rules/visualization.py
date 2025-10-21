@@ -179,5 +179,5 @@ def show_rules(
                 else_val_str = f"{p_s_if_false:.0f}%"
 
         print(
-            f"if   {condition_str_formatted:<{condition_col_width }} then {then_val_str:<18} else {else_val_str:<18}"
+            f"if   {condition_str_formatted:<{condition_col_width}} then {then_val_str:<18} else {else_val_str:<18}"
         )
