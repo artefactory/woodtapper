@@ -3,7 +3,7 @@
 # Stable and Interpretable RUle Set in Python (pySIRUS)
 
 
-Abdoulaye SAKHO<sup>1, 2</sup>, Emmanuel MALHERBE<sup>1</sup></sup>, Erwan SCORNET<sup>2</sup> <br>
+Abdoulaye SAKHO<sup>1, 2</sup>, Jad AOUAD<sup>1</sup>, Emmanuel MALHERBE<sup>1</sup></sup> and Erwan SCORNET<sup>2</sup> <br>
  <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université</sub>
 
 Preprint. <br>
