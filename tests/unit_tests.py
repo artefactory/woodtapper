@@ -1,0 +1,32 @@
+import numpy as np
+from extract_rules.extractors import SirusRFClassifier
+
+
+def test_sirus_init_default_params(simple_dataset):
+    X, y = simple_dataset
+    model = SirusRFClassifier(p0=0.0, num_rule=5)
+    model.fit(X, y)
+    assert len(model.estimators_) > 0
+    assert model.num_rule > 0
+
+
+def test_sirus_fit_sets_attributes(simple_dataset):
+    X, y = simple_dataset
+    model = SirusRFClassifier(n_estimators=50, num_rule=3)
+    model.fit(X, y)
+    assert hasattr(model, "all_possible_rules_list"), (
+        "SIRUS should store extracted rules"
+    )
+    assert isinstance(model.all_possible_rules_list, list)
+
+
+def test_predict_output_shape(trained_sirus_on_simple, simple_dataset):
+    X, _ = simple_dataset
+    preds = trained_sirus_on_simple.predict(X)
+    assert preds.shape[0] == X.shape[0]
+
+
+def test_predict_value_range(trained_sirus_on_simple, simple_dataset):
+    X, _ = simple_dataset
+    preds = trained_sirus_on_simple.predict(X)
+    assert np.all((preds >= 0) & (preds <= 1)), "Predictions should be probabilities"
