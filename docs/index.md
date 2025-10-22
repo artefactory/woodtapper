@@ -2,4 +2,8 @@
 
 WoodTapper is a machine learning toolbox for investigating tree-based models.
 
-## Features
+## What's in there ?
+
+### Rules Etractors
+
+### ExampleExplanation

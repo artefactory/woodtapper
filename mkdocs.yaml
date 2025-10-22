@@ -21,3 +21,4 @@ nav:
   - Reference:
     - Rules Extractors:
       - BaseMixin: references/mixin.md
+      - Extractors: references/extractors.md
