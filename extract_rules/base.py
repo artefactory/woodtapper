@@ -18,9 +18,9 @@ sklearn.tree._classes.DENSE_SPLITTERS = {
 }
 
 
-class SirusMixin:
+class RulesExtractorMixin:
     """
-    Mixin of SIRUS. Base of all SIRUS models.
+    Mixin for rules extraction. Base of all extractors models.
 
     Attributes
     ----------
@@ -58,8 +58,8 @@ class SirusMixin:
         Array of quantiles for continuous features.
     Returns
     ----------
-    SirusMixin: SirusMixin
-        The current SirusMixin instance.
+    RulesExtractorMixin: RulesExtractorMixin
+        The current RulesExtractorMixin instance.
     Note
     ----
     This mixin provides core functionalities for SIRUS models, including rule extraction from decision trees,
@@ -459,7 +459,7 @@ class SirusMixin:
     #######################################################
     def _fit_rules(self, X, y, all_possible_rules_list, sample_weight=None):
         """
-        Fit method for SirusMixin in classification case.
+        Fit method for RulesExtractorMixin in classification case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -549,7 +549,7 @@ class SirusMixin:
 
     def predict_proba(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin. in classification case
+        predict_proba method for RulesExtractorMixin. in classification case
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -586,7 +586,7 @@ class SirusMixin:
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """
-        Predict method for SirusMixin in classification case.
+        Predict method for RulesExtractorMixin in classification case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -621,7 +621,7 @@ class SirusMixin:
         self, X, y, all_possible_rules_list, sample_weight=None, to_encode_target=False
     ):
         """
-        Fit method for SirusMixin in regression case.
+        Fit method for RulesExtractorMixin in regression case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -713,7 +713,7 @@ class SirusMixin:
 
     def _predict_regressor(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for SirusMixin for regression case.
+        predict_proba method for RulesExtractorMixin for regression case.
         Parameters
         X : array-like, shape (n_samples, n_features)
             The input samples.
@@ -752,7 +752,7 @@ class SirusMixin:
     #######################################################
     def _fit_quantile_classifier(self, X, y, sample_weight=None):
         """
-        fit method for SirusMixin.
+        fit method for RulesExtractorMixin.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
