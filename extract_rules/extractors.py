@@ -136,6 +136,22 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        """
+        Fit the SIRUS model.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y : array-like of shape (n_samples,)
+            The target values (class labels) as integers or strings.
+        sample_weight : array-like of shape (n_samples,), default=None
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+
+        """
         start = time.time()
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
@@ -348,6 +364,22 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        """
+        Fit the SIRUS model.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y : array-like of shape (n_samples,)
+            The target values (class labels) as integers or strings.
+        sample_weight : array-like of shape (n_samples,), default=None
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+
+        """
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
         for dtree in self.estimators_[
@@ -481,6 +513,22 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        """
+        Fit the SIRUS model.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y : array-like of shape (n_samples,)
+            The target values (class labels) as integers or strings.
+        sample_weight : array-like of shape (n_samples,), default=None
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+
+        """
         if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
@@ -703,6 +751,22 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         return raw_predictions
 
     def fit(self, X, y, sample_weight=None, check_input=True):
+        """
+        Fit the RulesExtractor model.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y : array-like of shape (n_samples,)
+            The target values (class labels) as integers or strings.
+        sample_weight : array-like of shape (n_samples,), default=None
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+
+        """
         if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
             self.feature_names_in_ = X.columns.to_numpy()
             X = X.values
@@ -723,5 +787,19 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
+        """
+        Predict using the RulesExtractorMixin regressor.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        to_add_probas_outside_rules : bool, default=True
+            Whether to add the predictions from outside the rules.
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            The predicted values.
+
+        """
         y_pred = self._predict_regressor(X, to_add_probas_outside_rules)
         return y_pred
