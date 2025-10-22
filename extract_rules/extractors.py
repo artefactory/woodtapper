@@ -106,9 +106,7 @@ class DtreeExtractorClassifier(RulesExtractorMixin, DecisionTreeClassifier):
         return self
 
 
-class SirusClassifier(
-    RulesExtractorMixin, RandomForestClassifier
-):  # DecisionTreeClassifier
+class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
     """
     SIRUS class applied with a RandomForestClassifier.
     """
@@ -725,7 +723,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
             raise Exception("Wrong type for X")
         self._fit_quantile_classifier(X, y, sample_weight)
         all_possible_rules_list = []
-        for dtree in self.estimators_:  ## extraction  of all trees rules
+        for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
             if (
