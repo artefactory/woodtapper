@@ -27,7 +27,7 @@ And install the required packages into your environment (conda, mamba or pip):
 pip install -r requirements.txt
 ```
 
-> ⚠️ **Warning** Then, you **need** to run the following command inside extract_rules folder :
+> ⚠️ **Warning** Then, you **need** to run the following command from the repository root directory :
 ```
 python setup.py build_ext --inplace
 ```
