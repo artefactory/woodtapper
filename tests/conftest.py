@@ -5,7 +5,6 @@ sys.path.append(os.getcwd())
 
 import pytest
 from extract_rules.extractors import (
-    DtreeExtractorClassifier,
     SirusClassifier,
     SirusRegressor,
 )
@@ -48,7 +47,9 @@ def iris_dataset():
 def trained_sirusDtree_on_iris(iris_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = iris_dataset
-    model = DtreeExtractorClassifier(n_estimators=1000, p0=0.1, random_state=0)
+    model = SirusClassifier(
+        n_estimators=1, p0=0.1, random_state=0, bootstrap=False, max_features=1.0
+    )
     model.fit(X, y)
     return model
 
