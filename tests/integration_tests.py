@@ -1,0 +1,27 @@
+import pytest
+import numpy as np
+from extract_rules.extractors import SirusRFClassifier
+
+
+def test_training_and_prediction_consistency(simple_dataset):
+    X, y = simple_dataset
+    model = SirusRFClassifier(n_estimators=100, num_rule=5, p0=0.0)
+    model.fit(X, y)
+    preds1 = model.predict(X)
+    preds2 = model.predict(X)
+    np.testing.assert_allclose(preds1, preds2, atol=1e-6)
+
+
+def test_rules_extraction_stability(trained_sirus_on_simple):
+    rules = trained_sirus_on_simple.all_possible_rules_list
+    assert isinstance(rules, list)
+    assert len(rules) <= trained_sirus_on_simple.num_rule
+
+
+@pytest.mark.parametrize("n_trees,max_rules", [(50, 3), (100, 5), (300, 10)])
+def test_sirus_scaling(simple_dataset, n_trees, max_rules):
+    X, y = simple_dataset
+    model = SirusRFClassifier(n_estimators=n_trees, num_rule=max_rules)
+    model.fit(X, y)
+    preds = model.predict(X)
+    assert preds.shape[0] == X.shape[0]
