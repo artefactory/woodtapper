@@ -23,7 +23,9 @@ def test_sirus_fit_sets_attributes(simple_dataset):
 def test_predict_output_shape(trained_sirus_on_simple, simple_dataset):
     X, _ = simple_dataset
     preds = trained_sirus_on_simple.predict(X)
-    assert preds.shape[0] == X.shape[0]
+    assert preds.shape[0] == X.shape[0], (
+        "Number of predictions should match number of samples"
+    )
 
 
 def test_predict_value_range(trained_sirus_on_simple, simple_dataset):
