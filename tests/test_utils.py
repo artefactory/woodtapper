@@ -1,4 +1,4 @@
-from extract_rules.utils import get_top_rules
+from extract_rules.utils import get_top_rules, ridge_cv_positive
 import numpy as np
 import pytest
 
@@ -26,3 +26,13 @@ def test_normalize_weights_empty_list():
         get_top_rules([], p0=0.1)
     with pytest.raises(ValueError):
         get_top_rules([[]], p0=0.1)
+
+
+def test_ridge_cv(simple_regression_data):
+    X_reg, y_reg = simple_regression_data
+    best_alpha, results = ridge_cv_positive(
+        X_reg,
+        y_reg,
+        random_state=0,
+    )
+    assert isinstance(best_alpha, float)
