@@ -4,7 +4,7 @@ import os
 sys.path.append(os.getcwd())
 
 import pytest
-from extract_rules.extractors import SirusDTreeClassifier, SirusRFClassifier
+from extract_rules.extractors import DtreeExtractorClassifier, SirusClassifier
 import numpy as np
 from sklearn.datasets import load_iris
 
@@ -26,7 +26,7 @@ def simple_dataset(random_seed):
 def trained_sirus_on_simple(simple_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = simple_dataset
-    model = SirusRFClassifier(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
+    model = SirusClassifier(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
     model.fit(X, y)
     return model
 
@@ -44,7 +44,7 @@ def iris_dataset():
 def trained_sirusDtree_on_iris(iris_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = iris_dataset
-    model = SirusDTreeClassifier(n_estimators=1000, p0=0.1, random_state=0)
+    model = DtreeExtractorClassifier(n_estimators=1000, p0=0.1, random_state=0)
     model.fit(X, y)
     return model
 
@@ -53,6 +53,6 @@ def trained_sirusDtree_on_iris(iris_dataset):
 def trained_sirus_on_iris(iris_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = iris_dataset
-    model = SirusRFClassifier(n_trees=1000, p0=0.1, random_state=0)
+    model = SirusClassifier(n_trees=1000, p0=0.1, random_state=0)
     model.fit(X, y)
     return model
