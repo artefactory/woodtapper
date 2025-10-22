@@ -21,6 +21,42 @@ from .utils import compute_staibility_criterion
 class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
     """
     SIRUS class applied with a RandomForestClassifier.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    criterion : {"gini", "entropy", "log_loss"}, default="gini"
+        The function to measure the quality of a split. Supported criteria are
+        "gini" for the Gini impurity, "entropy" for the information gain and
+        "log_loss" for the reduction in log loss.
+    max_depth : int, default=2
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than min_samples_split samples.
+    class_weight : {"balanced", "balanced_subsample"}, default=None
+        Weights associated with classes in the form {class_label: weight}.
+        If None, all classes are supposed to have weight one.
+    splitter : {"best", "random", "quantile"}, default="quantile"
+        The strategy used to choose the split at each node. Supported strategies
+        are "best" to choose the best split and "random" to choose the best random
+        split. "quantile" is similar to "best" but the split point is chosen to
+        be a a value in the training set and not the beetween to values as for best and random.
+    p0 : float, default=0.01
+        The threshold for rule selection.
+    num_rule : int, default=25
+        The maximum number of rules to extract.
+    quantile : int, default=10
+        The number of quantiles to use for the "quantile" splitter.
+    to_not_binarize_colindexes : list of int, default=None
+        List of column indexes to not binarize when extracting the rules.
+    starting_index_one_hot : int, default=None
+        Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
+    Attributes
+    ----------
+    all_possible_rules_list : list
+        List of all possible rules extracted from the forest.
+
+
     """
 
     _parameter_constraints: dict = {**RandomForestClassifier._parameter_constraints}
@@ -31,7 +67,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         n_estimators=100,
         *,
         criterion="gini",
-        max_depth=None,
+        max_depth=2,
         min_samples_split=2,
         min_samples_leaf=1,
         min_weight_fraction_leaf=0.0,
@@ -127,11 +163,40 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters
     ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    learning_rate : float, default=0.1
+        Learning rate shrinks the contribution of each tree by
+        `learning_rate`. There is a trade-off between learning_rate and
+    loss : {'log_loss', 'deviance'}, default='log_loss'
+        The loss function to be optimized. 'log_loss' refers to
+        logistic regression for classification with probabilistic outputs.
+    criterion : {"gini", "entropy", "log_loss"}, default="gini"
+        The function to measure the quality of a split. Supported criteria are
+        "gini" for the Gini impurity, "entropy" for the information gain and
+        "log_loss" for the reduction in log loss.
+    max_depth : int, default=2
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than min_samples_split samples.
     splitter : {"best", "random", "quantile"}, default="quantile"
         The strategy used to choose the split at each node. Supported strategies
         are "best" to choose the best split and "random" to choose the best random
         split. "quantile" is similar to "best" but the split point is chosen to
         be a a value in the training set and not the beetween to values as for best and random.
+    p0 : float, default=0.01
+        The threshold for rule selection.
+    num_rule : int, default=25
+        The maximum number of rules to extract.
+    quantile : int, default=10
+        The number of quantiles to use for the "quantile" splitter.
+    to_not_binarize_colindexes : list of int, default=None
+        List of column indexes to not binarize when extracting the rules.
+    starting_index_one_hot : int, default=None
+        Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
+    Attributes
+    ----------
+    all_possible_rules_list : list
+        List of all possible rules extracted from the forest.
     """
 
     _parameter_constraints: dict = {**GradientBoostingClassifier._parameter_constraints}
@@ -303,6 +368,44 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
 
 
 class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
+    """
+    SIRUS class applied with a RandomForestRegressor.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    criterion : {"gini", "entropy", "log_loss"}, default="gini"
+        The function to measure the quality of a split. Supported criteria are
+        "gini" for the Gini impurity, "entropy" for the information gain and
+        "log_loss" for the reduction in log loss.
+    max_depth : int, default=2
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than min_samples_split samples.
+    splitter : {"best", "random", "quantile"}, default="quantile"
+        The strategy used to choose the split at each node. Supported strategies
+        are "best" to choose the best split and "random" to choose the best random
+        split. "quantile" is similar to "best" but the split point is chosen to
+        be a a value in the training set and not the beetween to values as for best and random.
+    p0 : float, default=0.01
+        The threshold for rule selection.
+    num_rule : int, default=25
+        The maximum number of rules to extract.
+    quantile : int, default=10
+        The number of quantiles to use for the "quantile" splitter.
+    to_not_binarize_colindexes : list of int, default=None
+        List of column indexes to not binarize when extracting the rules.
+    starting_index_one_hot : int, default=None
+        Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
+    ridge: ridge regression model fitted on the rules
+
+    Attributes
+    ----------
+    all_possible_rules_list : list
+        List of all possible rules extracted from the forest.
+
+    """
+
     _parameter_constraints: dict = {**RandomForestRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
@@ -409,6 +512,44 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
 class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    learning_rate : float, default=0.1
+        Learning rate shrinks the contribution of each tree by
+        `learning_rate`. There is a trade-off between learning_rate and
+    loss : {'log_loss', 'deviance'}, default='log_loss'
+        The loss function to be optimized. 'log_loss' refers to
+        logistic regression for classification with probabilistic outputs.
+    criterion : {"gini", "entropy", "log_loss"}, default="gini"
+        The function to measure the quality of a split. Supported criteria are
+        "gini" for the Gini impurity, "entropy" for the information gain and
+        "log_loss" for the reduction in log loss.
+    max_depth : int, default=2
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than min_samples_split samples.
+    splitter : {"best", "random", "quantile"}, default="quantile"
+        The strategy used to choose the split at each node. Supported strategies
+        are "best" to choose the best split and "random" to choose the best random
+        split. "quantile" is similar to "best" but the split point is chosen to
+        be a a value in the training set and not the beetween to values as for best and random.
+    p0 : float, default=0.01
+        The threshold for rule selection.
+    num_rule : int, default=25
+        The maximum number of rules to extract.
+    quantile : int, default=10
+        The number of quantiles to use for the "quantile" splitter.
+    to_not_binarize_colindexes : list of int, default=None
+        List of column indexes to not binarize when extracting the rules.
+    starting_index_one_hot : int, default=None
+        Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
+    Attributes
+    ----------
+    all_possible_rules_list : list
+        List of all possible rules extracted from the forest.
+    ridge: ridge regression model fitted on the rules
+
     """
 
     _parameter_constraints: dict = {**GradientBoostingRegressor._parameter_constraints}
