@@ -14,11 +14,11 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 import time
 
-from .base import SirusMixin
+from .base import RulesExtractorMixin
 from .utils import compute_staibility_criterion
 
 
-class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
+class DtreeExtractorClassifier(RulesExtractorMixin, DecisionTreeClassifier):
     """
     SIRUS class applied with a DecisionTreeClassifier
     """
@@ -106,7 +106,9 @@ class SirusDTreeClassifier(SirusMixin, DecisionTreeClassifier):
         return self
 
 
-class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClassifier
+class SirusClassifier(
+    RulesExtractorMixin, RandomForestClassifier
+):  # DecisionTreeClassifier
     """
     SIRUS class applied with a RandomForestClassifier.
     """
@@ -200,17 +202,17 @@ class SirusRFClassifier(SirusMixin, RandomForestClassifier):  # DecisionTreeClas
         compute_staibility_criterion(self)
 
 
-class QuantileDecisionTreeRegressor(SirusMixin, DecisionTreeRegressor):
+class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
-    Used for GradientBoostingClassifier in SirusGBClassifier
+    Used for GradientBoostingClassifier in GbExtractorClassifier
     """
 
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
+class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters
@@ -390,7 +392,7 @@ class SirusGBClassifier(SirusMixin, GradientBoostingClassifier):
 ######### Regressor ############
 
 
-class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
+class DtreeExtractorRegressor(RulesExtractorMixin, DecisionTreeRegressor):
     """
     SIRUS class applied with a DecisionTreeClassifier
     Parameters
@@ -455,7 +457,7 @@ class SirusDTreeRegressor(SirusMixin, DecisionTreeRegressor):
         return self._predict_regressor(X, to_add_probas_outside_rules)
 
 
-class SirusRFRegressor(SirusMixin, RandomForestRegressor):
+class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
     _parameter_constraints: dict = {**RandomForestRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
@@ -559,9 +561,9 @@ class SirusRFRegressor(SirusMixin, RandomForestRegressor):
         return self._predict_regressor(X, to_add_probas_outside_rules)
 
 
-class SirusGBRegressor(SirusMixin, GradientBoostingRegressor):
+class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
     """
-    Class for rules extraction from  a GradientBoostingRegressor
+    Class for rules extraction from a GradientBoostingRegressor
     """
 
     _parameter_constraints: dict = {**GradientBoostingRegressor._parameter_constraints}

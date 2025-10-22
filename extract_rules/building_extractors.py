@@ -8,12 +8,12 @@ from sklearn._loss.loss import HuberLoss
 from sklearn.utils._param_validation import StrOptions
 from sklearn.linear_model import RidgeCV
 
-from .base import SirusMixin
+from .base import RulesExtractorMixin
 from .extractors import QuantileDecisionTreeRegressor
 from .utils import compute_staibility_criterion
 
 
-class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
+class GbExtractorClassifierDouble(RulesExtractorMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters
@@ -191,7 +191,7 @@ class SirusGBClassifierDouble(SirusMixin, GradientBoostingClassifier):
         return y_pred_probas
 
 
-class SirusGBRegressorDouble(SirusMixin, GradientBoostingRegressor):
+class GbExtractorRegressorDouble(RulesExtractorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from  a GradientBoostingRegressor
     """
