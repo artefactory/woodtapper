@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev_refac
 
 jobs:
   deploy-docs:
