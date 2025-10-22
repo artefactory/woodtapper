@@ -5,8 +5,8 @@ import numpy
 
 extensions = [
     Extension(
-        "Splitter.QuantileSplitter",  # Full module path
-        ["Splitter/_QuantileSplitter.pyx"],  # Path to .pyx file
+        "extract_rules.Splitter.QuantileSplitter",  # Full module path
+        ["extract_rules/Splitter/_QuantileSplitter.pyx"],  # Path to .pyx file
     )
 ]
 
