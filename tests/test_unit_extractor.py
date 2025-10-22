@@ -1,13 +1,35 @@
 import numpy as np
-from extract_rules.extractors import SirusClassifier
+from extract_rules.extractors import (
+    SirusClassifier,
+    SirusRegressor,
+    GbExtractorClassifier,
+    GbExtractorRegressor,
+)
 
 
-def test_sirus_init_default_params(simple_dataset):
+def test_sirus_fit(simple_dataset, simple_regression_data):
     X, y = simple_dataset
-    model = SirusClassifier(p0=0.0, num_rule=5)
+    X_reg, y_reg = simple_regression_data
+
+    model = SirusClassifier(n_estimators=100, p0=0.0, num_rule=5)
     model.fit(X, y)
     assert len(model.estimators_) > 0
     assert model.num_rule > 0
+
+    model_regressor = SirusRegressor(n_estimators=100, p0=0.0, num_rule=5)
+    model_regressor.fit(X_reg, y_reg)
+    assert len(model_regressor.estimators_) > 0
+    assert model_regressor.num_rule > 0
+
+    model_gb_clf = GbExtractorClassifier(n_estimators=100, p0=0.0, num_rule=5)
+    model_gb_clf.fit(X, y)
+    assert len(model_gb_clf.estimators_) > 0
+    assert model_gb_clf.num_rule > 0
+
+    model_gb_regressor = GbExtractorRegressor(n_estimators=100, p0=0.0, num_rule=5)
+    model_gb_regressor.fit(X_reg, y_reg)
+    assert len(model_gb_regressor.estimators_) > 0
+    assert model_gb_regressor.num_rule > 0
 
 
 def test_sirus_fit_sets_attributes(simple_dataset):
