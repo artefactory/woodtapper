@@ -22,3 +22,5 @@ nav:
     - Rules Extractors:
       - BaseMixin: references/mixin.md
       - Extractors: references/extractors.md
+    - Example-based explainability:
+      - Example Explanation: references/example-explanation.md
