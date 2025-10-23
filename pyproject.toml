@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "Cython>=3.1.2","numpy" ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toolbox-forests"               # your package name
+version = "0.0.1"            # semantic versioning
+description = "A Python toolbox for tree-based models nvetigation"
+readme = "README.md"
+license = "MIT"     # or your license
+authors = [
+    {name = "Abdoulaye SAKHO", email = "abdoulaye.sakho@artefact.com"}
+]
+requires-python = ">=3.12,<3.13"
+keywords = ["toolbox-forests", "interpretable ML", "tree-based models", "Cython"]
+
+[project.urls]
+"Homepage" = "https://github.com/artefactory/rules"
+"Repository" = "https://github.com/artefactory/rules"
+
+
+[project.optional-dependencies]
+dev = ["cython"]
