@@ -2,6 +2,11 @@ site_name: WoodTapper
 site_url: https://artefactory.github.io/rules
 theme:
   name: material
+  repo_url: https://github.com/artefactory/rules
+  repo_name: WoodTapper
+  theme:
+    icon:
+      repo: fontawesome/brands/github
 markdown_extensions:
   - admonition
   - toc:
@@ -15,10 +20,12 @@ plugins:
         options:
           docstring_style: numpy
           show_source: true
+
+
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Reference:
+  - References:
     - Rules Extractors:
       - BaseMixin: references/mixin.md
       - Extractors: references/extractors.md

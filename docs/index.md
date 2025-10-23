@@ -8,7 +8,7 @@ In this documentation you will find examples to be quickly getting started as we
 Here is a quick overview of the different functionalities offered by WoodTapper. Further details are given in the rest of the documentation.
 
 ### Rules Etractors
-- [Rules extractors](.references/extractors.md)
+- [Rules extractors](./references/extractors.md)
 
 ### ExampleExplanation
-- [Example Explanation](.references/example-explanation.md)
+- [Example Explanation](./references/example-explanation.md)
