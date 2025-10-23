@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
 import numpy
@@ -11,8 +11,13 @@ extensions = [
 ]
 
 setup(
-    name="Splitter",
-    packages=["Splitter"],
+    name="toolbox-forests",  # must be unique on PyPI
+    version="0.1.0",
+    author="Abdoulaye SAKHO",
+    author_email="abdoulaye.sakho@artefact.com",
+    description="Test package for tree toolbox",
+    long_description=open("README.md").read(),
+    packages=find_packages(),
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
 )
