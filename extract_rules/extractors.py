@@ -429,12 +429,12 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         List of column indexes to not binarize when extracting the rules.
     starting_index_one_hot : int, default=None
         Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
-    ridge: ridge regression model fitted on the rules
 
     Attributes
     ----------
     all_possible_rules_list : list
         List of all possible rules extracted from the forest.
+    ridge: ridge regression model fitted on the rules
 
     """
 
