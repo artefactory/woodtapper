@@ -17,8 +17,12 @@ def iterative_random_choice(probas):
 
     Parameters
     ----------
-        probas : np.array like
-            Probabilities of the samples.
+    probas : np.ndarray of shape (n_samples, n_classes)
+        Probabilities for each class for each sample.
+    Returns
+    -------
+    np.ndarray of shape (n_samples,)
+        Chosen class for each sample.
     """
     thresholds = np.random.uniform(size=len(probas))
     cumulative_weights = np.cumsum(probas, axis=1)
