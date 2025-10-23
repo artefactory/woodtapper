@@ -1,0 +1,3 @@
+recursive-include extract_rules *.pyx
+recursive-include extract_rules *.pxd
+recursive-include extract_rules *.c
