@@ -5,8 +5,7 @@ from scipy.io.arff import loadarff
 from ucimlrepo import fetch_ucirepo
 
 DATA_DIR = os.path.join(
-    os.path.abspath(os.path.join(os.getcwd(), os.pardir)),
-    "experiments",
+    os.path.abspath(os.getcwd()),
     "data",
     "externals",
 )
