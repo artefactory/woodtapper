@@ -9,6 +9,8 @@ from sklearn.ensemble import (
     ExtraTreesClassifier,
     RandomForestClassifier,
 )
+from .utils.utils import compute_leaf_sizes
+from .utils.weights import compute_kernel_weights
 
 
 def iterative_random_choice(probas):
@@ -77,7 +79,7 @@ class ExplanationMixin:
             Each element is the frequency of the training sample's leaf in the new sample.
         """
         leafs_by_sample = (
-            super().apply(X).astype(np.int32)
+            super().apply(X).astype(np.int16)
         )  # taille n_samples x n_trees
         leaves_match = np.array(
             [leafs_by_sample[i] == self.train_samples_leaves for i in range(len(X))]
@@ -118,6 +120,20 @@ class ExplanationMixin:
         return self.train_y[
             np.argsort(-weights, axis=1)[:, :5]
         ]  # Get the 5 most similar samples
+
+    def get_weights_cython(self, X):
+        """ """
+        leafs_by_sample = (
+            super().apply(X).astype(np.int32)
+        )  # taille n_samples x n_trees
+        leaf_sizes = compute_leaf_sizes(self.train_samples_leaves)
+        return compute_kernel_weights(
+            leafs_by_sample, self.train_samples_leaves, leaf_sizes
+        )
+
+    def explanation_cython():
+        """Placeholder for Cython-optimized explanation method."""
+        pass
 
 
 class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
