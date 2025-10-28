@@ -89,6 +89,28 @@ class ExplanationMixin:
         # shape of output: n_samples x n_train
         return (leaves_match / n_by_tree).mean(axis=2)
 
+    def get_weights_cython(self, X):
+        """
+        Derive frequency of training samples ending in the same leaf as the new sample X.
+        (see GRF algorithm for details)
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            New samples for which to compute the weights.
+        Returns
+        -------
+        np.ndarray of shape (n_samples, n_train)
+            Weights for each sample in X based on the training samples leaves.
+            Each element is the frequency of the training sample's leaf in the new sample.
+        """
+        leafs_by_sample = (
+            super().apply(X).astype(np.int32)
+        )  # taille n_samples x n_trees
+        leaf_sizes = compute_leaf_sizes(self.train_samples_leaves)
+        return compute_kernel_weights(
+            leafs_by_sample, self.train_samples_leaves, leaf_sizes
+        )
+
     def explanation(self, X, batch_size=None):
         """
         Explanation procedure.
@@ -109,31 +131,17 @@ class ExplanationMixin:
             If the model is a regressor, the output will be real numbers.
         """
         if batch_size is None:
-            weights = self.get_weights(X)
+            weights = self.get_weights_cython(X)
         else:
             list_weights = []
             for batch in np.array_split(X, len(X) // batch_size):
-                list_weights.extend(self.get_weights(batch))
+                list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
 
         # return self.train_y[iterative_random_choice(weights)]
         return self.train_y[
             np.argsort(-weights, axis=1)[:, :5]
         ]  # Get the 5 most similar samples
-
-    def get_weights_cython(self, X):
-        """ """
-        leafs_by_sample = (
-            super().apply(X).astype(np.int32)
-        )  # taille n_samples x n_trees
-        leaf_sizes = compute_leaf_sizes(self.train_samples_leaves)
-        return compute_kernel_weights(
-            leafs_by_sample, self.train_samples_leaves, leaf_sizes
-        )
-
-    def explanation_cython():
-        """Placeholder for Cython-optimized explanation method."""
-        pass
 
 
 class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
