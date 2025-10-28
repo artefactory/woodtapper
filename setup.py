@@ -7,7 +7,11 @@ extensions = [
     Extension(
         "extract_rules.Splitter.QuantileSplitter",  # Full module path
         ["extract_rules/Splitter/_QuantileSplitter.pyx"],  # Path to .pyx file
-    )
+    ),
+    Extension(
+        "example_sampling.utils.weights",  # Full module path
+        ["example_sampling/utils/weights.pyx"],  # Path to .pyx file
+    ),
 ]
 
 setup(
