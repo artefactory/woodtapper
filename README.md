@@ -42,17 +42,6 @@ SIRUS = SirusRFClassifier(n_estimators=1000,max_depth=2,
 SIRUS.fit(X_train,y_train)
 y_pred_sirus = SIRUS.predict(X_test)
 ```
-## 💾 Data sets
-* [Pima](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database)
-* Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv
-* Adult : https://archive.ics.uci.edu/dataset/2/adult
-* Houses sales : https://www.openml.org/d/44144
-
-* California : https://www.openml.org/d/44090
-* Titanic : https://www.kaggle.com/datasets/yasserh/titanic-dataset?resource=download
-* Wine : https://archive.ics.uci.edu/dataset/186/wine+quality
-* Haberman : https://archive.ics.uci.edu/dataset/43/haberman+s+survival
-* Yeast : https://archive.ics.uci.edu/dataset/110/yeast
 
 ## 🙏 Acknowledgements
 
