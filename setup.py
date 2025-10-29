@@ -16,10 +16,10 @@ extensions = [
 
 setup(
     name="woodtapper",  # must be unique on PyPI
-    version="0.0.1",
+    version="0.0.2",
     author="Abdoulaye SAKHO",
     author_email="abdoulaye.sakho@artefact.com",
-    description="Test package for tree toolbox",
+    description="A Python toolbox for interpretable and explainable tree ensembles.",
     long_description=open("README.md").read(),
     packages=find_packages(),
     ext_modules=cythonize(extensions),
