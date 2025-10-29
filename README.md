@@ -1,6 +1,12 @@
 <div align="center">
 
-<p align="center"><img width="40%" src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png"  /></p>
+
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png">
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed_light.png" >
+<img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed_light.png" width="300">
+
+</picture>
 
 *User-friendly and scalable Python package for tapping decision tree ensembles*
 
