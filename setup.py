@@ -15,8 +15,8 @@ extensions = [
 ]
 
 setup(
-    name="toolbox-forests",  # must be unique on PyPI
-    version="0.1.0",
+    name="woodtapper",  # must be unique on PyPI
+    version="0.0.1",
     author="Abdoulaye SAKHO",
     author_email="abdoulaye.sakho@artefact.com",
     description="Test package for tree toolbox",

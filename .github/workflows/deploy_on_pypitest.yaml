@@ -1,4 +1,4 @@
-name: Build and publish toolbox-forests on TestPyPI
+name: Build and publish woodtapper on TestPyPI
 
 on:
   release:
