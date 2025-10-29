@@ -28,12 +28,12 @@ Then, you **need** to run the following command from the repository root directo
 pip install -e .[dev]
 ```
 
-## 🚀 How to use pySIRUS
+## 🚀 How to use WoodTapper
 ```python
 ## RandomForestClassifier rules extraction
-from extract_rules.extractors import SirusRFClassifier
+from extract_rules.extractors import SirusClassifier
 
-SIRUS = SirusRFClassifier(n_estimators=1000,max_depth=2,
+SIRUS = SirusClassifier(n_estimators=1000,max_depth=2,
                           quantile=10,p0=0.01, random_state=0)
 SIRUS.fit(X_train,y_train)
 y_pred_sirus = SIRUS.predict(X_test)
