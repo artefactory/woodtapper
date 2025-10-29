@@ -30,7 +30,7 @@ jobs:
       - name: Upload to TestPyPI
         if: github.ref == 'refs/heads/main'
         run: |
-          twine upload --repository testpypi dist/*
+          twine upload --repository-url https://test.pypi.org/legacy/ dist/*
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPITEST_API_TOKEN }}
