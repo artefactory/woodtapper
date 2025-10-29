@@ -7,7 +7,7 @@ name = "woodtapper"
 authors = [
     {name = "Abdoulaye SAKHO", email = "abdoulaye.sakho@artefact.com"}
 ]
-version = "0.0.4"
+version = "0.0.5"
 description = "A Python toolbox for interpretable and explainable tree ensembles."
 readme = "README.md"
 license = "MIT"
