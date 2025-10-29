@@ -2,7 +2,7 @@
 
 # WoodTapper
 
-<p align="center"><img width="25%" src="data/logos/logo_woodpecker_compressed.png"  /></p>
+<p align="center"><img width="25%" src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png"  /></p>
 
 *User-friendly and scalable Python package for tapping decision tree ensembles*
 
@@ -45,12 +45,12 @@ This work was done through a partenership between **Artefact Research Center** a
 
 <p align="center">
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
-    <img src="data/logos/logo_arc.png" height="80" />
+    <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_arc.png" height="80" />
   </a>
   &emsp;
   &emsp;
   <a href="https://www.lpsm.paris/">
-    <img src="data/logos//logo_LPSM.jpg" height="95" />
+    <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos//logo_LPSM.jpg" height="95" />
   </a>
 </p>
 
