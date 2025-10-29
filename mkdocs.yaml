@@ -1,26 +1,45 @@
 site_name: WoodTapper
 site_url: https://artefactory.github.io/rules
 theme:
-  name: material
+  name: "material"
   repo_url: https://github.com/artefactory/rules
   repo_name: WoodTapper
-  theme:
-    icon:
-      repo: fontawesome/brands/github
+  palette:
+      - media: "(prefers-color-scheme: dark)"
+        scheme: default
+        primary: teal
+        accent: amber
+        toggle:
+          icon: material/moon-waning-crescent
+          name: Switch to dark mode
+      - media: "(prefers-color-scheme: light)"
+        scheme: slate
+        primary: teal
+        accent: amber
+        toggle:
+          icon: material/white-balance-sunny
+          name: Switch to light mode
+  features:
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  logo: https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png
+  favicon: https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png
+
 markdown_extensions:
   - admonition
   - toc:
       permalink: true
 
 plugins:
-- search
 - mkdocstrings:
     handlers:
       python:
         options:
           docstring_style: numpy
           show_source: true
-
 
 nav:
   - Home: index.md
