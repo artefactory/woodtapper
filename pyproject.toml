@@ -7,7 +7,7 @@ name = "woodtapper"
 authors = [
     {name = "Abdoulaye SAKHO", email = "abdoulaye.sakho@artefact.com"}
 ]
-version = "0.0.2"
+version = "0.0.3"
 description = "A Python toolbox for interpretable and explainable tree ensembles."
 readme = "README.md"
 license = "MIT"
@@ -18,6 +18,21 @@ classifiers = [
     "Topic :: Software Development"
 ]
 requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=2.3.1",
+    "pandas>=2.3.0",
+    "scikit-learn>=1.6.1",
+    "matplotlib>=3.10.0",
+    "cython>=3.1.2",
+    "ucimlrepo>=0.0.7",
+    "setuptools>=78.1.1",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pre-commit>=4.3.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.22",
+    "mkdocstrings-python>=1.18.2"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/artefactory/woodtapper"
