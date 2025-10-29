@@ -2,7 +2,7 @@
 
 # WoodTapper
 
-<p align="center"><img width="25%" src="data/logos/logo_woodpecker.png"  /></p>
+<p align="center"><img width="25%" src="data/logos/logo_woodpecker_compressed.png"  /></p>
 
 *User-friendly and scalable Python package for tapping decision tree ensembles*
 
