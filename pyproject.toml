@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "Cython>=3.1.2","numpy","scikit-learn>=1.6.1" ]
+requires = ["setuptools>=78.1.1", "wheel", "Cython>=3.1.2","numpy>=2.3.1","scikit-learn>=1.6.1" ]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "woodtapper"
 authors = [
     {name = "Abdoulaye SAKHO", email = "abdoulaye.sakho@artefact.com"}
 ]
-version = "0.0.3"
+version = "0.0.4"
 description = "A Python toolbox for interpretable and explainable tree ensembles."
 readme = "README.md"
 license = "MIT"
@@ -23,15 +23,7 @@ dependencies = [
     "pandas>=2.3.0",
     "scikit-learn>=1.6.1",
     "matplotlib>=3.10.0",
-    "cython>=3.1.2",
     "ucimlrepo>=0.0.7",
-    "setuptools>=78.1.1",
-    "pytest>=8.4.2",
-    "pytest-cov>=7.0.0",
-    "pre-commit>=4.3.0",
-    "mkdocs>=1.6.1",
-    "mkdocs-material>=9.6.22",
-    "mkdocstrings-python>=1.18.2"
 ]
 
 [project.urls]
@@ -40,4 +32,13 @@ dependencies = [
 
 
 [project.optional-dependencies]
-dev = ["cython"]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "pre-commit>=4.3.0"
+]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.22",
+    "mkdocstrings-python>=1.18.2"
+]
