@@ -1,19 +1,15 @@
 <div align="center">
 
-# Stable and Interpretable RUle Set in Python (pySIRUS)
+# WoodTapper
 
+<p align="center"><img width="25%" src="data/logos/logo_woodpecker.png"  /></p>
 
-Abdoulaye SAKHO<sup>1, 2</sup>, Jad AOUAD<sup>1</sup>, Emmanuel MALHERBE<sup>1</sup></sup> and Erwan SCORNET<sup>2</sup> <br>
- <sup>1</sup> <sub> Artefact Research Center, </sub> <br> <sup>2</sup> <sub>*LPSM* - Sorbonne Université</sub>
+*User-friendly and scalable Python package for tapping decision tree ensembles*
 
-Preprint. <br>
-[[Full Paper]]() <br>
-
+[![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 </div>
 
-<p align="center"><img width="65%" src="data/logos/image.png"  /></p>
-
-**Abstract:** *Repository for the devloppement of scikit-learn based methodology for stable rules extraction from a tree-based classifier.*
+WoodTapper is a Python toolbox for tree ensemble models fully compatible with the scikit-learn API. WoodTapper enables seamless integration of interpretable rule extraction into existing machine learning workflows. In addition, it introduces an example-based explanation module that links predictions to a small set of representative samples through a weighting scheme, enhancing human interpretability.
 
 
 ## 🛠 Installation
@@ -27,9 +23,9 @@ And install the required packages into your environment (conda, mamba or pip):
 pip install -r requirements.txt
 ```
 
-> ⚠️ **Warning** Then, you **need** to run the following command from the repository root directory :
+Then, you **need** to run the following command from the repository root directory :
 ```
-python setup.py build_ext --inplace
+pip install -e .[dev]
 ```
 
 ## 🚀 How to use pySIRUS
