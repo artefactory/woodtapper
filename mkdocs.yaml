@@ -44,6 +44,10 @@ plugins:
 nav:
   - Home: index.md
   - Installation: installation.md
+  - Tutorials:
+    - Tutorials Overview: 0_tutorials.md
+    - Rules Extractors: 1_tutorials.md
+
   - References:
     - Rules Extractors:
       - BaseMixin: references/mixin.md
