@@ -50,31 +50,31 @@ In this section, we present our $\texttt{RulesExtractor}$ module, which is compa
 We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variable $X$ and $Y$  takes values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
 
 In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$  [@benard2021sirus-classif]. A path $\mathcal{P}$ is thus defined as
-$$\begin{align}
+$$
     \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
-\end{align}$$
+$$
 where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ corresponds to the chosen child node (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
 Thus, each path defines a hyperrectangle in the input space using $\mathcal{D}_n$, denoted $\hat{H}_n(\mathcal{P})$. Hence, each path can be associated with a rule $\hat{g}_{n,\mathcal{P}}(x)$, that returns the mean of $Y$ from its training sample for each of the two different cells. Thus,
-$$\begin{align}
+$$
     \hat{g}_{n,\mathcal{P}}(x) =
     \begin{cases}
         \frac{1}{|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}_n(\mathcal{P})\}} \text{ if } x \in \hat{H}_n(\mathcal{P})\\
         \frac{1}{n-|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}_n(\mathcal{P})\}} \text{ otherwise }.
     \end{cases}
-\end{align}$$
+$$
 The probability that a given path $\mathcal{P}$ belongs to a $\Theta$-random tree is
-$$\begin{align}
+$$
     p_n\left(\mathcal{P}\right) = \mathbb{P}\left(\mathcal{P}\in T(\Theta,\mathcal{D}_n|\mathcal{D}_n)\right).
-\end{align}$$
+$$
 For a path $\mathcal{P}$, $p_n\left(\mathcal{P}\right)$ is estimated via Monte-Carlo sampling with $\hat{p}_{M,n}$,
-$$\begin{align}
+$$
     \hat{p}_{M,n}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.
-\end{align}$$
+$$
 
 The set of finals rules is $\{\hat{g}_{n,\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,n,p_0}\}$ where $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$ with $p_0 \in (0,1)$. The finals rules are aggregated as follows for building the final estimator:
-$$\begin{align}
+$$
     \hat{\eta}_{M,np_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,n,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,n,p_0}} \hat{g}_{n,\mathcal{P}}(x).
-\end{align}$$
+$$
 
 So far, we have focused on binary classification for clarity. SIRUS was originally implemented in R for both binary classification and regression, with the regression version differing only in how the final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression.
 
@@ -130,9 +130,7 @@ The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule ex
 
 The $\texttt{ExampleExplanation}$ module enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. Letting $ w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
 $$
-\begin{align}
-    w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{X_i \in \mathcal{L}_l(Z)\}}}{|\mathcal{L}_l(Z)|}.
-\end{align}
+w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{X_i \in \mathcal{L}_l(Z)\}}}{|\mathcal{L}_l(Z)|}.
 $$
 
 
