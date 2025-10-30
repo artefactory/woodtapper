@@ -24,8 +24,7 @@ affiliations:
  - name: Laboratoire de Probabilités, Statistique et Modélisation Sorbonne Université and Université Paris Cité, CNRS, F-75005, Paris
    index: 2
 date: 31 November 2025
-bibliography: refs.bib
-output: paper_pdf
+bibliography: paper.bib
 ---
 
 # Summary
