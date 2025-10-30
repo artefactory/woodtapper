@@ -7,7 +7,6 @@ tags:
 authors:
   - name: Abdoulaye SAKHO
     orcid: 0009-0002-0248-4881
-    equal-contrib: true
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
   - name: Jad AOUAD
     orcid: 0009-0000-1456-3056
@@ -100,9 +99,10 @@ The package adheres to the scikit-learn [&pedregosa2011scikit] estimator interfa
 ## SIRUS: rules and predictive performances
 
 We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}. On the Titanic dataset, both implementations yield identical rules, confirming that our Python version faithfully reproduces the original algorithm.
-| ![\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% } | ![\label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% } |
-|:--:|:--:|
-| (a) SIRUS (R) | (b) Python (Ours) |
+![SIRUS (R).\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
+
+![Python (Ours). \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
+
 
 
 We also observe that the predictive performance of our implementation is similar to that of the original algorithm (see Table \ref{tab:perf_metrics}).
