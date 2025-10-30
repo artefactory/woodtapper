@@ -6,7 +6,7 @@ To install the required packages in a virtual environment, run the following com
 ## From TestPyPi
 The easiest is to pip-install the package:
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ woodtapper
+pip install woodtapper
 ```
 
 ## From Source
