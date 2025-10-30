@@ -11,8 +11,8 @@ extensions = [
         ],  # Path to .pyx file
     ),
     Extension(
-        "example_sampling.utils.weights",  # Full module path
-        ["example_sampling/utils/weights.pyx"],  # Path to .pyx file
+        "woodtapper.example_sampling.utils.weights",  # Full module path
+        ["woodtapper.example_sampling/utils/weights.pyx"],  # Path to .pyx file
     ),
 ]
 
