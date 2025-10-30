@@ -47,6 +47,7 @@ nav:
   - Tutorials:
     - Tutorials Overview: 0_tutorials.md
     - Rules Extractors: 1_tutorials.md
+    - Example-based explainability: 2_tutorials.md
 
   - References:
     - Rules Extractors:
