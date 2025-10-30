@@ -4,7 +4,7 @@ import os
 sys.path.append(os.getcwd())
 
 import pytest
-from extract_rules.extractors import (
+from woodtapper.extract_rules import (
     SirusClassifier,
     SirusRegressor,
 )
