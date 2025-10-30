@@ -10,7 +10,7 @@
 
 *User-friendly and scalable Python package for tapping decision tree ensembles*
 
-[![Build](https://img.shields.io/github/actions/workflow/status/artefactory/woodtapper/ci.yml?branch=main)](https://github.com/artefactory/woodtapper/actions)
+[![CI Status](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](#-documentation)
