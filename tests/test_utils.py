@@ -1,4 +1,4 @@
-from extract_rules.utils import get_top_rules, ridge_cv_positive
+from woodtapper.extract_rules.utils import get_top_rules, ridge_cv_positive
 import numpy as np
 import pytest
 

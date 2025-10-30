@@ -1,5 +1,5 @@
 import numpy as np
-from extract_rules.extractors import (
+from woodtapper.extract_rules import (
     SirusClassifier,
     SirusRegressor,
     GbExtractorClassifier,

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from extract_rules.extractors import SirusClassifier
+from woodtapper.extract_rules import SirusClassifier
 
 
 def test_training_and_prediction_consistency(simple_dataset):
