@@ -5,9 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "woodtapper"
 authors = [
-    {name = "Abdoulaye SAKHO", email = "abdoulaye.sakho@artefact.com"}
+    {name = "Abdoulaye SAKHO", email = "abdoulaye7020@gmail.com"},
+    {name = "artefactory", email = "abdoulaye.sakho@artefact.com"},
 ]
-version = "0.0.5"
+version = "0.0.6"
 description = "A Python toolbox for interpretable and explainable tree ensembles."
 readme = "README.md"
 license = "MIT"

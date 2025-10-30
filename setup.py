@@ -5,8 +5,10 @@ import numpy
 
 extensions = [
     Extension(
-        "extract_rules.Splitter.QuantileSplitter",  # Full module path
-        ["extract_rules/Splitter/_QuantileSplitter.pyx"],  # Path to .pyx file
+        "woodtapper.extract_rules.Splitter.QuantileSplitter",  # Full module path
+        [
+            "woodtapper/extract_rules/Splitter/_QuantileSplitter.pyx"
+        ],  # Path to .pyx file
     ),
     Extension(
         "example_sampling.utils.weights",  # Full module path
@@ -16,7 +18,7 @@ extensions = [
 
 setup(
     name="woodtapper",  # must be unique on PyPI
-    version="0.0.5",
+    version="0.0.6",
     author="Abdoulaye SAKHO",
     author_email="abdoulaye.sakho@artefact.com",
     description="A Python toolbox for interpretable and explainable tree ensembles.",
