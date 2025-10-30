@@ -26,6 +26,7 @@ pip install -e .[dev]
 ## Dependencies
 
 WoodTapper requires the following:
+
 * Python (>=3.12)
 * Numpy (>=2.3.1)
 * Pandas (>=2.3.0)
@@ -33,6 +34,7 @@ WoodTapper requires the following:
 
 ## Contributing
 You are welcome to contribute to the project ! You can help in various ways:
+
 * raise issues
 * resolve issues already opened
 * develop new features
