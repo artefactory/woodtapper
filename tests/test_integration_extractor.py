@@ -13,7 +13,7 @@ def test_training_and_prediction_consistency(simple_dataset):
 
 
 def test_rules_extraction_stability(trained_sirus_on_simple):
-    rules = trained_sirus_on_simple.all_possible_rules_list
+    rules = trained_sirus_on_simple.rules_
     assert isinstance(rules, list)
     assert len(rules) <= trained_sirus_on_simple.num_rule
 

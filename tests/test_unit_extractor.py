@@ -36,10 +36,8 @@ def test_sirus_fit_sets_attributes(simple_dataset):
     X, y = simple_dataset
     model = SirusClassifier(n_estimators=50, num_rule=3)
     model.fit(X, y)
-    assert hasattr(model, "all_possible_rules_list"), (
-        "SIRUS should store extracted rules"
-    )
-    assert isinstance(model.all_possible_rules_list, list)
+    assert hasattr(model, "rules_"), "SIRUS should store extracted rules"
+    assert isinstance(model.rules_, list)
 
 
 def test_predict_output_shape(trained_sirus_on_simple, simple_dataset):

@@ -39,33 +39,30 @@ class Node:
             self.children = []
 
 
-def get_top_rules(all_possible_rules_list_str, p0):
+def get_top_rules(rules_str, p0):
     """
     Get the top rules with frequency greater than p0
     Parameters
     ----------
-    all_possible_rules_list_str : list of str
+    rules_str : list of str
         List of all possible rules in string format
     p0 : float
         Minimum frequency threshold
     Returns
     ----------
-    all_possible_rules_list : list of list of tuples
+    rules_ : list of list of tuples
         List of all possible rules in tuple format
-    all_possible_freq_list : list of float
+    rules_freq_ : list of float
         List of frequencies corresponding to the rules
     Raises
     ----------
     ValueError
         If no rule is found with the given p0 value
     """
-    if (
-        len(all_possible_rules_list_str) == 0
-        or len(all_possible_rules_list_str[0]) == 0
-    ):
+    if len(rules_str) == 0 or len(rules_str[0]) == 0:
         raise ValueError("The input list of rules is empty.")
     unique_str_rules, indices_rules, frequence_rules = np.unique(
-        all_possible_rules_list_str, return_counts=True, return_index=True
+        rules_str, return_counts=True, return_index=True
     )  # get the unique rules and count
     frequence_rules = frequence_rules / frequence_rules.sum()  # convert to frequency
     unique_str_rules_and_freq = zip(
@@ -84,10 +81,8 @@ def get_top_rules(all_possible_rules_list_str, p0):
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
-    all_possible_rules_list, all_possible_freq_list = zip(
-        *all_possible_rules_and_freq_list
-    )  # unzip
-    return all_possible_rules_list, all_possible_freq_list
+    rules_, rules_freq_ = zip(*all_possible_rules_and_freq_list)  # unzip
+    return rules_, rules_freq_
 
 
 def compute_staibility_criterion(model):

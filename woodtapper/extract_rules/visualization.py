@@ -37,7 +37,7 @@ def show_rules(
     11. Print the rules along with their conditions, 'then' probabilities, and 'else' probabilities in a structured table.
     """
     if (
-        not hasattr(RulesExtractorModel, "all_possible_rules_list")
+        not hasattr(RulesExtractorModel, "rules_")
         or not hasattr(RulesExtractorModel, "list_probas_by_rules")
         or not hasattr(RulesExtractorModel, "list_probas_outside_by_rules")
     ):
@@ -45,7 +45,7 @@ def show_rules(
         return
     list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
 
-    rules_all = RulesExtractorModel.all_possible_rules_list
+    rules_all = RulesExtractorModel.rules_
     probas_if_true_all = RulesExtractorModel.list_probas_by_rules
     probas_if_false_all = RulesExtractorModel.list_probas_outside_by_rules
 

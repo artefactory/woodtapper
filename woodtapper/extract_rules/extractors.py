@@ -53,7 +53,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
     Attributes
     ----------
-    all_possible_rules_list : list
+    rules_ : list
         List of all possible rules extracted from the forest.
 
 
@@ -154,11 +154,11 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         """
         start = time.time()
         self._fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = []
+        rules_ = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
-        self._fit_rules(X, y, all_possible_rules_list, sample_weight)
+            rules_.extend(self._extract_single_tree_rules(tree))
+        self._fit_rules(X, y, rules_, sample_weight)
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
         compute_staibility_criterion(self)
@@ -211,7 +211,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
     Attributes
     ----------
-    all_possible_rules_list : list
+    rules_ : list
         List of all possible rules extracted from the forest.
     """
 
@@ -381,7 +381,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
 
         """
         self._fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = []
+        rules_ = []
         for dtree in self.estimators_[
             :, 0
         ]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
@@ -391,8 +391,8 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
                 len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
             ):  # to avoid empty rules
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
-                all_possible_rules_list.extend(curr_tree_rules)
-        self._fit_rules(X, y, all_possible_rules_list, sample_weight)
+                rules_.extend(curr_tree_rules)
+        self._fit_rules(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
 
@@ -432,7 +432,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
 
     Attributes
     ----------
-    all_possible_rules_list : list
+    rules_ : list
         List of all possible rules extracted from the forest.
     ridge: ridge regression model fitted on the rules
 
@@ -541,11 +541,11 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
                 "Wrong type for X. except numpy array, pandas dataframe or series"
             )
         self._fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = []
+        rules_ = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            all_possible_rules_list.extend(self._extract_single_tree_rules(tree))
-        self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
+            rules_.extend(self._extract_single_tree_rules(tree))
+        self._fit_rules_regressor(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
@@ -594,7 +594,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
     Attributes
     ----------
-    all_possible_rules_list : list
+    rules_ : list
         List of all possible rules extracted from the forest.
     ridge: ridge regression model fitted on the rules
 
@@ -774,7 +774,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         elif not isinstance(X, np.ndarray):
             raise Exception("Wrong type for X")
         self._fit_quantile_classifier(X, y, sample_weight)
-        all_possible_rules_list = []
+        rules_ = []
         for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
@@ -782,8 +782,8 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
                 len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
             ):  # to avoid empty rules
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
-                all_possible_rules_list.extend(curr_tree_rules)
-        self._fit_rules_regressor(X, y, all_possible_rules_list, sample_weight)
+                rules_.extend(curr_tree_rules)
+        self._fit_rules_regressor(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):

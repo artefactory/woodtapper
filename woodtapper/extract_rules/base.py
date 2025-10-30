@@ -38,7 +38,7 @@ class RulesExtractorMixin:
         Unique classes in the target variable (for classification tasks).
     n_rules : int
         Number of rules extracted from the ensemble.
-    all_possible_rules_list : list
+    rules_ : list
         List of all possible rules extracted from the ensemble.
     all_possible_rules_frequency_list : list
         List of frequencies associated with each rule.
@@ -214,7 +214,7 @@ class RulesExtractorMixin:
             The tree from which to extract rules.
         Returns
         ----------
-        all_possible_rules_list : list
+        rules_ : list
             List of all possible rules (single and multiple) extracted from the tree.
         1. Explore the tree structure and create Node instances.
         2. Generate the tree structure with Node instances.
@@ -230,12 +230,12 @@ class RulesExtractorMixin:
             len(tree_structure[0]) == 0 and root.feature == -2
         ):  # -2 means leaf node in sklearn
             # case where root node is also a leaf
-            all_possible_rules_list = [[]]  # Tree with only one leaf
+            rules_ = [[]]  # Tree with only one leaf
         else:
-            all_possible_rules_list = self._generate_all_possible_rules(
+            rules_ = self._generate_all_possible_rules(
                 tree_structure
             )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
-        return all_possible_rules_list
+        return rules_
 
     def _generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
@@ -327,7 +327,7 @@ class RulesExtractorMixin:
             Boolean mask matrix indicating which samples satisfy each rule.
         """
         rules_mask = np.zeros((X.shape[0], self.n_rules), dtype=bool)
-        for rule_number, current_rules in enumerate(self.all_possible_rules_list):
+        for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = self._generate_mask_rule(X=X, rules=current_rules)
             rules_mask[:, rule_number] = final_mask
@@ -457,7 +457,7 @@ class RulesExtractorMixin:
     #######################################################
     ############ Classification fit and predict  ##########
     #######################################################
-    def _fit_rules(self, X, y, all_possible_rules_list, sample_weight=None):
+    def _fit_rules(self, X, y, rules_, sample_weight=None):
         """
         Fit method for RulesExtractorMixin in classification case.
         Parameters
@@ -466,7 +466,7 @@ class RulesExtractorMixin:
             The input samples.
         y : array-like, shape (n_samples,)
             The target values (class labels).
-        all_possible_rules_list : list
+        rules_ : list
             List of all possible rules extracted from the ensemble of trees.
         sample_weight : array-like, shape (n_samples,), optional (default=None)
             Sample weights for each instance.
@@ -481,26 +481,22 @@ class RulesExtractorMixin:
         6. It handles both the presence and absence of sample weights during probability calculations.
         """
         start = time.time()
-        all_possible_rules_list_str = [
-            str(elem) for elem in all_possible_rules_list
-        ]  # Trick for np.unique
-        all_possible_rules_list, all_possible_freq_list = get_top_rules(
-            all_possible_rules_list_str=all_possible_rules_list_str, p0=self.p0
-        )
+        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
+        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list,
-            proba=all_possible_freq_list,
+            paths=rules_,
+            proba=rules_freq_,
             num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
         print(
             f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
         )
-        self.all_possible_rules_list = res["paths"]
+        self.rules_ = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]  # usefull ?
-        self.n_rules = len(self.all_possible_rules_list)
+        self.n_rules = len(self.rules_)
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
 
@@ -618,7 +614,7 @@ class RulesExtractorMixin:
     ############# Regressor fit and predict  ##############
     #######################################################
     def _fit_rules_regressor(
-        self, X, y, all_possible_rules_list, sample_weight=None, to_encode_target=False
+        self, X, y, rules_, sample_weight=None, to_encode_target=False
     ):
         """
         Fit method for RulesExtractorMixin in regression case.
@@ -628,7 +624,7 @@ class RulesExtractorMixin:
             The input samples.
         y : array-like, shape (n_samples,)
             The target values (real numbers).
-        all_possible_rules_list : list
+        rules_ : list
             List of all possible rules extracted from the ensemble of trees.
         sample_weight : array-like, shape (n_samples,), optional (default=None)
             Sample weights for each instance.
@@ -644,32 +640,28 @@ class RulesExtractorMixin:
         7. The method ensures that only relevant and non-redundant rules are retained for the final model.
         8. It handles both the presence and absence of sample weights during model fitting.
         """
-        all_possible_rules_list_str = [
-            str(elem) for elem in all_possible_rules_list
-        ]  # Trick for np.unique
-        all_possible_rules_list, all_possible_freq_list = get_top_rules(
-            all_possible_rules_list_str=all_possible_rules_list_str, p0=self.p0
-        )
-        if len(all_possible_rules_list) == 0:
+        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
+        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
+        if len(rules_) == 0:
             raise ValueError(
                 "No rule found with the given p0 value. Try to decrease it."
             )
 
         #### APPLY POST TREATMEANT : remove redundant rules
         res = self._paths_filtering_stochastic(
-            paths=all_possible_rules_list,
-            proba=all_possible_freq_list,
+            paths=rules_,
+            proba=rules_freq_,
             num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
-        self.all_possible_rules_list = res["paths"]
+        self.rules_ = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
-        self.n_rules = len(self.all_possible_rules_list)
+        self.n_rules = len(self.rules_)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         rules_mask = self._generate_masks_rules(X=X)
-        for rule_number, current_rules in enumerate(self.all_possible_rules_list):
+        for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, rule_number]
             output_value = y[final_mask].mean() if final_mask.any() else 0
