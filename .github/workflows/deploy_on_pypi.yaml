@@ -1,4 +1,4 @@
-name: Build and publish woodtapper on TestPyPI
+name: Build and publish woodtapper on PyPI
 
 on:
   release:
@@ -27,7 +27,7 @@ jobs:
         run: |
           python -m build --sdist
 
-      - name: Upload to TestPyPI
+      - name: Upload to PyPI
         if: github.ref == 'refs/heads/main'
         run: |
           twine upload dist/*
