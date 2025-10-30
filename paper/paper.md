@@ -99,7 +99,7 @@ The package adheres to the scikit-learn [&pedregosa2011scikit] estimator interfa
 
 ## SIRUS: rules and predictive performances
 
-We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \Cref{fig:rules-titanic}. On the Titanic dataset, both implementations yield identical rules, confirming that our Python version faithfully reproduces the original algorithm.
+We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}. On the Titanic dataset, both implementations yield identical rules, confirming that our Python version faithfully reproduces the original algorithm.
 | ![\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% } | ![\label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% } |
 |:--:|:--:|
 | (a) SIRUS (R) | (b) Python (Ours) |
