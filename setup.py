@@ -18,7 +18,7 @@ extensions = [
 
 setup(
     name="woodtapper",  # must be unique on PyPI
-    version="0.0.7",
+    version="0.0.8",
     author="Abdoulaye SAKHO",
     author_email="abdoulaye.sakho@artefact.com",
     description="A Python toolbox for interpretable and explainable tree ensembles.",
