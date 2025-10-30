@@ -115,9 +115,9 @@ We also observe that the predictive performance of our implementation is similar
 ## SIRUS: running time
 We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn’s $\texttt{make\_classification}$. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
 
-![Running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
+![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
-![Running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
+![SIRUS running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
 # Example-based explainability
 The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides a measure of example-based explainability. For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
@@ -150,7 +150,7 @@ As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres
 ## ExampleExplanation: running time
 We compare the runtime of $\texttt{ExampleExplanation}$ with the kernel weight computation in $\textit{skgrf}$ [@skgrf] using the same hardware as in the SIRUS experiments. $\texttt{ExampleExplanation}$ is consistently faster (see figure \ref{fig:run-time-grf}).
 
-![Running time for simulated data using weights extraction.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
+![Weights computation running time for simulated data using.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
 
 # Conclusions
 WoodTapper is a Python package that extracts interpretability and explainability insights from tree ensembles. SIRUS, a more parsimonious alternative to random forests, naturally supports interpretability, and a Python implementation can boost its adoption. Example-based explainability is provided by the $\texttt{ExampleExplanation}$ module, offering precise insights at the individual sample level.
