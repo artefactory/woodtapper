@@ -83,7 +83,7 @@ WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interfac
 |-----------------------------|--------------------------------------------|----------------------------------------|---------------------------|
 | Language ecosystem          | Python 3.x                                 | R 4.x                                  | Julia 1.x                 |
 | Forest implementation       | `scikit-learn`                             | `ranger`                               | Own                       |
-| Package availability        | PyPI (`forest-secrets`)                    | CRAN (`sirus`)                         | General registry          |
+| Package availability        | PyPI (`woodtapper`)                    | CRAN (`sirus`)                         | General registry          |
 | Parallel computation        | $\checkmark$  (via `joblib`)                           | Limited (via `parallel`)               | $\checkmark$  (native)               |
 | ML pipelines                | $\checkmark$                                           | Partial                                | Partial                   |
 | Tree-based models           | All                                        | random forest                          | random forest             |
