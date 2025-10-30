@@ -1,1 +1,1 @@
-::: example_sampling.explanation
+::: woodtapper.example_sampling.explanation

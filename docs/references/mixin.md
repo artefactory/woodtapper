@@ -1,3 +1,3 @@
 # Base Rules-Extractor Mixin
 
-::: extract_rules.base
+::: woodtapper.extract_rules.base
