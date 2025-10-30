@@ -16,29 +16,14 @@
 WoodTapper is a Python toolbox  for interpretable and explainable tree ensembles learning, fully compatible with the scikit-learn API. WoodTapper enables seamless integration of interpretable rule extraction into existing machine learning workflows. In addition, it introduces an example-based explanation module that links predictions to a small set of representative samples.
 
 
-## 🌳 Installation
+## 🛠 Installation
 
-**From TestPypi**:
+**From PyPi**:
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ woodtapper
-```
-**From Source:**
-Clone the repository:
-```bash
-git clone git@github.com:artefactory/mgs-grf.git
+pip install woodtapper
 ```
 
-And install the required packages into your environment (conda, mamba or pip):
-```bash
-pip install -r requirements.txt
-```
-
-Then run the following command from the repository root directory :
-```
-pip install -e .[dev]
-```
-
-## 🚀 How to use WoodTapper
+## 🌳 WoodTapper RulesEXtraction module
 ```python
 ## RandomForestClassifier rules extraction
 from extract_rules.extractors import SirusClassifier
