@@ -1,8 +1,8 @@
 site_name: WoodTapper
-site_url: https://artefactory.github.io/rules
+site_url: https://artefactory.github.io/woodtapper
 theme:
   name: "material"
-  repo_url: https://github.com/artefactory/rules
+  repo_url: https://github.com/artefactory/woodtapper
   repo_name: WoodTapper
   palette:
       - media: "(prefers-color-scheme: dark)"
@@ -25,6 +25,7 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
+    - content.math
   logo: https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png
   favicon: https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png
 
@@ -32,6 +33,14 @@ markdown_extensions:
   - admonition
   - toc:
       permalink: true
+  - tables
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax-config.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 plugins:
 - mkdocstrings:
@@ -47,7 +56,7 @@ nav:
   - Tutorials:
     - Tutorials Overview: 0_tutorials.md
     - Rules Extractors: 1_tutorials.md
-    - Example-based explainability: 2_tutorials.md
+    - Example-based explainability: 2_tutorials_example_exp.md
 
   - References:
     - Rules Extractors:
