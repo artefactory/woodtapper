@@ -13,6 +13,15 @@ User-friendly and scalable Python package for tapping decision tree ensembles
 WoodTapper is a machine learning toolbox for investigating tree-based models.
 In this documentation you will find examples to be quickly getting started as well as some more in-depth example.
 
+## Installation
+
+[Getting started.](./installation.md)
+
+## Tutorials
+
+[Tutorials understanding WoodTapper.](./0_tutorials.md)
+
+
 ## What's in there ?
 
 Here is a quick overview of the different functionalities offered by WoodTapper. Further details are given in the rest of the documentation.
