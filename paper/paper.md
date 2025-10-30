@@ -99,13 +99,13 @@ The package adheres to the scikit-learn [&pedregosa2011scikit] estimator interfa
 ## SIRUS: rules and predictive performances
 
 We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}. On the Titanic dataset, both implementations yield identical rules, confirming that our Python version faithfully reproduces the original algorithm.
+
 ![SIRUS (R).\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
 
 ![Python (Ours). \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
 
-
-
 We also observe that the predictive performance of our implementation is similar to that of the original algorithm (see Table \ref{tab:perf_metrics}).
+
 : **Performance metrics for Titanic and House Sales datasets.**\label{tab:perf_metrics}
 
 | **Dataset**   | **Metric** | **SIRUS (original R)** | **Ours**        |
@@ -128,7 +128,7 @@ SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R
 # Example-based explainability
 The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides a measure of example-based explainability. For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
 
-The $\texttt{ExampleExplanation}$ module enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. Letting $ w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
+The $\texttt{ExampleExplanation}$ module enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. Letting $w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
 $$
 w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{X_i \in \mathcal{L}_l(Z)\}}}{|\mathcal{L}_l(Z)|}.
 $$
@@ -158,6 +158,7 @@ Our $\texttt{ExampleExplanation}$ module is implemented as a Python Mixin for ha
 
 ## ExampleExplanation: running time
 We compare the runtime of $\texttt{ExampleExplanation}$ with the kernel weight computation in $\textit{skgrf}$ [@skgrf] using the same hardware as in the SIRUS experiments. $\texttt{ExampleExplanation}$ is consistently faster (see figure \ref{fig:run-time-grf}).
+
 ![Running time for simulated data using weights extraction.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
 
 # Conclusions
