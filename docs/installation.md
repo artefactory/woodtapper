@@ -23,22 +23,22 @@ Then run the following command from the repository root directory :
 pip install -e .[dev]
 ```
 
-## Dependecies
+## Dependencies
 
 WoodTapper requires the following:
-- Python (>=3.12)
-- Numpy ()>=2.3.1)
-- Pandas (>=2.3.0)
-- Scikit-learn (>=1.6.1)
+* Python (>=3.12)
+* Numpy (>=2.3.1)
+* Pandas (>=2.3.0)
+* Scikit-learn (>=1.6.1)
 
 ## Contributing
 You are welcome to contribute to the project ! You can help in various ways:
-- raise issues
-- resolve issues already opened
-- develop new features
-- provide additional examples of use
-- fix typos, improve code quality
-- develop new tests
+* raise issues
+* resolve issues already opened
+* develop new features
+* provide additional examples of use
+* fix typos, improve code quality
+* develop new tests
 
 We recommend to first open an [issue](https://github.com/artefactory/woodtapper/issues) to discuss your ideas.
 
