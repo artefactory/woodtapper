@@ -2,8 +2,8 @@
 
  The tutorials to get started with the Woodtapper package trough examples are aiavailble here:
 
-  -. [Rules extractor](1_tutorials.md)
-  -. [Example-based expalinability](2_tutorials_example_exp.md)
+  - [Rules extractor](1_tutorials.md)
+  - [Example-based expalinability](2_tutorials_example_exp.md)
 
 Here are a mathematical formulation of Wooodtaper's modules.
 
