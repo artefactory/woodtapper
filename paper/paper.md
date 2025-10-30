@@ -49,7 +49,7 @@ In this section, we present our $\texttt{RulesExtractor}$ module, which is compa
 ## SIRUS: formulation
 We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variable $X$ and $Y$  takes values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
 
-In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$  \citep[see][for details]{benard2021sirus-classif}. A path $\mathcal{P}$ is thus defined as
+In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$  [@benard2021sirus-classif]. A path $\mathcal{P}$ is thus defined as
 $$\begin{align}
     \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
 \end{align}$$
