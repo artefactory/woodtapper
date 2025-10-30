@@ -9,8 +9,8 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import average_precision_score, accuracy_score,roc_auc_score
 
-from extract_rules.extractors import SirusClassifier
-from extract_rules.visualization import show_rules
+from woodtapper.extract_rules import SirusClassifier,GbExtractorClassifier
+from woodtapper.extract_rules.visualization import show_rules
 ```
 
 ## Load data
