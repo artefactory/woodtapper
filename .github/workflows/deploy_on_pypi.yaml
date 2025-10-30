@@ -28,7 +28,7 @@ jobs:
           python -m build --sdist
 
       - name: Upload to PyPI
-        if: github.ref == 'refs/heads/main'
+        if: github.event.release.target_commitish == 'main'
         run: |
           twine upload dist/*
         env:
