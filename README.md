@@ -10,10 +10,23 @@
 
 *User-friendly and scalable Python package for tapping decision tree ensembles*
 
+[![Build](https://img.shields.io/github/actions/workflow/status/artefactory/woodtapper/ci.yml?branch=main)](https://github.com/artefactory/woodtapper/actions)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](#-documentation)
+
+[![License](https://img.shields.io/github/license/artefactory/woodtapper)](LICENSE)
+[![Python Versions](https://img.shields.io/pypi/pyversions/woodtapper?label=python)](https://pypi.org/project/woodtapper/)
+[![PyPI Version](https://img.shields.io/pypi/v/woodtapper.svg)](https://pypi.org/project/woodtapper/)
+
+
 </div>
 
-WoodTapper is a Python toolbox  for interpretable and explainable tree ensembles learning, fully compatible with the scikit-learn API. WoodTapper enables seamless integration of interpretable rule extraction into existing machine learning workflows. In addition, it introduces an example-based explanation module that links predictions to a small set of representative samples.
+WoodTapper is a Python toolbox  for interpretable and explainable tree ensembles learning, fully compatible with the scikit-learn API.
+
+## 🪵 Key Features
+- Rule extraction from tree-based ensembles.
+- Example-based explanation module that links predictions to a small set of representative samples.
 
 
 ## 🛠 Installation
@@ -23,15 +36,25 @@ WoodTapper is a Python toolbox  for interpretable and explainable tree ensembles
 pip install woodtapper
 ```
 
-## 🌳 WoodTapper RulesEXtraction module
+## 🌿 WoodTapper RulesExtraction module
 ```python
 ## RandomForestClassifier rules extraction
-from extract_rules.extractors import SirusClassifier
+from woodtapper.extract_rules import SirusClassifier
 
 SIRUS = SirusClassifier(n_estimators=1000,max_depth=2,
                           quantile=10,p0=0.01, random_state=0)
 SIRUS.fit(X_train,y_train)
 y_pred_sirus = SIRUS.predict(X_test)
+```
+
+## 🌱 WoodTapper ExampleExplanation module
+```python
+## RandomForestClassifier rules extraction
+from woodtapper.example_sampling import RandomForestClassifierExplained
+
+RFExplained = RandomForestClassifierExplained(n_estimators=100)
+RFExplained.fit(X_train,y_train)
+example_explanation = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
 ```
 
 ## 🙏 Acknowledgements
@@ -53,3 +76,20 @@ This work was done through a partenership between **Artefact Research Center** a
 ## 📜 Citation
 
 If you find the code usefull, please consider citing us :
+
+```bibtex
+@misc{woodtapper,
+  title        = {WoodTapper: a Python package for tapping decision tree ensembles},
+  author       = {Sakho, Abdoulaye and AOUAD, Jad and Malherbe, Emmanuel and Scornet, Erwan},
+  year         = {2025},
+  howpublished = {\url{https://github.com/artefactory/woodtapper}},
+}
+```
+For SIRUS methodology, consider citing:
+```
+@article{benard2021sirus,
+  title={Sirus: Stable and interpretable rule set for classification},
+  author={Benard, Clement and Biau, Gerard and Da Veiga, Sebastien and Scornet, Erwan},
+  year={2021}
+}
+```
