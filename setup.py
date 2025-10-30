@@ -12,7 +12,7 @@ extensions = [
     ),
     Extension(
         "woodtapper.example_sampling.utils.weights",  # Full module path
-        ["woodtapper.example_sampling/utils/weights.pyx"],  # Path to .pyx file
+        ["woodtapper/example_sampling/utils/weights.pyx"],  # Path to .pyx file
     ),
 ]
 
