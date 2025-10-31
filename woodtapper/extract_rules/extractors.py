@@ -12,6 +12,7 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
+from sklearn.utils.validation import validate_data
 import time
 
 from .base import RulesExtractorMixin
@@ -152,6 +153,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
             Fitted estimator.
 
         """
+        X, y = validate_data(self, X, y)
         start = time.time()
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
@@ -162,6 +164,14 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
         compute_staibility_criterion(self)
+
+    def predict_proba(self, X, to_add_probas_outside_rules=True):
+        X = validate_data(self, X)
+        return super().predict_proba(X, to_add_probas_outside_rules)
+
+    def predict(self, X, to_add_probas_outside_rules=True):
+        X = validate_data(self, X)
+        return super().predict(X, to_add_probas_outside_rules)
 
 
 class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
