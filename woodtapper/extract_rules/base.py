@@ -247,7 +247,7 @@ class RulesExtractorMixin:
         list_probas_outside_by_rules = []
         if sample_weight is None:
             sample_weight = np.full((len(y),), 1)  ## vector of ones
-        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
+        rules_mask = generate_masks_rules(X, self.rules_)
         for i in range(self.n_rules):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, i]
@@ -301,7 +301,7 @@ class RulesExtractorMixin:
             The predicted class probabilities for each sample.
         """
         y_pred_probas = np.zeros((len(X), self.n_classes_))
-        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
+        rules_mask = generate_masks_rules(X, self.rules_)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
             y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
@@ -401,7 +401,7 @@ class RulesExtractorMixin:
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
+        rules_mask = generate_masks_rules(X, self.rules_)
         for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, rule_number]
@@ -428,10 +428,9 @@ class RulesExtractorMixin:
             positive=True,
             random_state=self.random_state,
         )
-        self.ridge.fit(gamma_array, y)  # sample_weight=sample_weight
-        for indice in range(
-            self.n_rules
-        ):  # Scale the probabilities by the learned coefficients
+        self.ridge.fit(gamma_array, y)
+        for indice in range(self.n_rules):  
+            # Scale the probabilities by the learned coefficients
             coeff = (
                 self.ridge.coef_[indice]
                 if self.ridge.coef_.ndim == 1
@@ -467,7 +466,7 @@ class RulesExtractorMixin:
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
         gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
+        rules_mask = generate_masks_rules(X, self.rules_)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
