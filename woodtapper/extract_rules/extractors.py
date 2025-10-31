@@ -43,7 +43,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -86,7 +86,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -130,7 +130,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         self.ccp_alpha = ccp_alpha
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -201,7 +201,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -243,7 +243,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -272,7 +272,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         )
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -421,7 +421,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -464,7 +464,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -507,7 +507,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         self.monotonic_cst = monotonic_cst
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -584,7 +584,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -629,7 +629,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -659,7 +659,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         )
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)

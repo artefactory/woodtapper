@@ -76,7 +76,7 @@ class RulesExtractorMixin:
     10. Designed for interpretability and simplicity in model predictions.
     """
 
-    def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
+    def _paths_filtering_matrix_stochastic(self, paths, proba, max_n_rules):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         Parameters
@@ -85,7 +85,7 @@ class RulesExtractorMixin:
             List of rules (each rule is a list of splits; each split [var, thr, dir])
         proba : list
             Probabilities associated with each path/rule
-        num_rule : int
+        max_n_rules : int
             Max number of rules to keep
         Returns
         ----------
@@ -104,7 +104,7 @@ class RulesExtractorMixin:
         # split_gen = []
         ind_max = len(paths)
         ind = 0
-        num_rule_temp = 0
+        max_n_rules_temp = 0
 
         n_samples_indep = 10000
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
@@ -141,11 +141,11 @@ class RulesExtractorMixin:
                 ind_dim_continuous_array_quantile += 1
         np.random.seed(self.random_state)
 
-        while num_rule_temp < num_rule and ind < ind_max:
+        while max_n_rules_temp < max_n_rules and ind < ind_max:
             curr_path = paths[ind]
             if curr_path in paths_ftr:  ## Avoid duplicates
                 ind += 1
-                num_rule_temp = len(paths_ftr)
+                max_n_rules_temp = len(paths_ftr)
                 continue
             elif len(paths_ftr) != 0:  ## If there are already filtered paths
                 related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
@@ -171,30 +171,30 @@ class RulesExtractorMixin:
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
                 ind += 1
-                num_rule_temp = len(paths_ftr)
+                max_n_rules_temp = len(paths_ftr)
 
             else:  ## If there are no filtered paths yet
                 paths_ftr.append(curr_path)
                 proba_ftr.append(proba[ind])
                 ind += 1
-                num_rule_temp = len(paths_ftr)
+                max_n_rules_temp = len(paths_ftr)
 
         return {"paths": paths_ftr, "proba": proba_ftr}
 
-    def _paths_filtering_stochastic(self, paths, proba, num_rule):
+    def _paths_filtering_stochastic(self, paths, proba, max_n_rules):
         """
         Post-treatment for rules.
 
         Args:
             paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
             proba (list): Probabilities associated with each path/rule
-            num_rule (int): Max number of rules to keep
+            max_n_rules (int): Max number of rules to keep
 
         Returns:
             dict: {'paths': filtered_paths, 'proba': filtered_proba}
         """
         return self._paths_filtering_matrix_stochastic(
-            paths=paths, proba=proba, num_rule=num_rule
+            paths=paths, proba=proba, max_n_rules=max_n_rules
         )
 
     #######################################################
@@ -231,7 +231,7 @@ class RulesExtractorMixin:
         res = self._paths_filtering_stochastic(
             paths=rules_,
             proba=rules_freq_,
-            num_rule=self.num_rule,
+            max_n_rules=self.max_n_rules,
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
         print(
@@ -391,7 +391,7 @@ class RulesExtractorMixin:
         res = self._paths_filtering_stochastic(
             paths=rules_,
             proba=rules_freq_,
-            num_rule=self.num_rule,
+            max_n_rules=self.max_n_rules,
         )  ## Maximum number of rule to keep=25
         self.rules_ = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
@@ -516,8 +516,8 @@ class RulesExtractorMixin:
         start = time.time()
         if self.p0 > 1.0 or self.p0 < 0.0:
             raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
-        if self.num_rule <= 0:
-            raise ValueError("num_rule must be a positive integer.")
+        if self.max_n_rules <= 0:
+            raise ValueError("max_n_rules must be a positive integer.")
         if self.quantile <= 1:
             raise ValueError("quantile must be an integer greater than 1.")
 
