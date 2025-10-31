@@ -108,10 +108,10 @@ class RulesExtractorMixin:
 
         n_samples_indep = 10000
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
-        ind_dim_continuous_array_quantile = (
-            0  ## indice dans array_quantile des variables continues
-        )
-        ind_dim_categorcial_list_unique_elements = 0  ## indice dans _list_unique_categorical_values des variables catégorielles
+        ind_dim_continuous_array_quantile = 0
+        # indice dans array_quantile des variables continues
+        ind_dim_categorcial_list_unique_elements = 0
+        # indice dans _list_unique_categorical_values des variables catégorielles
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
@@ -143,11 +143,16 @@ class RulesExtractorMixin:
 
         while max_n_rules_temp < max_n_rules and ind < ind_max:
             curr_path = paths[ind]
-            if curr_path in paths_ftr:  ## Avoid duplicates
+            if len(paths_ftr) == 0: ## If there are no filtered paths yet
+                paths_ftr.append(curr_path)
+                proba_ftr.append(proba[ind])
+                ind += 1
+                max_n_rules_temp = len(paths_ftr)
+            elif curr_path in paths_ftr:  ## Avoid duplicates
                 ind += 1
                 max_n_rules_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr) != 0:  ## If there are already filtered paths
+            else:  ## If there are already filtered paths
                 related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
                 if len(related_paths_ftr) == 0:  ## If there are no related paths
                     paths_ftr.append(curr_path)
@@ -170,12 +175,6 @@ class RulesExtractorMixin:
                             # The current rule is not redundant with the previous ones
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
-                ind += 1
-                max_n_rules_temp = len(paths_ftr)
-
-            else:  ## If there are no filtered paths yet
-                paths_ftr.append(curr_path)
-                proba_ftr.append(proba[ind])
                 ind += 1
                 max_n_rules_temp = len(paths_ftr)
 
