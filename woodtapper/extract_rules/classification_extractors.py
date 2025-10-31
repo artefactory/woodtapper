@@ -133,7 +133,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
-    def fit(self, X, y, sample_weight=None, check_input=True):
+    def fit(self, X, y, sample_weight=None):
         """
         Fit the SIRUS model.
         Parameters
@@ -162,13 +162,13 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         print(f"All fit took {end - start:.4f} seconds")
         compute_staibility_criterion(self)
 
-    def predict_proba(self, X, to_add_probas_outside_rules=True):
+    def predict_proba(self, X):
         X = validate_data(self, X)
-        return super().predict_proba(X, to_add_probas_outside_rules)
+        return super().predict_proba(X)
 
-    def predict(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X):
         X = validate_data(self, X)
-        return super().predict(X, to_add_probas_outside_rules)
+        return super().predict(X)
 
 
 class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
@@ -296,7 +296,10 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         X_csc=None,
         X_csr=None,
     ):
-        """Fit another stage of ``n_trees_per_iteration_`` trees."""
+        """
+        Function from sklearn 1.6.0 modified to use QuantileDecisionTreeRegressor
+        as weak learner.
+        """
         original_y = y
 
         if isinstance(self._loss, HuberLoss):
@@ -370,7 +373,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
 
         return raw_predictions
 
-    def fit(self, X, y, sample_weight=None, check_input=True):
+    def fit(self, X, y, sample_weight=None):
         """
         Fit the SIRUS model.
         Parameters
@@ -387,6 +390,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
             Fitted estimator.
 
         """
+        X, y = validate_data(self, X, y)
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
         for dtree in self.estimators_[
@@ -401,3 +405,11 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
                 rules_.extend(curr_tree_rules)
         self._fit_rules(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
+
+    def predict_proba(self, X):
+        X = validate_data(self, X)
+        return super().predict_proba(X)
+
+    def predict(self, X):
+        X = validate_data(self, X)
+        return super().predict(X)
