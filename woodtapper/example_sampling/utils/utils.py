@@ -1,6 +1,24 @@
 import numpy as np
 
 
+def iterative_random_choice(probas):
+    """
+    Function for applying a np.random.choice several times with succesive values of probas.
+
+    Parameters
+    ----------
+    probas : np.ndarray of shape (n_samples, n_classes)
+        Probabilities for each class for each sample.
+    Returns
+    -------
+    np.ndarray of shape (n_samples,)
+        Chosen class for each sample.
+    """
+    thresholds = np.random.uniform(size=len(probas))
+    cumulative_weights = np.cumsum(probas, axis=1)
+    return np.argmax((cumulative_weights.T > thresholds), axis=0)
+
+
 def compute_leaf_sizes(train_samples_leaves):
     """
     Given train_samples_leaves shape (n_train, n_trees), return leaf_sizes
