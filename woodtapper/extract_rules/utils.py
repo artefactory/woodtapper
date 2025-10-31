@@ -437,5 +437,25 @@ def generate_mask_rule(X, rules):
         )
         list_mask.append(mask)
     final_mask = reduce(and_, list_mask)
+
     return final_mask
 
+
+ def generate_masks_rules(self, X, rules, n_rules):
+    """
+    Generate the masks associated to all the rules.
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        The input samples.
+    Returns
+    ----------
+    rules_mask : array-like, shape (n_samples, n_rules)
+        Boolean mask matrix indicating which samples satisfy each rule.
+    """
+    rules_mask = np.zeros((X.shape[0], n_rules), dtype=bool)
+    for rule_number, current_rules in enumerate(rules):
+        # for loop for getting all the values in train (X) passing the rules
+        final_mask = generate_mask_rule(X=X, rules=current_rules)
+        rules_mask[:, rule_number] = final_mask
+    return rules_mask
