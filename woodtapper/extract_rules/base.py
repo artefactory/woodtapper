@@ -239,7 +239,6 @@ class RulesExtractorMixin:
         )
         self.rules_ = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]  # usefull ?
-        self.n_rules = len(self.rules_)
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
 
@@ -248,7 +247,7 @@ class RulesExtractorMixin:
         if sample_weight is None:
             sample_weight = np.full((len(y),), 1)  ## vector of ones
         rules_mask = generate_masks_rules(X, self.rules_)
-        for i in range(self.n_rules):
+        for i in range(len(self.rules_)):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, i]
             y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask]
@@ -302,7 +301,7 @@ class RulesExtractorMixin:
         """
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         rules_mask = generate_masks_rules(X, self.rules_)
-        for indice in range(self.n_rules):
+        for indice in range(len(self.rules_)):
             final_mask = rules_mask[:, indice]
             y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
             # add the asociated rule probability
@@ -311,7 +310,7 @@ class RulesExtractorMixin:
                 y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[indice]
                 # If the rule is not verified we add the probas of the training samples not verifying the rule.
         if to_add_probas_outside_rules:
-            y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
+            y_pred_probas = (1 / len(self.rules_)) * (y_pred_probas)
         else:
             scaling_coeffs = y_pred_probas.sum(axis=1)
             y_pred_probas = (
@@ -396,11 +395,10 @@ class RulesExtractorMixin:
         )  ## Maximum number of rule to keep=25
         self.rules_ = res["paths"]
         self.all_possible_rules_frequency_list = res["proba"]
-        self.n_rules = len(self.rules_)
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
-        gamma_array = np.zeros((X.shape[0], self.n_rules))
+        gamma_array = np.zeros((X.shape[0], len(self.rules_)))
         rules_mask = generate_masks_rules(X, self.rules_)
         for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
@@ -429,7 +427,7 @@ class RulesExtractorMixin:
             random_state=self.random_state,
         )
         self.ridge.fit(gamma_array, y)
-        for indice in range(self.n_rules):  
+        for indice in range(len(self.rules_)):
             # Scale the probabilities by the learned coefficients
             coeff = (
                 self.ridge.coef_[indice]
@@ -465,9 +463,9 @@ class RulesExtractorMixin:
         8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
-        gamma_array = np.zeros((X.shape[0], self.n_rules))
         rules_mask = generate_masks_rules(X, self.rules_)
-        for indice in range(self.n_rules):
+        gamma_array = np.zeros((len(X), len(self.rules_)))
+        for indice in range(len(self.rules_)):
             final_mask = rules_mask[:, indice]
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
