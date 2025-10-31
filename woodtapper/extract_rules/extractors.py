@@ -14,11 +14,11 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 import time
 
-from .base import RulesExtractorMixin
+from .base import RulesExtractorClassifierMixin, RulesExtractorRegressorMixin
 from .utils import compute_staibility_criterion
 
 
-class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
+class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
     """
     SIRUS class applied with a RandomForestClassifier.
 
@@ -164,7 +164,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         compute_staibility_criterion(self)
 
 
-class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
+class QuantileDecisionTreeRegressor(RulesExtractorRegressorMixin, DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in GbExtractorClassifier
@@ -174,7 +174,7 @@ class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
+class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters
@@ -399,7 +399,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
 ######### Regressor ############
 
 
-class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
+class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
     """
     SIRUS class applied with a RandomForestRegressor.
 
@@ -557,7 +557,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         return self._predict_regressor(X, to_add_probas_outside_rules)
 
 
-class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
+class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters

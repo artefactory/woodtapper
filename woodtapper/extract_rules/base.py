@@ -181,8 +181,125 @@ class RulesExtractorMixin:
         return {"rules": paths_ftr, "probas": proba_ftr}
 
     #######################################################
-    ############ Classification fit and predict  ##########
+    ################ Fit main classifer   #################
     #######################################################
+    def _fit_quantile_classifier(self, X, y, sample_weight=None):
+        """
+        fit method for RulesExtractorMixin.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+
+            The target values (class labels in classification, real numbers in regression).
+        sample_weight : array-like, shape (n_samples,), optional
+            Sample weights. If None, then samples are equally weighted.
+        to_not_binarize_colindexes : list of int, optional (default=None)
+            List of column indices in X that should not be binarized (i.e., treated as categorical).
+        starting_index_one_hot : int, optional (default=None)
+            If provided, all columns from this index onward are treated as one-hot encoded categorical features.
+        Returns
+        ----------
+        self : object
+            Returns the instance itself.
+        1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
+        2. Fit the main classifier using the modified dataset.
+        3. Store quantile information and categorical feature details for future use.
+        4. Return the fitted instance.
+        5. If no columns are specified for exclusion from binarization, treat all features as continuous.
+        6. If columns are specified for exclusion, treat those as categorical and binarize only the continuous features.
+        7. Handle one-hot encoded features if a starting index is provided, treating all features from that index onward as categorical.
+        8. Use quantiles to binarize continuous features, ensuring that the binarization respects the distribution of the data.
+        9. Store the quantiles used for binarization, unique values of categorical features, and their indices for future reference.
+        10. Fit the main classifier with the modified dataset, ensuring that it can handle both continuous and categorical features appropriately.
+        11. Ensure that sample weights are appropriately handled during the fitting process.
+        12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
+        """
+        start = time.time()
+        if self.p0 > 1.0 or self.p0 < 0.0:
+            raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
+        if self.max_n_rules <= 0:
+            raise ValueError("max_n_rules must be a positive integer.")
+        if self.quantile <= 1:
+            raise ValueError("quantile must be an integer greater than 1.")
+
+        X_bin = X.copy()
+        if (self.to_not_binarize_colindexes is None) and (
+            self.starting_index_one_hot is None
+        ):  # All variables are continuous
+            list_quantile = [
+                np.quantile(X_bin, q=i, axis=0)
+                for i in np.linspace(0, 1, self.quantile + 1)
+            ]
+            array_quantile = np.array(list_quantile)
+            for dim in range(X.shape[1]):
+                out = np.searchsorted(
+                    array_quantile[:, dim], X_bin[:, dim], side="left"
+                )
+                X_bin[:, dim] = array_quantile[out, dim]
+            _list_unique_categorical_values = (
+                None  # set these to None if all variables are continuous
+            )
+            _list_categorical_indexes = (
+                None  # set these to None if all variables are continuous
+            )
+        else:
+            categorical = np.zeros((X.shape[1],), dtype=bool)
+            if self.starting_index_one_hot is None:
+                _list_categorical_indexes = self.to_not_binarize_colindexes
+            elif self.to_not_binarize_colindexes is None:
+                _list_categorical_indexes = [
+                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
+                ]
+            else:
+                _list_categorical_indexes = self.to_not_binarize_colindexes + [
+                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
+                ]
+            ## the last indexes of X must contains the one hot encoded variables !
+            categorical[_list_categorical_indexes] = True
+            list_quantile = [
+                np.quantile(X_bin[:, ~categorical], q=i, axis=0)
+                for i in np.linspace(0, 1, self.quantile + 1)
+            ]
+            _list_unique_categorical_values = [
+                np.unique(X_bin[:, i]) for i in _list_categorical_indexes
+            ]
+            array_quantile = np.array(list_quantile)
+
+            array_dim_indices_samples = np.arange(0, X.shape[1])
+            array_continuous_dim_indices_samples = array_dim_indices_samples[
+                ~categorical
+            ]
+            for ind_dim_quantile, cont_dim_samples in enumerate(
+                array_continuous_dim_indices_samples
+            ):
+                out = np.searchsorted(
+                    array_quantile[:, ind_dim_quantile],
+                    X_bin[:, cont_dim_samples],
+                    side="left",
+                )
+                X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
+        end = time.time()
+        print(
+            f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds"
+        )
+
+        start = time.time()
+        super().fit(
+            X_bin,
+            y,
+            sample_weight=sample_weight,
+        )
+        end = time.time()
+        print(f"Grow forest took {end - start:.4f} seconds")
+        self._array_quantile = array_quantile
+        self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
+        self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
+
+
+class RulesExtractorClassifierMixin(RulesExtractorMixin):
+
     def _fit_rules(self, X, y, rules_, sample_weight=None):
         """
         Fit method for RulesExtractorMixin in classification case.
@@ -333,9 +450,10 @@ class RulesExtractorMixin:
                 -1,
             )
 
-    #######################################################
-    ############# Regressor fit and predict  ##############
-    #######################################################
+
+
+class RulesExtractorRegressorMixin(RulesExtractorMixin):
+
     def _fit_rules_regressor(
         self, X, y, rules_, sample_weight=None, to_encode_target=False
     ):
@@ -459,120 +577,3 @@ class RulesExtractorMixin:
         y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
 
         return y_pred
-
-    #######################################################
-    ################ Fit main classiifer   ################
-    #######################################################
-    def _fit_quantile_classifier(self, X, y, sample_weight=None):
-        """
-        fit method for RulesExtractorMixin.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-
-            The target values (class labels in classification, real numbers in regression).
-        sample_weight : array-like, shape (n_samples,), optional
-            Sample weights. If None, then samples are equally weighted.
-        to_not_binarize_colindexes : list of int, optional (default=None)
-            List of column indices in X that should not be binarized (i.e., treated as categorical).
-        starting_index_one_hot : int, optional (default=None)
-            If provided, all columns from this index onward are treated as one-hot encoded categorical features.
-        Returns
-        ----------
-        self : object
-            Returns the instance itself.
-        1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
-        2. Fit the main classifier using the modified dataset.
-        3. Store quantile information and categorical feature details for future use.
-        4. Return the fitted instance.
-        5. If no columns are specified for exclusion from binarization, treat all features as continuous.
-        6. If columns are specified for exclusion, treat those as categorical and binarize only the continuous features.
-        7. Handle one-hot encoded features if a starting index is provided, treating all features from that index onward as categorical.
-        8. Use quantiles to binarize continuous features, ensuring that the binarization respects the distribution of the data.
-        9. Store the quantiles used for binarization, unique values of categorical features, and their indices for future reference.
-        10. Fit the main classifier with the modified dataset, ensuring that it can handle both continuous and categorical features appropriately.
-        11. Ensure that sample weights are appropriately handled during the fitting process.
-        12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
-        """
-        start = time.time()
-        if self.p0 > 1.0 or self.p0 < 0.0:
-            raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
-        if self.max_n_rules <= 0:
-            raise ValueError("max_n_rules must be a positive integer.")
-        if self.quantile <= 1:
-            raise ValueError("quantile must be an integer greater than 1.")
-
-        X_bin = X.copy()
-        if (self.to_not_binarize_colindexes is None) and (
-            self.starting_index_one_hot is None
-        ):  # All variables are continuous
-            list_quantile = [
-                np.quantile(X_bin, q=i, axis=0)
-                for i in np.linspace(0, 1, self.quantile + 1)
-            ]
-            array_quantile = np.array(list_quantile)
-            for dim in range(X.shape[1]):
-                out = np.searchsorted(
-                    array_quantile[:, dim], X_bin[:, dim], side="left"
-                )
-                X_bin[:, dim] = array_quantile[out, dim]
-            _list_unique_categorical_values = (
-                None  # set these to None if all variables are continuous
-            )
-            _list_categorical_indexes = (
-                None  # set these to None if all variables are continuous
-            )
-        else:
-            categorical = np.zeros((X.shape[1],), dtype=bool)
-            if self.starting_index_one_hot is None:
-                _list_categorical_indexes = self.to_not_binarize_colindexes
-            elif self.to_not_binarize_colindexes is None:
-                _list_categorical_indexes = [
-                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
-                ]
-            else:
-                _list_categorical_indexes = self.to_not_binarize_colindexes + [
-                    i for i in range(self.starting_index_one_hot, X_bin.shape[1])
-                ]
-            ## the last indexes of X must contains the one hot encoded variables !
-            categorical[_list_categorical_indexes] = True
-            list_quantile = [
-                np.quantile(X_bin[:, ~categorical], q=i, axis=0)
-                for i in np.linspace(0, 1, self.quantile + 1)
-            ]
-            _list_unique_categorical_values = [
-                np.unique(X_bin[:, i]) for i in _list_categorical_indexes
-            ]
-            array_quantile = np.array(list_quantile)
-
-            array_dim_indices_samples = np.arange(0, X.shape[1])
-            array_continuous_dim_indices_samples = array_dim_indices_samples[
-                ~categorical
-            ]
-            for ind_dim_quantile, cont_dim_samples in enumerate(
-                array_continuous_dim_indices_samples
-            ):
-                out = np.searchsorted(
-                    array_quantile[:, ind_dim_quantile],
-                    X_bin[:, cont_dim_samples],
-                    side="left",
-                )
-                X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
-        end = time.time()
-        print(
-            f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds"
-        )
-
-        start = time.time()
-        super().fit(
-            X_bin,
-            y,
-            sample_weight=sample_weight,
-        )
-        end = time.time()
-        print(f"Grow forest took {end - start:.4f} seconds")
-        self._array_quantile = array_quantile
-        self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
-        self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
