@@ -60,7 +60,8 @@ nav:
 
   - References:
     - Rules Extractors:
-      - BaseMixin: references/mixin.md
-      - Extractors: references/extractors.md
+      - Classification Extractors: references/classification_extractors.md
+      - Regression Extractors: references/regression_extractors.md
     - Example-based explainability:
-      - Example Explanation: references/example-explanation.md
+      - Classification Example Explanation: references/classification_explanation.md
+      - Regression Example Explanation: references/regression_explanation.md
