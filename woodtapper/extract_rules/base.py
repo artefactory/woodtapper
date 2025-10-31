@@ -1,4 +1,3 @@
-from functools import reduce
 from operator import and_
 
 import numpy as np
@@ -9,7 +8,7 @@ from sklearn.linear_model import Ridge
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive
+from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -92,10 +91,10 @@ class RulesExtractorMixin:
         rules_mask = np.zeros((X.shape[0], self.n_rules), dtype=bool)
         for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
-            final_mask = self._generate_mask_rule(X=X, rules=current_rules)
+            final_mask = generate_mask_rule(X=X, rules=current_rules)
             rules_mask[:, rule_number] = final_mask
         return rules_mask
-    
+
     def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
@@ -176,7 +175,7 @@ class RulesExtractorMixin:
                     rules_ensemble = related_paths_ftr + [curr_path]
                     list_matrix = [[] for i in range(len(rules_ensemble))]
                     for i, x in enumerate(rules_ensemble):
-                        mask_x = self._generate_mask_rule(X=data_indep, rules=x)
+                        mask_x = generate_mask_rule(X=data_indep, rules=x)
                         list_matrix[i] = mask_x
 
                     if len(list_matrix) > 0:
@@ -324,14 +323,12 @@ class RulesExtractorMixin:
         rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
-            y_pred_probas[final_mask] += self.list_probas_by_rules[
-                indice
-            ]  ## add the asociated rule probability
+            y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
+            # add the asociated rule probability
 
             if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[
-                    indice
-                ]  ## If the rule is not verified we add the probas of the training samples not verifying the rule.
+                y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[indice]
+                # If the rule is not verified we add the probas of the training samples not verifying the rule.
         if to_add_probas_outside_rules:
             y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
         else:

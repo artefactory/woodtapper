@@ -415,7 +415,7 @@ def _from_rules_to_constraint(rule):
     return dimension, treshold, sign
 
 
-def _generate_mask_rule(X, rules):
+def generate_mask_rule(X, rules):
     """
     Generate the mask associated to a rule of len >=1.
     Parameters
