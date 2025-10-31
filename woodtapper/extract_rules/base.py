@@ -543,15 +543,13 @@ class RulesExtractorMixin:
         self.list_probas_outside_by_rules = list_probas_outside_by_rules
         self.type_target = y.dtype
 
-    def predict_proba(self, X, to_add_probas_outside_rules=True):
+    def predict_proba(self, X):
         """
         predict_proba method for RulesExtractorMixin. in classification case
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, optional (default=True)
-            Whether to include probabilities from samples not satisfying the rules.
         Returns
         ----------
         y_pred_probas : array-like, shape (n_samples, n_classes)
@@ -561,42 +559,29 @@ class RulesExtractorMixin:
         rules_mask = self._generate_masks_rules(X=X)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
-            y_pred_probas[final_mask] += self.list_probas_by_rules[
-                indice
-            ]  ## add the asociated rule probability
+            y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
+            ## add the asociated rule probability
 
-            if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[
-                    indice
-                ]  ## If the rule is not verified we add the probas of the training samples not verifying the rule.
-        if to_add_probas_outside_rules:
-            y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
-        else:
-            scaling_coeffs = y_pred_probas.sum(axis=1)
-            y_pred_probas = (
-                y_pred_probas
-                / np.array([scaling_coeffs, scaling_coeffs, scaling_coeffs]).T
-            )
+            y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[indice]
+            ## If the rule is not verified we add the probas of the training samples not verifying the rule.
+
+        y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
 
         return y_pred_probas
 
-    def predict(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X):
         """
         Predict method for RulesExtractorMixin in classification case.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, optional (default=True)
-            Whether to include probabilities from samples not satisfying the rules.
         Returns
         ----------
         y_pred : array-like, shape (n_samples,)
             The predicted classes for each sample.
         """
-        y_pred_probas = self.predict_proba(
-            X=X, to_add_probas_outside_rules=to_add_probas_outside_rules
-        )
+        y_pred_probas = self.predict_proba(X=X)
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
         if self.type_target is not int:
             y_pred = y_pred_numeric.copy().astype(self.type_target)
@@ -703,14 +688,12 @@ class RulesExtractorMixin:
                 coeff * self.list_probas_outside_by_rules[indice]
             ).tolist()
 
-    def _predict_regressor(self, X, to_add_probas_outside_rules=True):
+    def _predict_regressor(self, X):
         """
         predict_proba method for RulesExtractorMixin for regression case.
         Parameters
         X : array-like, shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, optional (default=True)
-            Whether to include probabilities from samples not satisfying the rules.
         Returns
         ----------
         y_pred : array-like, shape (n_samples,)
@@ -730,10 +713,7 @@ class RulesExtractorMixin:
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
-            if to_add_probas_outside_rules:  # ERWAN TIPS !!
-                gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[
-                    indice
-                ]
+            gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[indice]
         # y_pred = self.ridge.predict(gamma_array)
         y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
 
