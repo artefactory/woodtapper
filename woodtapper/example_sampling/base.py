@@ -35,6 +35,7 @@ class ExplanationMixin:
         """
         super().fit(X=X, y=y, sample_weight=sample_weight)
         self.train_y = y
+        self.train_X = X
         self.train_samples_leaves = (
             super().apply(X).astype(np.int32)
         )  # train_samples_leaves: size n_train x n_trees
@@ -114,7 +115,6 @@ class ExplanationMixin:
             for batch in np.array_split(X, len(X) // batch_size):
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
-
-        return self.train_y[
-            np.argsort(-weights, axis=1)[:, :5]
-        ]  # Get the 5 most similar samples
+        most_similar_idx = np.argsort(-weights, axis=1)[:, :5]
+        # Get the 5 most similar samples
+        return self.train_X[most_similar_idx], self.train_y[most_similar_idx]
