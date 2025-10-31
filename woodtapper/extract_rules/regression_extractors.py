@@ -154,9 +154,20 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         self._fit_rules_regressor(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
-    def predict(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X):
+        """
+        Predict using the SIRUS regressor.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+                The predicted values.
+        """
         X = validate_data(self, X)
-        return self._predict_regressor(X, to_add_probas_outside_rules)
+        return self._predict_regressor(X)
 
 
 class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
@@ -383,15 +394,13 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         self._fit_rules_regressor(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
-    def predict(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X):
         """
         Predict using the RulesExtractorMixin regressor.
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, default=True
-            Whether to add the predictions from outside the rules.
         Returns
         -------
         y_pred : ndarray of shape (n_samples,)
@@ -399,5 +408,5 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
 
         """
         X = validate_data(self, X)
-        y_pred = self._predict_regressor(X, to_add_probas_outside_rules)
+        y_pred = self._predict_regressor(X)
         return y_pred

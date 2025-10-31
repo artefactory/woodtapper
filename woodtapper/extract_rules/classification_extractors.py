@@ -163,10 +163,33 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         compute_staibility_criterion(self)
 
     def predict_proba(self, X):
+        """
+        Predict class probabilities for X.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, n_classes)
+            The class probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        """
         X = validate_data(self, X)
         return super().predict_proba(X)
 
     def predict(self, X):
+        """
+        Predict class for X.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            The predicted classes.
+        """
         X = validate_data(self, X)
         return super().predict(X)
 
@@ -407,9 +430,32 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         compute_staibility_criterion(self)
 
     def predict_proba(self, X):
+        """
+        Predict class probabilities for X.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        Returns
+        -------
+        proba : ndarray of shape (n_samples, n_classes)
+            The class probabilities of the input samples. The order of the
+            classes corresponds to that in the attribute `classes_`.
+        """
         X = validate_data(self, X)
         return super().predict_proba(X)
 
     def predict(self, X):
+        """
+        Predict class for X.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        Returns
+        -------
+        y : ndarray of shape (n_samples,)
+            The predicted classes.
+        """
         X = validate_data(self, X)
         return super().predict(X)
