@@ -453,9 +453,9 @@ def generate_mask_rule(X, rules):
     rules_mask : array-like, shape (n_samples, n_rules)
         Boolean mask matrix indicating which samples satisfy each rule.
     """
-    rules_mask = np.zeros((X.shape[0], n_rules), dtype=bool)
+    rules_mask = np.zeros((len(X), n_rules), dtype=bool)
     for rule_number, current_rules in enumerate(rules):
         # for loop for getting all the values in train (X) passing the rules
-        final_mask = generate_mask_rule(X=X, rules=current_rules)
-        rules_mask[:, rule_number] = final_mask
+        rules_mask[:, rule_number] = generate_mask_rule(X=X, rules=current_rules)
+
     return rules_mask
