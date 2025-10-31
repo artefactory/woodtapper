@@ -8,7 +8,7 @@
 
 </picture>
 
-*User-friendly and scalable Python package for tapping decision tree ensembles*
+*User-friendly Python toolbox for interpreting and manipuling decision tree ensembles from scikit-learn*
 
 [![CI Status](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -22,7 +22,7 @@
 
 </div>
 
-WoodTapper is a Python toolbox  for interpretable and explainable tree ensembles learning, fully compatible with the scikit-learn API.
+WoodTapper is a Python toolbox for interpretable and manipulable ensemble of tree-based models, fully compatible with scikit-learn forests and boosting models. 
 
 ## 🪵 Key Features
 - Rule extraction from tree-based ensembles.
