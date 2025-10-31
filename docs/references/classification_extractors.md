@@ -1,1 +1,1 @@
-::: woodtapper.extract_rules.extractors
+::: woodtapper.extract_rules.classification_extractors
