@@ -91,7 +91,7 @@ def compute_staibility_criterion(model):
     Parameters
     ----------
     model : SirusDTreeClassifier, SirusRFClassifier, SirusGBClassifier
-        The model instance with attributes n_estimators and all_possible_rules_frequency_list
+        The model instance with attributes n_estimators and rules_freq_
     Returns
     -------
     None
@@ -106,14 +106,11 @@ def compute_staibility_criterion(model):
             [
                 binom.cdf(k=p0_curr * M, n=M, p=pm)
                 * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                for pm in model.all_possible_rules_frequency_list
+                for pm in model.rules_freq_
             ]
         )
         epsilon_denominator = np.sum(
-            [
-                (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                for pm in model.all_possible_rules_frequency_list
-            ]
+            [(1 - binom.cdf(k=p0_curr * M, n=M, p=pm)) for pm in model.rules_freq_]
         )
         epsilon = (
             epsilon_numerator / epsilon_denominator if epsilon_denominator > 0 else 0

@@ -40,7 +40,7 @@ class RulesExtractorMixin:
         Number of rules extracted from the ensemble.
     rules_ : list
         List of all possible rules extracted from the ensemble.
-    all_possible_rules_frequency_list : list
+    rules_freq_ : list
         List of frequencies associated with each rule.
     list_probas_by_rules : list
         List of probabilities associated with each rule (for classification tasks).
@@ -495,7 +495,7 @@ class RulesExtractorMixin:
             f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
         )
         self.rules_ = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"]  # usefull ?
+        self.rules_freq_ = res["proba"]  # usefull ?
         self.n_rules = len(self.rules_)
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
@@ -654,7 +654,7 @@ class RulesExtractorMixin:
             num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
         self.rules_ = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"]
+        self.rules_freq_ = res["proba"]
         self.n_rules = len(self.rules_)
         # list_mask_by_rules = []
         list_output_by_rules = []
