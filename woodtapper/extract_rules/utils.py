@@ -441,7 +441,7 @@ def generate_mask_rule(X, rules):
     return final_mask
 
 
- def generate_masks_rules(self, X, rules, n_rules):
+ def generate_masks_rules(X, rules, n_rules):
     """
     Generate the masks associated to all the rules.
     Parameters
