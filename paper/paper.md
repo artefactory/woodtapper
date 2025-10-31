@@ -10,10 +10,12 @@ authors:
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
   - name: Jad AOUAD
     orcid: 0009-0000-1456-3056
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: 1
+  - name: Carl-Erik GAUTHIER
+    affiliation: 3
   - name: Emmanuel MALHERBE
     orcid: 0009-0006-0898-6873
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: 1
   - name: Erwan SCORNET
     affiliation: 2
 affiliations:
@@ -22,13 +24,15 @@ affiliations:
    ror: 00hx57361
  - name: Laboratoire de Probabilités, Statistique et Modélisation Sorbonne Université and Université Paris Cité, CNRS, F-75005, Paris
    index: 2
+ - name: Societe Générale, Paris, France
+   index: 3
 date: 31 November 2025
 bibliography: paper.bib
 ---
 
 # Summary
 
-Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], finance[@ex-fraud;@sakho2025harnessing] or marketing [@ex-churn]. While complex models (e.g., deep neural networks, ensemble methods) often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance. Among interpretable models, rule-based methods are especially attractive because they yield decision paths that humans can follow in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations. Stable and Interpretable RUle Set (SIRUS)[@benard2021sirus-classif;@benard2021interpretable-regression] is one such method.
+Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models (e.g., deep neural networks, ensemble methods) often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance. Among interpretable models, rule-based methods are especially attractive because they yield decision paths that humans can follow in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations. Stable and Interpretable RUle Set (SIRUS)[@benard2021sirus-classif;@benard2021interpretable-regression] is one such method.
 
 This article presents WoodTapper, a Python toolbox for tree ensemble models fully compatible with the scikit-learn API [@pedregosa2011scikit]. WoodTapper enables seamless integration of interpretable rule extraction into existing machine learning workflows. In addition to faithfully implementing the SIRUS methodology in Python, it introduces an example-based explanation module that links predictions to a small set of representative samples through a weighting scheme, enhancing human interpretability.
 
@@ -113,7 +117,7 @@ We also observe that the predictive performance of our implementation is similar
 
 
 ## SIRUS: running time
-We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn’s $\texttt{make\_classification}$. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
+We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn’s $\texttt{make\_classification}$. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
 
 ![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
@@ -141,7 +145,7 @@ As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres
 |---------------------------|----------------------------------|----------------------------|
 | Forest implementation     | `scikit-learn`                  | `ranger`                   |
 | Language ecosystem        | Python                          | Python & R                 |
-| Package availability      | PyPI (`forest-secrets`)         | PyPI (`skgrf`)             |
+| Package availability      | PyPI (`woodtapper`)             | PyPI (`skgrf`)             |
 | scikit-learn API compatible | $\checkmark$                            | $\checkmark$                         |
 | Tree-based models         | All                             | Tree and random forest     |
 | GRF                       | $\times$                               | $\checkmark$                        |
