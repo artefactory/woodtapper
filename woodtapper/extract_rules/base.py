@@ -76,7 +76,7 @@ class RulesExtractorMixin:
     10. Designed for interpretability and simplicity in model predictions.
     """
 
-    def _paths_filtering_matrix_stochastic(self, paths, proba, max_n_rules):
+    def _paths_filtering_stochastic(self, paths, proba, max_n_rules):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         Parameters
@@ -89,7 +89,7 @@ class RulesExtractorMixin:
             Max number of rules to keep
         Returns
         ----------
-        dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        dict: {'rules': filtered paths, 'probas': corresponding probabilities}
         1. Generate an independent dataset for checking rule redundancy.
         2. Iterate through the paths and apply redundancy checks.
         3. Return the filtered paths and their associated probabilities.
@@ -178,23 +178,7 @@ class RulesExtractorMixin:
                 ind += 1
                 max_n_rules_temp = len(paths_ftr)
 
-        return {"paths": paths_ftr, "proba": proba_ftr}
-
-    def _paths_filtering_stochastic(self, paths, proba, max_n_rules):
-        """
-        Post-treatment for rules.
-
-        Args:
-            paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
-            proba (list): Probabilities associated with each path/rule
-            max_n_rules (int): Max number of rules to keep
-
-        Returns:
-            dict: {'paths': filtered_paths, 'proba': filtered_proba}
-        """
-        return self._paths_filtering_matrix_stochastic(
-            paths=paths, proba=proba, max_n_rules=max_n_rules
-        )
+        return {"rules": paths_ftr, "probas": proba_ftr}
 
     #######################################################
     ############ Classification fit and predict  ##########
@@ -236,8 +220,8 @@ class RulesExtractorMixin:
         print(
             f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
         )
-        self.rules_ = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"]  # usefull ?
+        self.rules_ = res["rules"]
+        self.all_possible_rules_frequency_list = res["probas"]  # usefull ?
         end = time.time()
         print(f"Rules extraction took {end - start:.4f} seconds")
 
@@ -392,8 +376,8 @@ class RulesExtractorMixin:
             proba=rules_freq_,
             max_n_rules=self.max_n_rules,
         )  ## Maximum number of rule to keep=25
-        self.rules_ = res["paths"]
-        self.all_possible_rules_frequency_list = res["proba"]
+        self.rules_ = res["rules"]
+        self.all_possible_rules_frequency_list = res["probas"]
         # list_mask_by_rules = []
         list_output_by_rules = []
         list_output_outside_by_rules = []
