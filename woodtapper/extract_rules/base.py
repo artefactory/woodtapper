@@ -6,7 +6,6 @@ from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
-import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
 from .utils import Node, get_top_rules, ridge_cv_positive
@@ -65,16 +64,6 @@ class RulesExtractorMixin:
     This mixin provides core functionalities for SIRUS models, including rule extraction from decision trees,
     rule filtering, and prediction methods for both classification and regression tasks.
     It is designed to be inherited by specific SIRUS model classes.
-    1. Tree exploration and rule extraction using a custom Node class.
-    2. Generation of masks for data samples based on extracted rules.
-    3. Filtering of redundant rules based on linear dependence.
-    4. Fit and predict methods for classification and regression tasks.
-    5. Integration with Ridge regression for regression tasks.
-    6. Handling of both continuous and categorical features.
-    7. Efficient memory and time management for large datasets.
-    8. Compatibility with scikit-learn's decision tree structures.
-    9. Customizable parameters for rule selection and model fitting.
-    10. Designed for interpretability and simplicity in model predictions.
     """
 
     #######################################################
@@ -96,9 +85,8 @@ class RulesExtractorMixin:
             The starting Node of the first call of this function (given node_id by user).
 
         """
-        if (
-            tree.children_left[node_id] != _tree.TREE_LEAF
-        ):  # possible to add a max_depth constraint exploration value
+        if tree.children_left[node_id] != _tree.TREE_LEAF:
+            # possible to add a max_depth constraint exploration value
             id_left_child = tree.children_left[node_id]
             id_right_child = tree.children_right[node_id]
             children = [
@@ -143,9 +131,8 @@ class RulesExtractorMixin:
                 common_path_rules = tree_structure[indice_in_tree_struct].copy()
                 common_path_rules.append(rule_right)
                 tree_structure.append(common_path_rules)  ## RIGHT : Added at the end
-                tree_structure[indice_in_tree_struct].append(
-                    rule_left
-                )  ## LEFT  : Added depending on indice_in_tree_struct
+                tree_structure[indice_in_tree_struct].append(rule_left)
+                ## LEFT  : Added depending on indice_in_tree_struct
 
                 stack.append((curr_rule.children[0], indice_in_tree_struct))
                 stack.append((curr_rule.children[1], len(tree_structure) - 1))
@@ -155,7 +142,8 @@ class RulesExtractorMixin:
 
     def _split_sub_rules(self, path):
         """
-        From a multiple rule, generate the associated sub multiple/single rules.
+        Iterate through the given path to generate sub-rules,
+        and return the list of generated sub-rules.
         Auxiliar function for _generate_all_possible_rules.
 
         Parameters
@@ -167,12 +155,6 @@ class RulesExtractorMixin:
         ----------
         list_sub_path : list
             List of sub-rules extracted from the given multiple rule.
-        1. Iterate through the given path to generate sub-rules.
-        2. Return the list of generated sub-rules.
-        3. The function ensures that only valid sub-rules (with at least two conditions) are included when required.
-        4. This method is essential for expanding the rule set derived from decision trees.
-        5. It helps in capturing more granular patterns within the data by considering all possible combinations of conditions.
-        8. The generated sub-rules can be used for further analysis or model fitting.
         """
         list_sub_path = []
         max_size_curr_path = len(path)
@@ -207,7 +189,8 @@ class RulesExtractorMixin:
 
     def _extract_single_tree_rules(self, tree):
         """
-        Extract all possible rules (single and multiple) from a single tree.
+        Explore the tree structure and create Node instances.
+        Generate the tree structure with Node instances.
         Parameters
         ----------
         tree : sklearn DecisionTree instance
@@ -216,30 +199,23 @@ class RulesExtractorMixin:
         ----------
         rules_ : list
             List of all possible rules (single and multiple) extracted from the tree.
-        1. Explore the tree structure and create Node instances.
-        2. Generate the tree structure with Node instances.
-        3. Explore the tree structure to extract the longest rules (rules from root to a leaf).
-        4. Generate all possible rules (single and multiple) from the tree structure.
-        5. Return the list of all possible rules.
         """
         root = self._explore_tree(0, "Root", tree)  ## Root node
-        tree_structure = self._construct_longest_paths(
-            root
-        )  ## generate the tree structure with Node instances
-        if (
-            len(tree_structure[0]) == 0 and root.feature == -2
-        ):  # -2 means leaf node in sklearn
+        tree_structure = self._construct_longest_paths(root)
+        ## generate the tree structure with Node instances
+        if len(tree_structure[0]) == 0 and root.feature == -2:
+            # -2 means leaf node in sklearn
             # case where root node is also a leaf
             rules_ = [[]]  # Tree with only one leaf
         else:
-            rules_ = self._generate_all_possible_rules(
-                tree_structure
-            )  # Explre the tree structure to extract the longest rules (rules from root to a leaf)
+            rules_ = self._generate_all_possible_rules(tree_structure)
+            # Explre the tree structure to extract the longest rules (rules from root to a leaf)
         return rules_
 
     def _generate_single_rule_mask(self, X, dimension, treshold, sign):
         """
-        Uses constraints of a unitary rule (len 1) to generate the associated mask for data set X.
+        Generate a boolean mask based on the rule's dimension, threshold, and sign.
+        The mask indicates which samples in X satisfy the condition defined by the rule.
 
         Parameters
         ----------
@@ -255,11 +231,6 @@ class RulesExtractorMixin:
         ----------
         mask : array-like, shape (n_samples,)
             Boolean mask indicating which samples satisfy the single rule.
-        1. Generate a boolean mask based on the rule's dimension, threshold, and sign.
-        2. The mask indicates which samples in X satisfy the condition defined by the rule.
-        3. Return the generated mask.
-        4. The function supports two types of conditions: 'L' for less than or equal to the threshold, and 'R' for greater than the threshold.
-        5. This method is essential for filtering data samples based on specific rule conditions.
         """
         if sign == "L":
             return X[:, dimension] <= treshold
@@ -292,7 +263,7 @@ class RulesExtractorMixin:
 
     def _generate_mask_rule(self, X, rules):
         """
-        Generate the mask associated to a rule of len >=1.
+        Generate the UNIQUE mask associated to a rule of len >=1.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -316,7 +287,7 @@ class RulesExtractorMixin:
 
     def _generate_masks_rules(self, X):
         """
-        Generate the masks associated to all the rules.
+        Generate the maskS associated to all the rules in rules_ attribute.
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -347,28 +318,20 @@ class RulesExtractorMixin:
         Returns
         ----------
         dict: {'paths': filtered_paths, 'proba': filtered_proba}
-        1. Generate an independent dataset for checking rule redundancy.
-        2. Iterate through the paths and apply redundancy checks.
-        3. Return the filtered paths and their associated probabilities.
-        4. The redundancy check is based on the rank of a matrix formed by the masks of the rules.
-        5. If the rank of the matrix increases when adding a new rule, it is considered non-redundant and kept.
-        6. This method ensures that the selected rules are diverse and not linearly dependent.
-        7. The process continues until the desired number of rules is reached or all paths are evaluated.
-        8. The function returns a dictionary containing the filtered paths and their probabilities.
         """
         paths_ftr = []
         proba_ftr = []
-        # split_gen = []
         ind_max = len(paths)
         ind = 0
         num_rule_temp = 0
 
         n_samples_indep = 10000
+        # Number of samples for the independent data set
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
-        ind_dim_continuous_array_quantile = (
-            0  ## indice dans array_quantile des variables continues
-        )
-        ind_dim_categorcial_list_unique_elements = 0  ## indice dans _list_unique_categorical_values des variables catégorielles
+        ind_dim_continuous_array_quantile = 0
+        # indice in array_quantile of continuous variabless
+        ind_dim_categorcial_list_unique_elements = 0
+        # indice in _list_unique_categorical_values of categorical variables
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
@@ -473,32 +436,18 @@ class RulesExtractorMixin:
         Returns
         ----------
         None
-        1. Count unique rules and their frequencies.
-        2. Apply post-treatment to filter redundant rules.
-        3. Calculate probabilities for each rule based on the training data.
-        4. Store the extracted rules and their associated probabilities.
-        5. The method ensures that only relevant and non-redundant rules are retained for the final model.
-        6. It handles both the presence and absence of sample weights during probability calculations.
         """
-        start = time.time()
         rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
         rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
         #### APPLY POST TREATMEANT : remove redundant rules
-        start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
             paths=rules_,
             proba=rules_freq_,
             num_rule=self.num_rule,
         )  ## Maximum number of rule to keep=25
-        end_lin_dep = time.time()
-        print(
-            f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
-        )
         self.rules_ = res["paths"]
         self.rules_freq_ = res["proba"]  # usefull ?
         self.n_rules = len(self.rules_)
-        end = time.time()
-        print(f"Rules extraction took {end - start:.4f} seconds")
 
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
@@ -530,13 +479,11 @@ class RulesExtractorMixin:
                     else 0
                 )
                 list_probas.append(curr_probas)  # len n_classes_
-                list_probas_outside_rules.append(
-                    curr_probas_outside_rules
-                )  # len n_classes_
+                list_probas_outside_rules.append(curr_probas_outside_rules)
+                # len n_classes_
 
-            list_probas_by_rules.append(
-                list_probas
-            )  # list of len n_rules of list of len n_classes_
+            list_probas_by_rules.append(list_probas)
+            # list of len n_rules of list of len n_classes_
             list_probas_outside_by_rules.append(list_probas_outside_rules)
 
         self.list_probas_by_rules = list_probas_by_rules
@@ -595,9 +542,7 @@ class RulesExtractorMixin:
                 -1,
             )
 
-    #######################################################
     ############# Regressor fit and predict  ##############
-    #######################################################
     def _fit_rules_regressor(
         self, X, y, rules_, sample_weight=None, to_encode_target=False
     ):
@@ -616,14 +561,6 @@ class RulesExtractorMixin:
         Returns
         ----------
         None
-        1. Validate input data and initialize parameters.
-        2. Count unique rules and their frequencies.
-        3. Apply post-treatment to filter redundant rules.
-        4. Calculate mean target values for samples satisfying and not satisfying each rule.
-        5. Store the extracted rules and their associated mean target values.
-        6. Fit a Ridge regression model using the rule-based features.
-        7. The method ensures that only relevant and non-redundant rules are retained for the final model.
-        8. It handles both the presence and absence of sample weights during model fitting.
         """
         rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
         rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
@@ -698,15 +635,6 @@ class RulesExtractorMixin:
         ----------
         y_pred : array-like, shape (n_samples,)
             The predicted values for each sample.
-        1. Generate the feature matrix based on the rules for the input samples.
-        2. Use the fitted Ridge regression model to predict target values.
-        3. Return the predicted values.
-        4. The method constructs the feature matrix by evaluating each rule on the input samples.
-        5. It includes an intercept term in the feature matrix for the Ridge regression model.
-        6. The predictions are made using the linear combination of the rule-based features and the learned coefficients from the Ridge model.
-        7. The function supports the option to include or exclude probabilities for samples not satisfying the rules, although in this implementation it is always included in the feature matrix.
-        8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
-        9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
         gamma_array = np.zeros((X.shape[0], self.n_rules))
         rules_mask = self._generate_masks_rules(X=X)
@@ -719,9 +647,7 @@ class RulesExtractorMixin:
 
         return y_pred
 
-    #######################################################
     ################ Fit main classiifer   ################
-    #######################################################
     def _fit_quantile_classifier(self, X, y, sample_weight=None):
         """
         fit method for RulesExtractorMixin.
@@ -742,20 +668,7 @@ class RulesExtractorMixin:
         ----------
         self : object
             Returns the instance itself.
-        1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
-        2. Fit the main classifier using the modified dataset.
-        3. Store quantile information and categorical feature details for future use.
-        4. Return the fitted instance.
-        5. If no columns are specified for exclusion from binarization, treat all features as continuous.
-        6. If columns are specified for exclusion, treat those as categorical and binarize only the continuous features.
-        7. Handle one-hot encoded features if a starting index is provided, treating all features from that index onward as categorical.
-        8. Use quantiles to binarize continuous features, ensuring that the binarization respects the distribution of the data.
-        9. Store the quantiles used for binarization, unique values of categorical features, and their indices for future reference.
-        10. Fit the main classifier with the modified dataset, ensuring that it can handle both continuous and categorical features appropriately.
-        11. Ensure that sample weights are appropriately handled during the fitting process.
-        12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
-        start = time.time()
         if self.p0 > 1.0 or self.p0 < 0.0:
             raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
         if self.num_rule <= 0:
@@ -819,19 +732,12 @@ class RulesExtractorMixin:
                     side="left",
                 )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
-        end = time.time()
-        print(
-            f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds"
-        )
 
-        start = time.time()
         super().fit(
             X_bin,
             y,
             sample_weight=sample_weight,
         )
-        end = time.time()
-        print(f"Grow forest took {end - start:.4f} seconds")
         self._array_quantile = array_quantile
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
