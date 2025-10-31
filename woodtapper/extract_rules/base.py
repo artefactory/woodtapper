@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule
+from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule, generate_masks_rules
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -75,25 +75,6 @@ class RulesExtractorMixin:
     9. Customizable parameters for rule selection and model fitting.
     10. Designed for interpretability and simplicity in model predictions.
     """
-
-     def _generate_masks_rules(self, X):
-        """
-        Generate the masks associated to all the rules.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        Returns
-        ----------
-        rules_mask : array-like, shape (n_samples, n_rules)
-            Boolean mask matrix indicating which samples satisfy each rule.
-        """
-        rules_mask = np.zeros((X.shape[0], self.n_rules), dtype=bool)
-        for rule_number, current_rules in enumerate(self.rules_):
-            # for loop for getting all the values in train (X) passing the rules
-            final_mask = generate_mask_rule(X=X, rules=current_rules)
-            rules_mask[:, rule_number] = final_mask
-        return rules_mask
 
     def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
         """
@@ -266,7 +247,7 @@ class RulesExtractorMixin:
         list_probas_outside_by_rules = []
         if sample_weight is None:
             sample_weight = np.full((len(y),), 1)  ## vector of ones
-        rules_mask = self._generate_masks_rules(X=X)
+        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
         for i in range(self.n_rules):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, i]
@@ -320,7 +301,7 @@ class RulesExtractorMixin:
             The predicted class probabilities for each sample.
         """
         y_pred_probas = np.zeros((len(X), self.n_classes_))
-        rules_mask = self._generate_masks_rules(X=X)
+        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
             y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
@@ -420,7 +401,7 @@ class RulesExtractorMixin:
         list_output_by_rules = []
         list_output_outside_by_rules = []
         gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = self._generate_masks_rules(X=X)
+        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
         for rule_number, current_rules in enumerate(self.rules_):
             # for loop for getting all the values in train (X) passing the rules
             final_mask = rules_mask[:, rule_number]
@@ -486,7 +467,7 @@ class RulesExtractorMixin:
         9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
         """
         gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = self._generate_masks_rules(X=X)
+        rules_mask = generate_masks_rules(X, self.rules_, self.n_rules)
         for indice in range(self.n_rules):
             final_mask = rules_mask[:, indice]
             gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
