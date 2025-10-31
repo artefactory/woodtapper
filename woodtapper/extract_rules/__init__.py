@@ -1,12 +1,13 @@
 """Rule extraction module for WoodTapper."""
 
-from .extractors import (
+from .classification_extractors import (
     SirusClassifier,
-    SirusRegressor,
     GbExtractorClassifier,
+)
+from .regression_extractors import (
+    SirusRegressor,
     GbExtractorRegressor,
 )
-
 
 __all__ = [
     "SirusClassifier",
