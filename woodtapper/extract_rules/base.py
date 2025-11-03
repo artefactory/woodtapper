@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule, generate_masks_rules
+from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule, generate_masks_rules, _extract_single_tree_rules
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -297,6 +297,43 @@ class RulesExtractorMixin:
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
 
+    def fit(self, X, y, sample_weight=None, check_input=True):
+        """
+        Fit the RulesExtractor model.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The training input samples.
+        y : array-like of shape (n_samples,)
+            The target values (class labels) as integers or strings.
+        sample_weight : array-like of shape (n_samples,), default=None
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+
+        """
+        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+            y = y.values
+        elif not isinstance(X, np.ndarray):
+            raise Exception("Wrong type for X")
+        self._fit_quantile_classifier(X, y, sample_weight)
+        rules_ = []
+        for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
+        #for dtree in self.estimators_: pour SIRUS models
+            tree = dtree.tree_
+            curr_tree_rules = _extract_single_tree_rules(tree)
+            if (len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0):
+                # to avoid empty rules
+                # Boosting may produce trees with no splits, for example when the number of estimators is high
+                rules_.extend(curr_tree_rules)
+        self._fit_rules(X, y, rules_, sample_weight)
+        # Will call the _fit_rules for classifier or regressor (implemented in child class)
+        compute_stability_criterion(self)
+
 
 class RulesExtractorClassifierMixin(RulesExtractorMixin):
 
@@ -454,7 +491,7 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
 
 class RulesExtractorRegressorMixin(RulesExtractorMixin):
 
-    def _fit_rules_regressor(
+    def _fit_rules(
         self, X, y, rules_, sample_weight=None, to_encode_target=False
     ):
         """
