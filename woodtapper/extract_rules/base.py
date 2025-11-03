@@ -579,28 +579,27 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
                 coeff * self.list_probas_outside_by_rules[indice]
             ).tolist()
 
-    def _predict_regressor(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X, to_add_probas_outside_rules=True):
         """
-        predict_proba method for RulesExtractorMixin for regression case.
+        Predict using the RulesExtractorMixin regressor.
         Parameters
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        to_add_probas_outside_rules : bool, optional (default=True)
-            Whether to include probabilities from samples not satisfying the rules.
-        Returns
         ----------
-        y_pred : array-like, shape (n_samples,)
-            The predicted values for each sample.
-        1. Generate the feature matrix based on the rules for the input samples.
-        2. Use the fitted Ridge regression model to predict target values.
-        3. Return the predicted values.
-        4. The method constructs the feature matrix by evaluating each rule on the input samples.
-        5. It includes an intercept term in the feature matrix for the Ridge regression model.
-        6. The predictions are made using the linear combination of the rule-based features and the learned coefficients from the Ridge model.
-        7. The function supports the option to include or exclude probabilities for samples not satisfying the rules, although in this implementation it is always included in the feature matrix.
-        8. The final output is a one-dimensional array of predicted values corresponding to each input sample.
-        9. The method ensures that the predictions are consistent with the training process and the rules extracted from the decision trees.
+        X : array-like of shape (n_samples, n_features)
+            The input samples.
+        to_add_probas_outside_rules : bool, default=True
+            Whether to add the predictions from outside the rules.
+        Returns
+        -------
+        y_pred : ndarray of shape (n_samples,)
+            The predicted values.
+
         """
+        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
+            self.feature_names_in_ = X.columns.to_numpy()
+            X = X.values
+        elif not isinstance(X, np.ndarray):
+            raise Exception("Wrong type for X")
+
         rules_mask = generate_masks_rules(X, self.rules_)
         gamma_array = np.zeros((len(X), len(self.rules_)))
         for indice in range(len(self.rules_)):

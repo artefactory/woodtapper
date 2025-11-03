@@ -451,14 +451,6 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
-    def predict(self, X, to_add_probas_outside_rules=True):
-        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
-            self.feature_names_in_ = X.columns.to_numpy()
-            X = X.values
-        elif not isinstance(X, np.ndarray):
-            raise Exception("Wrong type for X")
-        return self._predict_regressor(X, to_add_probas_outside_rules)
-
 
 class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
@@ -652,21 +644,3 @@ class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegress
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
-    def predict(self, X, to_add_probas_outside_rules=True):
-        """
-        Predict using the RulesExtractorMixin regressor.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        to_add_probas_outside_rules : bool, default=True
-            Whether to add the predictions from outside the rules.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            The predicted values.
-
-        """
-        y_pred = self._predict_regressor(X, to_add_probas_outside_rules)
-        return y_pred
