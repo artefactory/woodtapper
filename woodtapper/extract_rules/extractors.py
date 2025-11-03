@@ -15,7 +15,7 @@ from sklearn.utils._param_validation import StrOptions
 import time
 
 from .base import RulesExtractorClassifierMixin, RulesExtractorRegressorMixin
-from .utils import compute_staibility_criterion
+from .utils import compute_stability_criterion
 
 
 class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
@@ -161,7 +161,7 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         self._fit_rules(X, y, rules_, sample_weight)
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
 
 class QuantileDecisionTreeRegressor(RulesExtractorRegressorMixin, DecisionTreeRegressor):
@@ -382,18 +382,16 @@ class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClass
         """
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
-        for dtree in self.estimators_[
-            :, 0
-        ]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
+        for dtree in self.estimators_[:,0]:
+            # extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
-            if (
-                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
-            ):  # to avoid empty rules
+            if (len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0): 
+                # to avoid empty rules
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
                 rules_.extend(curr_tree_rules)
         self._fit_rules(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
 
 ######### Regressor ############
@@ -546,7 +544,7 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
             tree = dtree.tree_
             rules_.extend(self._extract_single_tree_rules(tree))
         self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
         if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
@@ -778,13 +776,12 @@ class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegress
         for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
             tree = dtree.tree_
             curr_tree_rules = self._extract_single_tree_rules(tree)
-            if (
-                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
-            ):  # to avoid empty rules
+            if (len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0):
+                # to avoid empty rules
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
                 rules_.extend(curr_tree_rules)
         self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
     def predict(self, X, to_add_probas_outside_rules=True):
         """

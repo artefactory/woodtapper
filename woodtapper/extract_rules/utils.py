@@ -84,7 +84,7 @@ def get_top_rules(rules_str, p0):
     return rules_, rules_freq_
 
 
-def compute_staibility_criterion(model):
+def compute_stability_criterion(model):
     """
     Compute the stability criterion for a given model.
     Parameters
