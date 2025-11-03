@@ -8,7 +8,8 @@ from sklearn.linear_model import Ridge
 import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule, generate_masks_rules, _extract_single_tree_rules
+from .utils import (Node, get_top_rules, ridge_cv_positive, generate_mask_rule,
+                    generate_masks_rules, _extract_single_tree_rules, _rules_filtering_stochastic)
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -75,110 +76,6 @@ class RulesExtractorMixin:
     9. Customizable parameters for rule selection and model fitting.
     10. Designed for interpretability and simplicity in model predictions.
     """
-
-    def _paths_filtering_stochastic(self, paths, proba, max_n_rules):
-        """
-        Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
-        Parameters
-        ----------
-        paths : list
-            List of rules (each rule is a list of splits; each split [var, thr, dir])
-        proba : list
-            Probabilities associated with each path/rule
-        max_n_rules : int
-            Max number of rules to keep
-        Returns
-        ----------
-        dict: {'rules': filtered paths, 'probas': corresponding probabilities}
-        1. Generate an independent dataset for checking rule redundancy.
-        2. Iterate through the paths and apply redundancy checks.
-        3. Return the filtered paths and their associated probabilities.
-        4. The redundancy check is based on the rank of a matrix formed by the masks of the rules.
-        5. If the rank of the matrix increases when adding a new rule, it is considered non-redundant and kept.
-        6. This method ensures that the selected rules are diverse and not linearly dependent.
-        7. The process continues until the desired number of rules is reached or all paths are evaluated.
-        8. The function returns a dictionary containing the filtered paths and their probabilities.
-        """
-        paths_ftr = []
-        proba_ftr = []
-        # split_gen = []
-        ind_max = len(paths)
-        ind = 0
-        max_n_rules_temp = 0
-
-        n_samples_indep = 10000
-        data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
-        ind_dim_continuous_array_quantile = 0
-        # indice dans array_quantile des variables continues
-        ind_dim_categorcial_list_unique_elements = 0
-        # indice dans _list_unique_categorical_values des variables catégorielles
-        # Generate an independent data set for checking rule redundancy
-        for ind_dim_abs in range(self.n_features_in_):
-            np.random.seed(ind_dim_abs)
-            if (self._list_categorical_indexes is not None) and (
-                ind_dim_abs in self._list_categorical_indexes
-            ):  # Categorical variable
-                data_indep[:, ind_dim_abs] = np.random.choice(
-                    np.unique(
-                        self._list_unique_categorical_values[
-                            ind_dim_categorcial_list_unique_elements
-                        ]
-                    ),
-                    size=n_samples_indep,
-                    replace=True,
-                )
-                ind_dim_categorcial_list_unique_elements += 1
-            else:  # Continuous variable
-                elem_low = (
-                    self._array_quantile[:, ind_dim_continuous_array_quantile].min() - 1
-                )
-                elem_high = (
-                    self._array_quantile[:, ind_dim_continuous_array_quantile].max() + 1
-                )
-                data_indep[:, ind_dim_abs] = np.random.uniform(
-                    low=elem_low, high=elem_high, size=n_samples_indep
-                )
-                ind_dim_continuous_array_quantile += 1
-        np.random.seed(self.random_state)
-
-        while max_n_rules_temp < max_n_rules and ind < ind_max:
-            curr_path = paths[ind]
-            if len(paths_ftr) == 0: ## If there are no filtered paths yet
-                paths_ftr.append(curr_path)
-                proba_ftr.append(proba[ind])
-                ind += 1
-                max_n_rules_temp = len(paths_ftr)
-            elif curr_path in paths_ftr:  ## Avoid duplicates
-                ind += 1
-                max_n_rules_temp = len(paths_ftr)
-                continue
-            else:  ## If there are already filtered paths
-                related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
-                if len(related_paths_ftr) == 0:  ## If there are no related paths
-                    paths_ftr.append(curr_path)
-                    proba_ftr.append(proba[ind])
-                else:
-                    rules_ensemble = related_paths_ftr + [curr_path]
-                    list_matrix = [[] for i in range(len(rules_ensemble))]
-                    for i, x in enumerate(rules_ensemble):
-                        mask_x = generate_mask_rule(X=data_indep, rules=x)
-                        list_matrix[i] = mask_x
-
-                    if len(list_matrix) > 0:
-                        # Check if the current rule is redundant with the previous ones trough matrix rank
-                        matrix = np.array(list_matrix).T
-                        ones_vector = np.ones((len(matrix), 1))  # Vector of ones
-                        matrix = np.hstack((matrix, ones_vector))
-                        matrix_rank = np.linalg.matrix_rank(matrix)
-                        n_rules_compared = len(rules_ensemble)
-                        if matrix_rank == (n_rules_compared) + 1:
-                            # The current rule is not redundant with the previous ones
-                            paths_ftr.append(curr_path)
-                            proba_ftr.append(proba[ind])
-                ind += 1
-                max_n_rules_temp = len(paths_ftr)
-
-        return {"rules": paths_ftr, "probas": proba_ftr}
 
     #######################################################
     ################ Fit main classifer   #################
@@ -324,6 +221,7 @@ class RulesExtractorMixin:
         rules_ = []
         for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
         #for dtree in self.estimators_: pour SIRUS models
+        #if bug: estimators = self.estimators_[:, 0] if issubclass(self, CLASS_TBC) else self.estimators_
             tree = dtree.tree_
             curr_tree_rules = _extract_single_tree_rules(tree)
             if (len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0):
@@ -365,10 +263,13 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
         rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
         #### APPLY POST TREATMEANT : remove redundant rules
         start_lin_dep = time.time()
-        res = self._paths_filtering_stochastic(
-            paths=rules_,
-            proba=rules_freq_,
+        res = self._rules_filtering_stochastic(
+            rules=rules_,
+            probas=rules_freq_,
             max_n_rules=self.max_n_rules,
+            n_features_in_=self.n_features_in_,
+            quantiles=self._array_quantile,
+            random_state=self.random_state,
         )  ## Maximum number of rule to keep=25
         end_lin_dep = time.time()
         print(
@@ -526,10 +427,13 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
             )
 
         #### APPLY POST TREATMEANT : remove redundant rules
-        res = self._paths_filtering_stochastic(
-            paths=rules_,
-            proba=rules_freq_,
+        res = self._rules_filtering_stochastic(
+            rules=rules_,
+            probas=rules_freq_,
             max_n_rules=self.max_n_rules,
+            n_features_in_=self.n_features_in_,
+            quantiles=self._array_quantile,
+            random_state=self.random_state,
         )  ## Maximum number of rule to keep=25
         self.rules_ = res["rules"]
         self.all_possible_rules_frequency_list = res["probas"]
