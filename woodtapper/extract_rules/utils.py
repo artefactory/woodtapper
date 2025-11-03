@@ -476,6 +476,8 @@ def _rules_filtering_stochastic(rules, probas, max_n_rules, n_features_in_, quan
         Number of input features, on which rules where extracted.
     quantiles: np.array of shape (n_quantiles, n_dim)
         Quantiles for each continuous dimension. Used to sample values within this range.
+    list_categorical_indexes: list of int or None
+        List of categorical indexes (if provided)
     random_state : int or None
 
     Returns
@@ -506,8 +508,8 @@ def _rules_filtering_stochastic(rules, probas, max_n_rules, n_features_in_, quan
     # Generate an independent data set for checking rule redundancy
     for ind_dim_abs in range(n_features_in_):
         np.random.seed(ind_dim_abs)
-        if (self._list_categorical_indexes is not None) and (
-            ind_dim_abs in self._list_categorical_indexes
+        if (list_categorical_indexes is not None) and (
+            ind_dim_abs in list_categorical_indexes
         ):  # Categorical variable
             data_indep[:, ind_dim_abs] = np.random.choice(
                 np.unique(
