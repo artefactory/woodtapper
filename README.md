@@ -8,7 +8,7 @@
 
 </picture>
 
-*User-friendly Python toolbox for interpreting and manipuling decision tree ensembles from scikit-learn*
+*User-friendly Python toolbox for interpreting and manipulating decision tree ensembles from scikit-learn*
 
 [![CI Status](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -22,10 +22,10 @@
 
 </div>
 
-WoodTapper is a Python toolbox for interpretable and manipulable ensemble of tree-based models, fully compatible with scikit-learn forests and boosting models. 
+WoodTapper is a Python toolbox for interpretable and manipulable ensembles of tree-based models, fully compatible with scikit-learn forests and boosting models. 
 
 ## 🪵 Key Features
-- Rule extraction from tree-based ensembles.
+- Rules extraction from tree-based ensembles.
 - Example-based explanation module that links predictions to a small set of representative samples.
 
 
@@ -59,7 +59,7 @@ example_explanation = RFExplained.explanation(X_test) # Get the 5 most similar s
 
 ## 🙏 Acknowledgements
 
-This work was done through a partenership between **Artefact Research Center** and the **Laboratoire de Probabilités Statistiques et Modélisation** (LPSM) of Sorbonne University.
+This work was done through a partnership between the **Artefact Research Center** and the **Laboratoire de Probabilités Statistiques et Modélisation** (LPSM) of Sorbonne University.
 
 <p align="center">
   <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/">
@@ -75,7 +75,7 @@ This work was done through a partenership between **Artefact Research Center** a
 
 ## 📜 Citation
 
-If you find the code usefull, please consider citing us :
+If you find the code useful, please consider citing us :
 
 ```bibtex
 @misc{woodtapper,
