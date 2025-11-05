@@ -36,12 +36,10 @@ WoodTapper is a Python toolbox for interpretable and manipulable ensemble of tre
 pip install woodtapper
 ```
 
-**From this repository**:
+**From this repository, within a pip/conda/mamba environment (python=3.12)**:
 ````bash
-mamba create -n woodtapper_env
-mamba activate woodtapper_env
-mamba install requirements.txt
-python setup.py
+pip install -r requirements.txt
+pip install -e '.[dev]'
 ```
 
 ## 🌿 WoodTapper RulesExtraction module
