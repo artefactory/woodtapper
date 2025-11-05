@@ -7,7 +7,11 @@ Generalized Random Forest implementation based on scikit-learn, for categorical 
 import numpy as np
 from sklearn.ensemble import (
     ExtraTreesClassifier,
+    ExtraTreesRegressor,
     RandomForestClassifier,
+    RandomForestRegressor,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
 )
 from .utils.utils import compute_leaf_sizes
 from .utils.weights import compute_kernel_weights
@@ -111,15 +115,17 @@ class ExplanationMixin:
             leafs_by_sample, self.train_samples_leaves, leaf_sizes
         )
 
-    def explanation(self, X, batch_size=None):
+    def explanation(self, X, n_samples=5, batch_size=None):
         """
         Explanation procedure.
-        Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
+        Show the k most similar samples based on the frequency of training samples ending in the same leaf as the new sample
 
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             New samples for which to predict the target values.
+        n_samples : int, (default=5)
+            Number of examples to draw.
         batch_size : int, optional
             Size of the batch to process at once. If None, the entire dataset is processed at once.
 
@@ -138,15 +144,28 @@ class ExplanationMixin:
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
 
-        # return self.train_y[iterative_random_choice(weights)]
-        return self.train_y[
-            np.argsort(-weights, axis=1)[:, :5]
-        ]  # Get the 5 most similar samples
+        return self.train_y[np.argsort(-weights, axis=1)[:,:n_samples]]  
 
 
 class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
     """ExplanationExample RandomForestClassifier"""
 
 
+class RandomForestRegressorExplained(ExplanationMixin, RandomForestRegressor):
+    """ExplanationExample RandomForestRegressor"""
+
+
 class ExtraTreesClassifierExplained(ExplanationMixin, ExtraTreesClassifier):
     """ExplanationExample ExtraTreesClassifier"""
+
+
+class ExtraTreesRegressorExplained(ExplanationMixin, ExtraTreesRegressor):
+    """ExplanationExample ExtraTreesRegressor"""
+
+
+class GradientBoostingClassifierExplained(ExplanationMixin, GradientBoostingClassifier):
+    """ExplanationExample GradientBoostingClassifier"""
+
+
+class GradientBoostingRegressorExplained(ExplanationMixin, GradientBoostingRegressor):
+    """ExplanationExample GradientBoostingRegressor"""
