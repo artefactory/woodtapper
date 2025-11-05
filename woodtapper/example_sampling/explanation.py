@@ -144,7 +144,8 @@ class ExplanationMixin:
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
 
-        return self.train_y[np.argsort(-weights, axis=1)[:,:n_samples]]  
+        closest_samples_idx = np.argsort(-weights, axis=1)[:,:n_samples]
+        return self.train_sample_leaves[closest_samples_idx], self.train_y[closest_samples_idx]
 
 
 class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
