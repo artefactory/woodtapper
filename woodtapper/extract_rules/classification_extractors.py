@@ -190,9 +190,7 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         return super().predict(X)
 
 
-class QuantileDecisionTreeRegressor(
-    RulesExtractorClassifierMixin, DecisionTreeRegressor
-):
+class QuantileDecisionTreeRegressor(DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in GbExtractorClassifier
@@ -202,7 +200,7 @@ class QuantileDecisionTreeRegressor(
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
+class GbExtractorClassifier(GradientBoostingClassifier, RulesExtractorClassifierMixin):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters

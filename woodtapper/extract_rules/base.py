@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
@@ -361,7 +362,7 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
 
 
 class RulesExtractorRegressorMixin(RulesExtractorMixin):
-    def _fit_rules(self, X, y, rules_, sample_weight=None, to_encode_target=False):
+    def _fit_rules(self, X, y, rules_, sample_weight=None):
         """
         Fit method for RulesExtractorMixin in regression case.
         Parameters

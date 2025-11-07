@@ -170,7 +170,7 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         return self.predict(X)
 
 
-class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
+class GbExtractorRegressor(GradientBoostingRegressor, RulesExtractorRegressorMixin):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters
