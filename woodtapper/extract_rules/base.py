@@ -1,14 +1,15 @@
-from functools import reduce
-from operator import and_
-
 import numpy as np
-from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive
+from .utils import (
+    get_top_rules,
+    ridge_cv_positive,
+    generate_mask_rule,
+    generate_masks_rules,
+)
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -64,247 +65,10 @@ class RulesExtractorMixin:
     This mixin provides core functionalities for SIRUS models, including rule extraction from decision trees,
     rule filtering, and prediction methods for both classification and regression tasks.
     It is designed to be inherited by specific SIRUS model classes.
+
     """
 
-    #######################################################
-    ##### Auxiliary function for path construction  #######
-    #######################################################
-    def _explore_tree(self, node_id, side, tree):
-        """
-        Whole tree structure recursive explorator (with Node class).
-        Node class are associated to their childs if internal node.
-        Parameters
-        ----------
-        node_id : int
-            Starting node id for the tree structure exploration.
-        side : str
-            Current node cutting side. 'L' for left and 'R' for right. 'root' for the root node.
-        Returns
-        ----------
-        Node: Node
-            The starting Node of the first call of this function (given node_id by user).
-
-        """
-        if tree.children_left[node_id] != _tree.TREE_LEAF:
-            # possible to add a max_depth constraint exploration value
-            id_left_child = tree.children_left[node_id]
-            id_right_child = tree.children_right[node_id]
-            children = [
-                self._explore_tree(id_left_child, "L", tree),  # L for \leq
-                self._explore_tree(id_right_child, "R", tree),
-            ]
-        else:
-            return Node(
-                feature=tree.feature[node_id],
-                treshold=tree.threshold[node_id],
-                side=side,
-                node_id=node_id,
-            )
-
-        return Node(
-            tree.feature[node_id], tree.threshold[node_id], side, node_id, *children
-        )
-
-    def _construct_longest_paths(self, root):
-        """
-        Generate tree_strucre, i.e a list of rules that all starts FROM root node TO a leaf.
-        The lengh of this list is equal to the number of leaf.
-        Parameters
-        ----------
-        root : Node instance
-            The tree root.
-        Returns
-        ----------
-        tree_structure : list
-            list of longest paths, i.e a list of rules that all starts FROM root node TO a leaf
-
-        """
-        tree_structure = [[]]
-        stack = [(root, 0)]  # start with the root node id (0) and its depth (0)
-        while len(stack) > 0:
-            curr_rule, indice_in_tree_struct = stack.pop()
-            is_split_node = curr_rule.feature != -2  # -2 means leaf node in sklearn
-
-            if is_split_node:
-                rule_left = (curr_rule.feature, curr_rule.treshold, "L")
-                rule_right = (curr_rule.feature, curr_rule.treshold, "R")
-                common_path_rules = tree_structure[indice_in_tree_struct].copy()
-                common_path_rules.append(rule_right)
-                tree_structure.append(common_path_rules)  ## RIGHT : Added at the end
-                tree_structure[indice_in_tree_struct].append(rule_left)
-                ## LEFT  : Added depending on indice_in_tree_struct
-
-                stack.append((curr_rule.children[0], indice_in_tree_struct))
-                stack.append((curr_rule.children[1], len(tree_structure) - 1))
-            else:
-                continue
-        return tree_structure
-
-    def _split_sub_rules(self, path):
-        """
-        Iterate through the given path to generate sub-rules,
-        and return the list of generated sub-rules.
-        Auxiliar function for _generate_all_possible_rules.
-
-        Parameters
-        ----------
-        path : list
-            A multiple rule (list of single rules).
-
-        Returns
-        ----------
-        list_sub_path : list
-            List of sub-rules extracted from the given multiple rule.
-        """
-        list_sub_path = []
-        max_size_curr_path = len(path)
-        for j in range(max_size_curr_path):
-            curr_path = path[: (max_size_curr_path - j)]
-            if len(curr_path) >= 2:
-                list_sub_path.append(curr_path)
-        return list_sub_path
-
-    def _generate_all_possible_rules(self, tree_structure):
-        """
-        Generate all possibles rules (single and multiple) from a tree_strucre (i.e a list of node to leafs paths)
-        Auxiliar function for _extract_single_tree_rules.
-
-        Parameters
-        ----------
-        tree_structure : list
-            list of longest paths, i.e a list of rules that all starts FROM root node TO a leaf
-
-        Returns
-        ----------
-        all_paths_list : list
-            List of all possible rules (single and multiple) extracted from the tree.
-        """
-        all_paths_list = []
-        for i in range(len(tree_structure)):
-            curr_path = tree_structure[i]
-            list_sub_path = self._split_sub_rules(curr_path)
-            all_paths_list.extend(list_sub_path)
-            all_paths_list.append([curr_path[0]])
-        return all_paths_list
-
-    def _extract_single_tree_rules(self, tree):
-        """
-        Explore the tree structure and create Node instances.
-        Generate the tree structure with Node instances.
-        Parameters
-        ----------
-        tree : sklearn DecisionTree instance
-            The tree from which to extract rules.
-        Returns
-        ----------
-        rules_ : list
-            List of all possible rules (single and multiple) extracted from the tree.
-        """
-        root = self._explore_tree(0, "Root", tree)  ## Root node
-        tree_structure = self._construct_longest_paths(root)
-        ## generate the tree structure with Node instances
-        if len(tree_structure[0]) == 0 and root.feature == -2:
-            # -2 means leaf node in sklearn
-            # case where root node is also a leaf
-            rules_ = [[]]  # Tree with only one leaf
-        else:
-            rules_ = self._generate_all_possible_rules(tree_structure)
-            # Explre the tree structure to extract the longest rules (rules from root to a leaf)
-        return rules_
-
-    def _generate_single_rule_mask(self, X, dimension, treshold, sign):
-        """
-        Generate a boolean mask based on the rule's dimension, threshold, and sign.
-        The mask indicates which samples in X satisfy the condition defined by the rule.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        dimension : int
-            The feature indice of the rule.
-        treshold : float
-            The treshold of the rule.
-        sign : str
-            The sign of the rule ('L' for less or equal and 'R' for greater)
-        Returns
-        ----------
-        mask : array-like, shape (n_samples,)
-            Boolean mask indicating which samples satisfy the single rule.
-        """
-        if sign == "L":
-            return X[:, dimension] <= treshold
-        else:
-            return X[:, dimension] > treshold
-
-    def _from_rules_to_constraint(self, rule):
-        """
-        Extract informations from a single rule.
-        Auxiliar function for  _generate_single_rule_mask.
-
-        Parameters
-        ----------
-        rule : tuple
-            A single rule (dimension, treshold, sign)
-
-        Returns
-        ----------
-        dimension : int
-            The feature indice of the rule.
-        treshold : float
-            The treshold of the rule.
-        sign : str
-            The sign of the rule ('L' for less or equal and 'R' for greater)
-        """
-        dimension = rule[0]
-        treshold = rule[1]
-        sign = rule[2]
-        return dimension, treshold, sign
-
-    def _generate_mask_rule(self, X, rules):
-        """
-        Generate the UNIQUE mask associated to a rule of len >=1.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        rules : list of tuples
-            A rule (list of single rules).
-        Returns
-        ----------
-        final_mask : array-like, shape (n_samples,)
-            Boolean mask indicating which samples satisfy the rule.
-        """
-        list_mask = []
-        for j in range(len(rules)):
-            dimension, treshold, sign = self._from_rules_to_constraint(rule=rules[j])
-            mask = self._generate_single_rule_mask(
-                X=X, dimension=dimension, treshold=treshold, sign=sign
-            )
-            list_mask.append(mask)
-        final_mask = reduce(and_, list_mask)
-        return final_mask
-
-    def _generate_masks_rules(self, X):
-        """
-        Generate the maskS associated to all the rules in rules_ attribute.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        Returns
-        ----------
-        rules_mask : array-like, shape (n_samples, n_rules)
-            Boolean mask matrix indicating which samples satisfy each rule.
-        """
-        rules_mask = np.zeros((X.shape[0], self.n_rules), dtype=bool)
-        for rule_number, current_rules in enumerate(self.rules_):
-            # for loop for getting all the values in train (X) passing the rules
-            final_mask = self._generate_mask_rule(X=X, rules=current_rules)
-            rules_mask[:, rule_number] = final_mask
-        return rules_mask
-
-    def _paths_filtering_matrix_stochastic(self, paths, proba, num_rule):
+    def _paths_filtering_stochastic(self, paths, proba, max_n_rules):
         """
         Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
         Parameters
@@ -313,25 +77,33 @@ class RulesExtractorMixin:
             List of rules (each rule is a list of splits; each split [var, thr, dir])
         proba : list
             Probabilities associated with each path/rule
-        num_rule : int
+        max_n_rules : int
             Max number of rules to keep
         Returns
         ----------
-        dict: {'paths': filtered_paths, 'proba': filtered_proba}
+        dict: {'rules': filtered paths, 'probas': corresponding probabilities}
+        1. Generate an independent dataset for checking rule redundancy.
+        2. Iterate through the paths and apply redundancy checks.
+        3. Return the filtered paths and their associated probabilities.
+        4. The redundancy check is based on the rank of a matrix formed by the masks of the rules.
+        5. If the rank of the matrix increases when adding a new rule, it is considered non-redundant and kept.
+        6. This method ensures that the selected rules are diverse and not linearly dependent.
+        7. The process continues until the desired number of rules is reached or all paths are evaluated.
+        8. The function returns a dictionary containing the filtered paths and their probabilities.
         """
         paths_ftr = []
         proba_ftr = []
         ind_max = len(paths)
         ind = 0
-        num_rule_temp = 0
+        max_n_rules_temp = 0
 
         n_samples_indep = 10000
         # Number of samples for the independent data set
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
         ind_dim_continuous_array_quantile = 0
-        # indice in array_quantile of continuous variabless
+        # indice dans array_quantile des variables continues
         ind_dim_categorcial_list_unique_elements = 0
-        # indice in _list_unique_categorical_values of categorical variables
+        # indice dans _list_unique_categorical_values des variables catégorielles
         # Generate an independent data set for checking rule redundancy
         for ind_dim_abs in range(self.n_features_in_):
             np.random.seed(ind_dim_abs)
@@ -361,13 +133,18 @@ class RulesExtractorMixin:
                 ind_dim_continuous_array_quantile += 1
         np.random.seed(self.random_state)
 
-        while num_rule_temp < num_rule and ind < ind_max:
+        while max_n_rules_temp < max_n_rules and ind < ind_max:
             curr_path = paths[ind]
-            if curr_path in paths_ftr:  ## Avoid duplicates
+            if len(paths_ftr) == 0:  ## If there are no filtered paths yet
+                paths_ftr.append(curr_path)
+                proba_ftr.append(proba[ind])
                 ind += 1
-                num_rule_temp = len(paths_ftr)
+                max_n_rules_temp = len(paths_ftr)
+            elif curr_path in paths_ftr:  ## Avoid duplicates
+                ind += 1
+                max_n_rules_temp = len(paths_ftr)
                 continue
-            elif len(paths_ftr) != 0:  ## If there are already filtered paths
+            else:  ## If there are already filtered paths
                 related_paths_ftr = paths_ftr  # We comlpare the new rule to all the previous ones already selected.
                 if len(related_paths_ftr) == 0:  ## If there are no related paths
                     paths_ftr.append(curr_path)
@@ -376,7 +153,7 @@ class RulesExtractorMixin:
                     rules_ensemble = related_paths_ftr + [curr_path]
                     list_matrix = [[] for i in range(len(rules_ensemble))]
                     for i, x in enumerate(rules_ensemble):
-                        mask_x = self._generate_mask_rule(X=data_indep, rules=x)
+                        mask_x = generate_mask_rule(X=data_indep, rules=x)
                         list_matrix[i] = mask_x
 
                     if len(list_matrix) > 0:
@@ -391,263 +168,13 @@ class RulesExtractorMixin:
                             paths_ftr.append(curr_path)
                             proba_ftr.append(proba[ind])
                 ind += 1
-                num_rule_temp = len(paths_ftr)
+                max_n_rules_temp = len(paths_ftr)
 
-            else:  ## If there are no filtered paths yet
-                paths_ftr.append(curr_path)
-                proba_ftr.append(proba[ind])
-                ind += 1
-                num_rule_temp = len(paths_ftr)
-
-        return {"paths": paths_ftr, "proba": proba_ftr}
-
-    def _paths_filtering_stochastic(self, paths, proba, num_rule):
-        """
-        Post-treatment for rules.
-
-        Args:
-            paths (list): List of rules (each rule is a list of splits; each split [var, thr, dir])
-            proba (list): Probabilities associated with each path/rule
-            num_rule (int): Max number of rules to keep
-
-        Returns:
-            dict: {'paths': filtered_paths, 'proba': filtered_proba}
-        """
-        return self._paths_filtering_matrix_stochastic(
-            paths=paths, proba=proba, num_rule=num_rule
-        )
+        return {"rules": paths_ftr, "probas": proba_ftr}
 
     #######################################################
-    ############ Classification fit and predict  ##########
-    #######################################################
-    def _fit_rules(self, X, y, rules_, sample_weight=None):
-        """
-        Fit method for RulesExtractorMixin in classification case.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        y : array-like, shape (n_samples,)
-            The target values (class labels).
-        rules_ : list
-            List of all possible rules extracted from the ensemble of trees.
-        sample_weight : array-like, shape (n_samples,), optional (default=None)
-            Sample weights for each instance.
-        Returns
-        ----------
-        None
-        """
-        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
-        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
-        #### APPLY POST TREATMEANT : remove redundant rules
-        res = self._paths_filtering_stochastic(
-            paths=rules_,
-            proba=rules_freq_,
-            num_rule=self.num_rule,
-        )  ## Maximum number of rule to keep=25
-        self.rules_ = res["paths"]
-        self.rules_freq_ = res["proba"]  # usefull ?
-        self.n_rules = len(self.rules_)
-
-        list_probas_by_rules = []
-        list_probas_outside_by_rules = []
-        if sample_weight is None:
-            sample_weight = np.full((len(y),), 1)  ## vector of ones
-        rules_mask = self._generate_masks_rules(X=X)
-        for i in range(self.n_rules):
-            # for loop for getting all the values in train (X) passing the rules
-            final_mask = rules_mask[:, i]
-            y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask]
-            sample_weight_rule, sample_weight_outside_rule = (
-                sample_weight[final_mask],
-                sample_weight[~final_mask],
-            )
-
-            list_probas = []
-            list_probas_outside_rules = []
-            for cl in range(self.n_classes_):  # iteration on each class of the target
-                curr_probas = (
-                    sample_weight_rule[y_train_rule == cl].sum()
-                    / sample_weight_rule.sum()
-                    if len(y_train_rule) != 0
-                    else 0
-                )
-                curr_probas_outside_rules = (
-                    sample_weight_outside_rule[y_train_outside_rule == cl].sum()
-                    / sample_weight_outside_rule.sum()
-                    if len(y_train_outside_rule) != 0
-                    else 0
-                )
-                list_probas.append(curr_probas)  # len n_classes_
-                list_probas_outside_rules.append(curr_probas_outside_rules)
-                # len n_classes_
-
-            list_probas_by_rules.append(list_probas)
-            # list of len n_rules of list of len n_classes_
-            list_probas_outside_by_rules.append(list_probas_outside_rules)
-
-        self.list_probas_by_rules = list_probas_by_rules
-        self.list_probas_outside_by_rules = list_probas_outside_by_rules
-        self.type_target = y.dtype
-
-    def predict_proba(self, X):
-        """
-        predict_proba method for RulesExtractorMixin. in classification case
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        Returns
-        ----------
-        y_pred_probas : array-like, shape (n_samples, n_classes)
-            The predicted class probabilities for each sample.
-        """
-        y_pred_probas = np.zeros((len(X), self.n_classes_))
-        rules_mask = self._generate_masks_rules(X=X)
-        for indice in range(self.n_rules):
-            final_mask = rules_mask[:, indice]
-            y_pred_probas[final_mask] += self.list_probas_by_rules[indice]
-            ## add the asociated rule probability
-
-            y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[indice]
-            ## If the rule is not verified we add the probas of the training samples not verifying the rule.
-
-        y_pred_probas = (1 / self.n_rules) * (y_pred_probas)
-
-        return y_pred_probas
-
-    def predict(self, X):
-        """
-        Predict method for RulesExtractorMixin in classification case.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        Returns
-        ----------
-        y_pred : array-like, shape (n_samples,)
-            The predicted classes for each sample.
-        """
-        y_pred_probas = self.predict_proba(X=X)
-        y_pred_numeric = np.argmax(y_pred_probas, axis=1)
-        if self.type_target is not int:
-            y_pred = y_pred_numeric.copy().astype(self.type_target)
-            for i, cls in enumerate(self.classes_):
-                y_pred[y_pred_numeric == i] = cls
-            return y_pred.ravel().reshape(
-                -1,
-            )
-        else:
-            return y_pred_numeric.ravel().reshape(
-                -1,
-            )
-
-    ############# Regressor fit and predict  ##############
-    def _fit_rules_regressor(
-        self, X, y, rules_, sample_weight=None, to_encode_target=False
-    ):
-        """
-        Fit method for RulesExtractorMixin in regression case.
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        y : array-like, shape (n_samples,)
-            The target values (real numbers).
-        rules_ : list
-            List of all possible rules extracted from the ensemble of trees.
-        sample_weight : array-like, shape (n_samples,), optional (default=None)
-            Sample weights for each instance.
-        Returns
-        ----------
-        None
-        """
-        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
-        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
-        if len(rules_) == 0:
-            raise ValueError(
-                "No rule found with the given p0 value. Try to decrease it."
-            )
-
-        #### APPLY POST TREATMEANT : remove redundant rules
-        res = self._paths_filtering_stochastic(
-            paths=rules_,
-            proba=rules_freq_,
-            num_rule=self.num_rule,
-        )  ## Maximum number of rule to keep=25
-        self.rules_ = res["paths"]
-        self.rules_freq_ = res["proba"]
-        self.n_rules = len(self.rules_)
-        # list_mask_by_rules = []
-        list_output_by_rules = []
-        list_output_outside_by_rules = []
-        gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = self._generate_masks_rules(X=X)
-        for rule_number, current_rules in enumerate(self.rules_):
-            # for loop for getting all the values in train (X) passing the rules
-            final_mask = rules_mask[:, rule_number]
-            output_value = y[final_mask].mean() if final_mask.any() else 0
-            output_outside_value = y[~final_mask].mean() if (~final_mask).any() else 0
-
-            list_output_by_rules.append(output_value)
-            list_output_outside_by_rules.append(output_outside_value)
-
-            gamma_array[final_mask, rule_number] = output_value
-            gamma_array[~final_mask, rule_number] = output_outside_value
-
-        self.list_probas_by_rules = list_output_by_rules
-        self.list_probas_outside_by_rules = list_output_outside_by_rules
-        self.type_target = y.dtype
-
-        ## final predictor fitting : Ridge regression with positive coefficients
-        best_alpha, results = ridge_cv_positive(
-            gamma_array, y, random_state=self.random_state
-        )
-        self.ridge = Ridge(
-            alpha=best_alpha,
-            fit_intercept=True,
-            positive=True,
-            random_state=self.random_state,
-        )
-        self.ridge.fit(gamma_array, y)  # sample_weight=sample_weight
-        for indice in range(
-            self.n_rules
-        ):  # Scale the probabilities by the learned coefficients
-            coeff = (
-                self.ridge.coef_[indice]
-                if self.ridge.coef_.ndim == 1
-                else self.ridge.coef_[:, indice]
-            )
-            self.list_probas_by_rules[indice] = (
-                coeff * self.list_probas_by_rules[indice]
-            ).tolist()
-            self.list_probas_outside_by_rules[indice] = (
-                coeff * self.list_probas_outside_by_rules[indice]
-            ).tolist()
-
-    def _predict_regressor(self, X):
-        """
-        predict_proba method for RulesExtractorMixin for regression case.
-        Parameters
-        X : array-like, shape (n_samples, n_features)
-            The input samples.
-        Returns
-        ----------
-        y_pred : array-like, shape (n_samples,)
-            The predicted values for each sample.
-        """
-        gamma_array = np.zeros((X.shape[0], self.n_rules))
-        rules_mask = self._generate_masks_rules(X=X)
-        for indice in range(self.n_rules):
-            final_mask = rules_mask[:, indice]
-            gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
-            gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[indice]
-        # y_pred = self.ridge.predict(gamma_array)
-        y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
-
-        return y_pred
-
     ################ Fit main classiifer   ################
+    #######################################################
     def _fit_quantile_classifier(self, X, y, sample_weight=None):
         """
         fit method for RulesExtractorMixin.
@@ -668,11 +195,23 @@ class RulesExtractorMixin:
         ----------
         self : object
             Returns the instance itself.
+        1. Binarize continuous features in X using quantiles, while leaving specified categorical features unchanged.
+        2. Fit the main classifier using the modified dataset.
+        3. Store quantile information and categorical feature details for future use.
+        4. Return the fitted instance.
+        5. If no columns are specified for exclusion from binarization, treat all features as continuous.
+        6. If columns are specified for exclusion, treat those as categorical and binarize only the continuous features.
+        7. Handle one-hot encoded features if a starting index is provided, treating all features from that index onward as categorical.
+        8. Use quantiles to binarize continuous features, ensuring that the binarization respects the distribution of the data.
+        9. Store the quantiles used for binarization, unique values of categorical features, and their indices for future reference.
+        10. Fit the main classifier with the modified dataset, ensuring that it can handle both continuous and categorical features appropriately.
+        11. Ensure that sample weights are appropriately handled during the fitting process.
+        12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
         if self.p0 > 1.0 or self.p0 < 0.0:
             raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
-        if self.num_rule <= 0:
-            raise ValueError("num_rule must be a positive integer.")
+        if self.max_n_rules <= 0:
+            raise ValueError("max_n_rules must be a positive integer.")
         if self.quantile <= 1:
             raise ValueError("quantile must be an integer greater than 1.")
 
@@ -732,7 +271,6 @@ class RulesExtractorMixin:
                     side="left",
                 )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
-
         super().fit(
             X_bin,
             y,
@@ -741,3 +279,235 @@ class RulesExtractorMixin:
         self._array_quantile = array_quantile
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
+
+
+class RulesExtractorClassifierMixin(RulesExtractorMixin):
+    def _fit_rules(self, X, y, rules_, sample_weight=None):
+        """
+        Fit method for RulesExtractorMixin in classification case.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,)
+            The target values (class labels).
+        rules_ : list
+            List of all possible rules extracted from the ensemble of trees.
+        sample_weight : array-like, shape (n_samples,), optional (default=None)
+            Sample weights for each instance.
+        Returns
+        ----------
+        None
+        """
+        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
+        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
+        #### APPLY POST TREATMEANT : remove redundant rules
+        res = self._paths_filtering_stochastic(
+            paths=rules_,
+            proba=rules_freq_,
+            max_n_rules=self.max_n_rules,
+        )  ## Maximum number of rule to keep=25
+
+        self.rules_ = res["rules"]
+        self.rules_freq_ = res["probas"]
+
+        list_probas_by_rules = []
+        list_probas_outside_by_rules = []
+        if sample_weight is None:
+            sample_weight = np.full((len(y),), 1)  ## vector of ones
+        rules_mask = generate_masks_rules(X, self.rules_)
+        for i in range(len(self.rules_)):
+            # for loop for getting all the values in train (X) passing the rules
+            final_mask = rules_mask[:, i]
+            y_train_rule, y_train_outside_rule = y[final_mask], y[~final_mask]
+            sample_weight_rule, sample_weight_outside_rule = (
+                sample_weight[final_mask],
+                sample_weight[~final_mask],
+            )
+
+            list_probas = []
+            list_probas_outside_rules = []
+            for cl in range(self.n_classes_):  # iteration on each class of the target
+                curr_probas = (
+                    sample_weight_rule[y_train_rule == cl].sum()
+                    / sample_weight_rule.sum()
+                    if len(y_train_rule) != 0
+                    else 0
+                )
+                curr_probas_outside_rules = (
+                    sample_weight_outside_rule[y_train_outside_rule == cl].sum()
+                    / sample_weight_outside_rule.sum()
+                    if len(y_train_outside_rule) != 0
+                    else 0
+                )
+                list_probas.append(curr_probas)  # len n_classes_
+                list_probas_outside_rules.append(curr_probas_outside_rules)
+                # len n_classes_
+
+            list_probas_by_rules.append(list_probas)
+            # list of len n_rules of list of len n_classes_
+            list_probas_outside_by_rules.append(list_probas_outside_rules)
+
+        self.list_probas_by_rules = list_probas_by_rules
+        self.list_probas_outside_by_rules = list_probas_outside_by_rules
+        self.type_target = y.dtype
+
+    def predict_proba(self, X):
+        """
+        predict_proba method for RulesExtractorMixin. in classification case
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        Returns
+        ----------
+        y_pred_probas : array-like, shape (n_samples, n_classes)
+            The predicted class probabilities for each sample.
+        """
+        y_pred_probas = np.zeros((len(X), self.n_classes_))
+        rules_mask = generate_masks_rules(X, self.rules_)
+        n_rules = len(self.rules_)
+        for indice in range(n_rules):
+            final_mask = rules_mask[:, indice]
+            y_pred_probas[final_mask] += self.list_probas_by_rules[
+                indice
+            ]  ## add the asociated rule probability
+
+            y_pred_probas[~final_mask] += self.list_probas_outside_by_rules[indice]
+            ## If the rule is not verified we add the probas of the training samples not verifying the rule.
+
+        y_pred_probas = (1 / n_rules) * (y_pred_probas)
+
+        return y_pred_probas
+
+    def predict(self, X):
+        """
+        Predict method for RulesExtractorMixin in classification case.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        Returns
+        ----------
+        y_pred : array-like, shape (n_samples,)
+            The predicted classes for each sample.
+        """
+        y_pred_probas = self.predict_proba(X=X)
+        y_pred_numeric = np.argmax(y_pred_probas, axis=1)
+        if self.type_target is not int:
+            y_pred = y_pred_numeric.copy().astype(self.type_target)
+            for i, cls in enumerate(self.classes_):
+                y_pred[y_pred_numeric == i] = cls
+            return y_pred.ravel().reshape(
+                -1,
+            )
+        else:
+            return y_pred_numeric.ravel().reshape(
+                -1,
+            )
+
+
+class RulesExtractorRegressorMixin(RulesExtractorMixin):
+    def _fit_rules_regressor(
+        self, X, y, rules_, sample_weight=None, to_encode_target=False
+    ):
+        """
+        Fit method for RulesExtractorMixin in regression case.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        y : array-like, shape (n_samples,)
+            The target values (real numbers).
+        rules_ : list
+            List of all possible rules extracted from the ensemble of trees.
+        sample_weight : array-like, shape (n_samples,), optional (default=None)
+            Sample weights for each instance.
+        Returns
+        ----------
+        None
+        """
+        rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
+        rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
+        if len(rules_) == 0:
+            raise ValueError(
+                "No rule found with the given p0 value. Try to decrease it."
+            )
+
+        #### APPLY POST TREATMEANT : remove redundant rules
+        res = self._paths_filtering_stochastic(
+            paths=rules_,
+            proba=rules_freq_,
+            max_n_rules=self.max_n_rules,
+        )  ## Maximum number of rule to keep=25
+        self.rules_ = res["rules"]
+        self.rules_freq_ = res["probas"]
+        # self.n_rules = len(self.rules_)
+        # list_mask_by_rules = []
+        list_output_by_rules = []
+        list_output_outside_by_rules = []
+        gamma_array = np.zeros((X.shape[0], len(self.rules_)))
+        rules_mask = generate_masks_rules(X, self.rules_)
+        for rule_number, current_rules in enumerate(self.rules_):
+            # for loop for getting all the values in train (X) passing the rules
+            final_mask = rules_mask[:, rule_number]
+            output_value = y[final_mask].mean() if final_mask.any() else 0
+            output_outside_value = y[~final_mask].mean() if (~final_mask).any() else 0
+
+            list_output_by_rules.append(output_value)
+            list_output_outside_by_rules.append(output_outside_value)
+
+            gamma_array[final_mask, rule_number] = output_value
+            gamma_array[~final_mask, rule_number] = output_outside_value
+
+        self.list_probas_by_rules = list_output_by_rules
+        self.list_probas_outside_by_rules = list_output_outside_by_rules
+        self.type_target = y.dtype
+
+        ## final predictor fitting : Ridge regression with positive coefficients
+        best_alpha, results = ridge_cv_positive(
+            gamma_array, y, random_state=self.random_state
+        )
+        self.ridge = Ridge(
+            alpha=best_alpha,
+            fit_intercept=True,
+            positive=True,
+            random_state=self.random_state,
+        )
+        self.ridge.fit(gamma_array, y)
+        for indice in range(len(self.rules_)):
+            # Scale the probabilities by the learned coefficients
+            coeff = (
+                self.ridge.coef_[indice]
+                if self.ridge.coef_.ndim == 1
+                else self.ridge.coef_[:, indice]
+            )
+            self.list_probas_by_rules[indice] = (
+                coeff * self.list_probas_by_rules[indice]
+            ).tolist()
+            self.list_probas_outside_by_rules[indice] = (
+                coeff * self.list_probas_outside_by_rules[indice]
+            ).tolist()
+
+    def _predict_regressor(self, X):
+        """
+        predict_proba method for RulesExtractorMixin for regression case.
+        Parameters
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        Returns
+        ----------
+        y_pred : array-like, shape (n_samples,)
+            The predicted values for each sample.
+
+        """
+        rules_mask = generate_masks_rules(X, self.rules_)
+        gamma_array = np.zeros((len(X), len(self.rules_)))
+        for indice in range(len(self.rules_)):
+            final_mask = rules_mask[:, indice]
+            gamma_array[final_mask, indice] = self.list_probas_by_rules[indice]
+            gamma_array[~final_mask, indice] = self.list_probas_outside_by_rules[indice]
+        # y_pred = self.ridge.predict(gamma_array)
+        y_pred = gamma_array.sum(axis=1) + self.ridge.intercept_
+
+        return y_pred

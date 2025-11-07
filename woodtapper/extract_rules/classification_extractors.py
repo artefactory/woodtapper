@@ -12,11 +12,11 @@ from sklearn.utils._param_validation import StrOptions
 from sklearn.utils.validation import validate_data
 import time
 
-from .base import RulesExtractorMixin
-from .utils import compute_staibility_criterion
+from .base import RulesExtractorClassifierMixin
+from .utils import compute_staibility_criterion, _extract_single_tree_rules
 
 
-class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
+class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
     """
     SIRUS class applied with a RandomForestClassifier.
 
@@ -41,7 +41,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -84,7 +84,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -128,7 +128,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         self.ccp_alpha = ccp_alpha
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -156,7 +156,7 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         rules_ = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            rules_.extend(self._extract_single_tree_rules(tree))
+            rules_.extend(_extract_single_tree_rules(tree))
         self._fit_rules(X, y, rules_, sample_weight)
         end = time.time()
         print(f"All fit took {end - start:.4f} seconds")
@@ -194,7 +194,9 @@ class SirusClassifier(RulesExtractorMixin, RandomForestClassifier):
         return super().predict(X)
 
 
-class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
+class QuantileDecisionTreeRegressor(
+    RulesExtractorClassifierMixin, DecisionTreeRegressor
+):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in GbExtractorClassifier
@@ -204,7 +206,7 @@ class QuantileDecisionTreeRegressor(RulesExtractorMixin, DecisionTreeRegressor):
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
+class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters
@@ -231,7 +233,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -273,7 +275,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -302,7 +304,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
         )
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -420,7 +422,7 @@ class GbExtractorClassifier(RulesExtractorMixin, GradientBoostingClassifier):
             :, 0
         ]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
             tree = dtree.tree_
-            curr_tree_rules = self._extract_single_tree_rules(tree)
+            curr_tree_rules = _extract_single_tree_rules(tree)
             if (
                 len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
             ):  # to avoid empty rules

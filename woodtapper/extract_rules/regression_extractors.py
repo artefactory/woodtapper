@@ -11,7 +11,7 @@ from sklearn.utils._param_validation import StrOptions
 from sklearn.utils.validation import validate_data
 
 from .base import RulesExtractorMixin
-from .utils import compute_staibility_criterion
+from .utils import compute_staibility_criterion, _extract_single_tree_rules
 from .classification_extractors import QuantileDecisionTreeRegressor
 
 
@@ -37,7 +37,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -80,7 +80,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         monotonic_cst=None,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -123,7 +123,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         self.monotonic_cst = monotonic_cst
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -150,7 +150,7 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         rules_ = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
-            rules_.extend(self._extract_single_tree_rules(tree))
+            rules_.extend(_extract_single_tree_rules(tree))
         self._fit_rules_regressor(X, y, rules_, sample_weight)
         compute_staibility_criterion(self)
 
@@ -197,7 +197,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         be a a value in the training set and not the beetween to values as for best and random.
     p0 : float, default=0.01
         The threshold for rule selection.
-    num_rule : int, default=25
+    max_n_rules : int, default=25
         The maximum number of rules to extract.
     quantile : int, default=10
         The number of quantiles to use for the "quantile" splitter.
@@ -242,7 +242,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         ccp_alpha=0.0,
         splitter="quantile",
         p0=0.01,
-        num_rule=25,
+        max_n_rules=25,
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
@@ -272,7 +272,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         )
         self.splitter = splitter
         self.p0 = p0
-        self.num_rule = num_rule
+        self.max_n_rules = max_n_rules
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
@@ -385,7 +385,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
         rules_ = []
         for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
             tree = dtree.tree_
-            curr_tree_rules = self._extract_single_tree_rules(tree)
+            curr_tree_rules = _extract_single_tree_rules(tree)
             if (
                 len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
             ):  # to avoid empty rules
