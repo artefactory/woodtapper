@@ -17,6 +17,7 @@ authors:
     orcid: 0009-0006-0898-6873
     affiliation: 1
   - name: Erwan SCORNET
+    orcid: 0000-0001-9946-4160
     affiliation: 2
 affiliations:
  - name: Artefact Research Center, Paris, France

@@ -2,6 +2,8 @@ from functools import reduce
 
 import numpy as np
 from scipy.stats import binom
+from operator import and_
+from sklearn.tree import _tree
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold
 from sklearn.base import clone
@@ -90,7 +92,7 @@ def compute_staibility_criterion(model):
     Parameters
     ----------
     model : SirusDTreeClassifier, SirusRFClassifier, SirusGBClassifier
-        The model instance with attributes n_estimators and all_possible_rules_frequency_list
+        The model instance with attributes n_estimators and rules_freq_
     Returns
     -------
     None
@@ -105,14 +107,11 @@ def compute_staibility_criterion(model):
             [
                 binom.cdf(k=p0_curr * M, n=M, p=pm)
                 * (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                for pm in model.all_possible_rules_frequency_list
+                for pm in model.rules_freq_
             ]
         )
         epsilon_denominator = np.sum(
-            [
-                (1 - binom.cdf(k=p0_curr * M, n=M, p=pm))
-                for pm in model.all_possible_rules_frequency_list
-            ]
+            [(1 - binom.cdf(k=p0_curr * M, n=M, p=pm)) for pm in model.rules_freq_]
         )
         epsilon = (
             epsilon_numerator / epsilon_denominator if epsilon_denominator > 0 else 0
@@ -227,10 +226,12 @@ def _explore_tree(node_id, side, tree):
             _explore_tree(id_right_child, "R", tree),
         ]
         starting_node = Node(
-            tree.feature[node_id], tree.threshold[node_id], side, node_id, *children)
+            tree.feature[node_id], tree.threshold[node_id], side, node_id, *children
+        )
     else:
         starting_node = Node(
-            tree.feature[node_id], tree.threshold[node_id], side, node_id)
+            tree.feature[node_id], tree.threshold[node_id], side, node_id
+        )
 
     return starting_node
 
@@ -350,7 +351,7 @@ def _extract_single_tree_rules(tree):
     # generate the tree structure with Node instances
     if len(tree_structure[0]) == 0 and root.feature == -2:
         # case where root node is also a leaf (-2 means leaf node in sklearn)
-        rules_ = [[]]  
+        rules_ = [[]]
         # Tree with only one leaf
     else:
         rules_ = _generate_all_possible_rules(tree_structure)
@@ -441,7 +442,7 @@ def generate_mask_rule(X, rules):
     return final_mask
 
 
- def generate_masks_rules(X, rules):
+def generate_masks_rules(X, rules):
     """
     Generate the masks associated to all the rules.
     Parameters

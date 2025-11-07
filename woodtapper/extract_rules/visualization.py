@@ -1,4 +1,5 @@
 import numpy as np
+from .utils import _from_rules_to_constraint
 
 
 #######################################################
@@ -111,10 +112,8 @@ def show_rules(
         current_rule_conditions = rules_all[i]
         condition_parts_str = []
         for j in range(len(current_rule_conditions)):
-            dimension, treshold, sign_internal = (
-                RulesExtractorModel._from_rules_to_constraint(
-                    rule=current_rule_conditions[j]
-                )
+            dimension, treshold, sign_internal = _from_rules_to_constraint(
+                rule=current_rule_conditions[j]
             )
 
             column_name = f"Feature[{dimension}]"  # Default if no mapping

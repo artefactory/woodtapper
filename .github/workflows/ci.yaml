@@ -37,7 +37,7 @@ jobs:
       # --- Run pytest with coverage
       - name: Run tests with coverage
         run: |
-          pytest --cov=extract_rules --cov-report=term-missing --cov-report=xml
+          pytest --cov=woodtapper/extract_rules --cov=woodtapper/example_sampling/ --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

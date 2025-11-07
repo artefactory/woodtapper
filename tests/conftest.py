@@ -20,7 +20,7 @@ def random_seed():
 @pytest.fixture
 def simple_dataset(random_seed):
     """Generate a simple synthetic dataset for binary classification."""
-    X = np.random.randn(100, 5)
+    X = np.random.randn(100, 6)
     y = (X[:, 0] + 0.5 * X[:, 1] > 0).astype(int)
     return X, y
 

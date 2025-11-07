@@ -1,14 +1,15 @@
-from operator import and_
-
 import numpy as np
-from sklearn.tree import _tree
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
-import time
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
-from .utils import Node, get_top_rules, ridge_cv_positive, generate_mask_rule, generate_masks_rules
+from .utils import (
+    get_top_rules,
+    ridge_cv_positive,
+    generate_mask_rule,
+    generate_masks_rules,
+)
 
 sklearn.tree._classes.DENSE_SPLITTERS = {
     "best": _splitter.BestSplitter,
@@ -39,7 +40,7 @@ class RulesExtractorMixin:
         Number of rules extracted from the ensemble.
     rules_ : list
         List of all possible rules extracted from the ensemble.
-    all_possible_rules_frequency_list : list
+    rules_freq_ : list
         List of frequencies associated with each rule.
     list_probas_by_rules : list
         List of probabilities associated with each rule (for classification tasks).
@@ -101,12 +102,12 @@ class RulesExtractorMixin:
         """
         paths_ftr = []
         proba_ftr = []
-        # split_gen = []
         ind_max = len(paths)
         ind = 0
         max_n_rules_temp = 0
 
         n_samples_indep = 10000
+        # Number of samples for the independent data set
         data_indep = np.zeros((n_samples_indep, self.n_features_in_), dtype=float)
         ind_dim_continuous_array_quantile = 0
         # indice dans array_quantile des variables continues
@@ -143,7 +144,7 @@ class RulesExtractorMixin:
 
         while max_n_rules_temp < max_n_rules and ind < ind_max:
             curr_path = paths[ind]
-            if len(paths_ftr) == 0: ## If there are no filtered paths yet
+            if len(paths_ftr) == 0:  ## If there are no filtered paths yet
                 paths_ftr.append(curr_path)
                 proba_ftr.append(proba[ind])
                 ind += 1
@@ -216,7 +217,6 @@ class RulesExtractorMixin:
         11. Ensure that sample weights are appropriately handled during the fitting process.
         12. Raise an error if no rules are found with the given p0 value, suggesting to decrease it.
         """
-        start = time.time()
         if self.p0 > 1.0 or self.p0 < 0.0:
             raise ValueError("Invalid value for p0: p0 must be in the range (0, 1].")
         if self.max_n_rules <= 0:
@@ -280,26 +280,18 @@ class RulesExtractorMixin:
                     side="left",
                 )
                 X_bin[:, cont_dim_samples] = array_quantile[out, ind_dim_quantile]
-        end = time.time()
-        print(
-            f"Pre-processing binarization took in fit_main_clasifier {end - start:.4f} seconds"
-        )
 
-        start = time.time()
         super().fit(
             X_bin,
             y,
             sample_weight=sample_weight,
         )
-        end = time.time()
-        print(f"Grow forest took {end - start:.4f} seconds")
         self._array_quantile = array_quantile
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
 
 
 class RulesExtractorClassifierMixin(RulesExtractorMixin):
-
     def _fit_rules(self, X, y, rules_, sample_weight=None):
         """
         Fit method for RulesExtractorMixin in classification case.
@@ -323,24 +315,16 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
         5. The method ensures that only relevant and non-redundant rules are retained for the final model.
         6. It handles both the presence and absence of sample weights during probability calculations.
         """
-        start = time.time()
         rules_str = [str(elem) for elem in rules_]  # Trick for np.unique
         rules_, rules_freq_ = get_top_rules(rules_str=rules_str, p0=self.p0)
         #### APPLY POST TREATMEANT : remove redundant rules
-        start_lin_dep = time.time()
         res = self._paths_filtering_stochastic(
             paths=rules_,
             proba=rules_freq_,
             max_n_rules=self.max_n_rules,
         )  ## Maximum number of rule to keep=25
-        end_lin_dep = time.time()
-        print(
-            f"Linear dep post-treatment took {end_lin_dep - start_lin_dep:.4f} seconds"
-        )
         self.rules_ = res["rules"]
         self.all_possible_rules_frequency_list = res["probas"]  # usefull ?
-        end = time.time()
-        print(f"Rules extraction took {end - start:.4f} seconds")
 
         list_probas_by_rules = []
         list_probas_outside_by_rules = []
@@ -451,9 +435,7 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
             )
 
 
-
 class RulesExtractorRegressorMixin(RulesExtractorMixin):
-
     def _fit_rules_regressor(
         self, X, y, rules_, sample_weight=None, to_encode_target=False
     ):

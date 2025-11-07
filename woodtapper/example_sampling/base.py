@@ -1,34 +1,11 @@
 """
-
-Generalized Random Forest implementation based on scikit-learn, for categorical variables.
-
+ExampleExplanation mixin for tree-based models.
 """
 
 import numpy as np
-from sklearn.ensemble import (
-    ExtraTreesClassifier,
-    RandomForestClassifier,
-)
+
 from .utils.utils import compute_leaf_sizes
 from .utils.weights import compute_kernel_weights
-
-
-def iterative_random_choice(probas):
-    """
-    Function for applying a np.random.choice several times with succesive values of probas.
-
-    Parameters
-    ----------
-    probas : np.ndarray of shape (n_samples, n_classes)
-        Probabilities for each class for each sample.
-    Returns
-    -------
-    np.ndarray of shape (n_samples,)
-        Chosen class for each sample.
-    """
-    thresholds = np.random.uniform(size=len(probas))
-    cumulative_weights = np.cumsum(probas, axis=1)
-    return np.argmax((cumulative_weights.T > thresholds), axis=0)
 
 
 class ExplanationMixin:
@@ -58,6 +35,7 @@ class ExplanationMixin:
         """
         super().fit(X=X, y=y, sample_weight=sample_weight)
         self.train_y = y
+        self.train_X = X
         self.train_samples_leaves = (
             super().apply(X).astype(np.int32)
         )  # train_samples_leaves: size n_train x n_trees
@@ -137,16 +115,6 @@ class ExplanationMixin:
             for batch in np.array_split(X, len(X) // batch_size):
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
-
-        # return self.train_y[iterative_random_choice(weights)]
-        return self.train_y[
-            np.argsort(-weights, axis=1)[:, :5]
-        ]  # Get the 5 most similar samples
-
-
-class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
-    """ExplanationExample RandomForestClassifier"""
-
-
-class ExtraTreesClassifierExplained(ExplanationMixin, ExtraTreesClassifier):
-    """ExplanationExample ExtraTreesClassifier"""
+        most_similar_idx = np.argsort(-weights, axis=1)[:, :5]
+        # Get the 5 most similar samples
+        return self.train_X[most_similar_idx], self.train_y[most_similar_idx]

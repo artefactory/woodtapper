@@ -164,7 +164,9 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         compute_staibility_criterion(self)
 
 
-class QuantileDecisionTreeRegressor(RulesExtractorRegressorMixin, DecisionTreeRegressor):
+class QuantileDecisionTreeRegressor(
+    RulesExtractorRegressorMixin, DecisionTreeRegressor
+):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in GbExtractorClassifier
