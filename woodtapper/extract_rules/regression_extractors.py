@@ -10,12 +10,12 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 from sklearn.utils.validation import validate_data
 
-from .base import RulesExtractorMixin
-from .utils import compute_staibility_criterion, _extract_single_tree_rules
+from .base import RulesExtractorRegressorMixin
+from .utils import compute_stability_criterion, _extract_single_tree_rules
 from .classification_extractors import QuantileDecisionTreeRegressor
 
 
-class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
+class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
     """
     SIRUS class applied with a RandomForestRegressor.
 
@@ -151,8 +151,8 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             rules_.extend(_extract_single_tree_rules(tree))
-        self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        self._fit_rules(X, y, rules_, sample_weight)
+        compute_stability_criterion(self)
 
     def predict(self, X):
         """
@@ -167,10 +167,10 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
                 The predicted values.
         """
         X = validate_data(self, X)
-        return self._predict_regressor(X)
+        return self.predict(X)
 
 
-class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
+class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters
@@ -391,8 +391,7 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
             ):  # to avoid empty rules
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
                 rules_.extend(curr_tree_rules)
-        self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        self._fit_rules(X, y, rules_, sample_weight)
 
     def predict(self, X):
         """
@@ -408,5 +407,5 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
 
         """
         X = validate_data(self, X)
-        y_pred = self._predict_regressor(X)
+        y_pred = self.predict(X)
         return y_pred

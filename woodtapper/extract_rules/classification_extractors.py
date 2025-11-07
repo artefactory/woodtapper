@@ -10,10 +10,9 @@ from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 from sklearn.utils.validation import validate_data
-import time
 
 from .base import RulesExtractorClassifierMixin
-from .utils import compute_staibility_criterion, _extract_single_tree_rules
+from .utils import compute_stability_criterion, _extract_single_tree_rules
 
 
 class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
@@ -151,16 +150,13 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
 
         """
         X, y = validate_data(self, X, y)
-        start = time.time()
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
         for dtree in self.estimators_:  ## extraction  of all trees rules
             tree = dtree.tree_
             rules_.extend(_extract_single_tree_rules(tree))
         self._fit_rules(X, y, rules_, sample_weight)
-        end = time.time()
-        print(f"All fit took {end - start:.4f} seconds")
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
     def predict_proba(self, X):
         """
@@ -429,7 +425,7 @@ class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClass
                 # Boosting may produce trees with no splits, for example when the number of estimators is high
                 rules_.extend(curr_tree_rules)
         self._fit_rules(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
+        compute_stability_criterion(self)
 
     def predict_proba(self, X):
         """
