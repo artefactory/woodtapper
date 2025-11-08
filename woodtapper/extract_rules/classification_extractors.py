@@ -200,7 +200,7 @@ class QuantileDecisionTreeRegressor(DecisionTreeRegressor):
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class GbExtractorClassifier(GradientBoostingClassifier, RulesExtractorClassifierMixin):
+class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters

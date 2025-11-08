@@ -1,8 +1,8 @@
 import numpy as np
-import pandas as pd
 from sklearn.tree import _splitter
 import sklearn.tree._classes
 from sklearn.linear_model import Ridge
+from sklearn.utils.validation import validate_data
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
 from .utils import (
@@ -188,7 +188,7 @@ class RulesExtractorMixin:
         self._list_unique_categorical_values = _list_unique_categorical_values  # list of each categorical features containing unique values for each of them
         self._list_categorical_indexes = _list_categorical_indexes  # indices of each categorical features, including the one hot encoded
 
-    def fit(self, X, y, sample_weight=None, check_input=True):
+    def fit(self, X, y, sample_weight=None):
         """
         Fit the RulesExtractor model.
         Parameters
@@ -205,15 +205,16 @@ class RulesExtractorMixin:
             Fitted estimator.
 
         """
-        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
-            self.feature_names_in_ = X.columns.to_numpy()
-            X = X.values
-            y = y.values
-        elif not isinstance(X, np.ndarray):
-            raise Exception("Wrong type for X")
+        X, y = validate_data(self, X, y)
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
-        for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
+        estimators = (
+            self.estimators_[:, 0]
+            if isinstance(self.estimators_[0], np.ndarray)
+            else self.estimators_
+        )
+        # estimators =self.estimators_
+        for dtree in estimators:  ## extraction  of all trees rules
             # for dtree in self.estimators_: pour SIRUS models
             # if bug: estimators = self.estimators_[:, 0] if issubclass(self, CLASS_TBC) else self.estimators_
             tree = dtree.tree_
@@ -346,7 +347,9 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
         y_pred : array-like, shape (n_samples,)
             The predicted classes for each sample.
         """
+        X = validate_data(self, X)
         y_pred_probas = self.predict_proba(X=X)
+        print("a")
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
         if self.type_target is not int:
             y_pred = y_pred_numeric.copy().astype(self.type_target)
@@ -453,7 +456,7 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
                 coeff * self.list_probas_outside_by_rules[indice]
             ).tolist()
 
-    def predict(self, X, to_add_probas_outside_rules=True):
+    def predict(self, X):
         """
         Predict using the RulesExtractorMixin regressor.
         Parameters
@@ -468,11 +471,7 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
             The predicted values.
 
         """
-        if isinstance(X, (pd.core.series.Series, pd.core.frame.DataFrame)):
-            self.feature_names_in_ = X.columns.to_numpy()
-            X = X.values
-        elif not isinstance(X, np.ndarray):
-            raise Exception("Wrong type for X")
+        X = validate_data(self, X)
 
         rules_mask = generate_masks_rules(X, self.rules_)
         gamma_array = np.zeros((len(X), len(self.rules_)))
