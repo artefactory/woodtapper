@@ -347,7 +347,6 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
         """
         X = validate_data(self, X)
         y_pred_probas = self.predict_proba(X=X)
-        print("a")
         y_pred_numeric = np.argmax(y_pred_probas, axis=1)
         if self.type_target is not int:
             y_pred = y_pred_numeric.copy().astype(self.type_target)
