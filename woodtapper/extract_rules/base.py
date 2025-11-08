@@ -6,6 +6,7 @@ from sklearn.utils.validation import validate_data
 
 from .Splitter.QuantileSplitter import QuantileBestSplitter
 from .utils import (
+    compute_stability_criterion,
     get_top_rules,
     ridge_cv_positive,
     generate_masks_rules,
@@ -213,18 +214,15 @@ class RulesExtractorMixin:
             if isinstance(self.estimators_[0], np.ndarray)
             else self.estimators_
         )
-        # estimators =self.estimators_
         for dtree in estimators:  ## extraction  of all trees rules
-            # for dtree in self.estimators_: pour SIRUS models
-            # if bug: estimators = self.estimators_[:, 0] if issubclass(self, CLASS_TBC) else self.estimators_
             tree = dtree.tree_
             curr_tree_rules = _extract_single_tree_rules(tree)
             if len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0:
                 # to avoid empty rules
-                # Boosting may produce trees with no splits, for example when the number of estimators is high
                 rules_.extend(curr_tree_rules)
         self._fit_rules(X, y, rules_, sample_weight)
         # Will call the _fit_rules for classifier or regressor (implemented in child class)
+        compute_stability_criterion(self)
 
 
 class RulesExtractorClassifierMixin(RulesExtractorMixin):
