@@ -577,4 +577,4 @@ def _rules_filtering_stochastic(
             ind += 1
             max_n_rules_temp = len(rules_ftr)
 
-        return {"rules": rules_ftr, "probas": probas_ftr}
+    return {"rules": rules_ftr, "probas": probas_ftr}
