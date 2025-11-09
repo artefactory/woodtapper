@@ -320,6 +320,7 @@ class RulesExtractorClassifierMixin(RulesExtractorMixin):
         y_pred_probas : array-like, shape (n_samples, n_classes)
             The predicted class probabilities for each sample.
         """
+        X = validate_data(self, X)
         y_pred_probas = np.zeros((len(X), self.n_classes_))
         rules_mask = generate_masks_rules(X, self.rules_)
         for indice in range(len(self.rules_)):
@@ -469,7 +470,6 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
 
         """
         X = validate_data(self, X)
-
         rules_mask = generate_masks_rules(X, self.rules_)
         gamma_array = np.zeros((len(X), len(self.rules_)))
         for indice in range(len(self.rules_)):
