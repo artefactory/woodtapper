@@ -9,7 +9,6 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
-from sklearn.utils.validation import validate_data
 
 from .base import RulesExtractorClassifierMixin
 
@@ -130,37 +129,6 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
-
-    def predict_proba(self, X):
-        """
-        Predict class probabilities for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        proba : ndarray of shape (n_samples, n_classes)
-            The class probabilities of the input samples. The order of the
-            classes corresponds to that in the attribute `classes_`.
-        """
-        X = validate_data(self, X)
-        return super().predict_proba(X)
-
-    def predict(self, X):
-        """
-        Predict class for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y : ndarray of shape (n_samples,)
-            The predicted classes.
-        """
-        X = validate_data(self, X)
-        return super().predict(X)
 
 
 class QuantileDecisionTreeRegressor(DecisionTreeRegressor):
@@ -364,34 +332,3 @@ class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClass
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
-    def predict_proba(self, X):
-        """
-        Predict class probabilities for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        proba : ndarray of shape (n_samples, n_classes)
-            The class probabilities of the input samples. The order of the
-            classes corresponds to that in the attribute `classes_`.
-        """
-        X = validate_data(self, X)
-        return super().predict_proba(X)
-
-    def predict(self, X):
-        """
-        Predict class for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y : ndarray of shape (n_samples,)
-            The predicted classes.
-        """
-        X = validate_data(self, X)
-        return super().predict(X)

@@ -8,7 +8,6 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
-from sklearn.utils.validation import validate_data
 
 from .base import RulesExtractorRegressorMixin
 from .classification_extractors import QuantileDecisionTreeRegressor
@@ -126,21 +125,6 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
-
-    def predict(self, X):
-        """
-        Predict using the SIRUS regressor.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-                The predicted values.
-        """
-        X = validate_data(self, X)
-        return self.predict(X)
 
 
 class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
@@ -335,20 +319,3 @@ class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegress
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
-    def predict(self, X):
-        """
-        Predict using the RulesExtractorMixin regressor.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            The predicted values.
-
-        """
-        X = validate_data(self, X)
-        y_pred = self.predict(X)
-        return y_pred
