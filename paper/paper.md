@@ -33,79 +33,84 @@ bibliography: paper.bib
 
 # Summary
 
-Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models (e.g., deep neural networks, ensemble methods) often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance. Among interpretable models, rule-based methods are especially attractive because they yield decision paths that humans can follow in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations. Stable and Interpretable RUle Set (SIRUS)[@benard2021sirus-classif;@benard2021interpretable-regression] is one such method.
+Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models, such as tree-based ensemble methods, often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance. Among interpretable models, rule-based methods are especially attractive because they are explained in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations. Stable and Interpretable RUle Set (SIRUS)[@benard2021sirus-classif;@benard2021interpretable-regression] is one such method.
 
-This article presents WoodTapper, a Python toolbox for tree ensemble models fully compatible with the scikit-learn API [@pedregosa2011scikit]. WoodTapper enables seamless integration of interpretable rule extraction into existing machine learning workflows. In addition to faithfully implementing the SIRUS methodology in Python, it introduces an example-based explanation module that links predictions to a small set of representative samples through a weighting scheme, enhancing human interpretability.
+This article presents WoodTapper, a Python toolbox for tree ensemble models fully compatible with scikit-learn [@pedregosa2011scikit]. WoodTapper enables seamless integration of interpretable rule extraction based on SIRUS methodology into existing machine learning workflows. To enhance human interpretability, a second module of WoodTapper introduces an example-based explanation that links predictions to a small set of representative samples, leveraging the weighting scheme of Generalized Random Forest (GRF).
 
 # Statement of need
 
-The original SIRUS algorithm offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. WoodTapper addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, WoodTapper extends rules extraction $(i)$ from all the tree-based models in scikit learn and $(ii)$ to the multiclass classification setting.
+The original SIRUS algorithm offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. WoodTapper addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, WoodTapper extends rules extraction $(i)$ from all the tree-based models in scikit learn (Random Forest, Gradient Boosting and Extremely Randomized Trees) and $(ii)$ to the multiclass classification setting.
 
-In addition, WoodTapper introduces an example-based explainability methodology that can be applied to all tree-based classifiers. This approach associates predicted samples with representative samples from the training data set, helping users explaining tree-based classifier outputs through concrete examples.
+In addition, WoodTapper introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, helping users explaining tree-based classifier outputs through concrete examples.
 
-# Rules Extraction
+# Rules Extraction Module
+
+## Formulation: SIRUS
 
 In this section, we present our $\texttt{RulesExtractor}$ module, which is compatible with any ensemble of trees. In the following, we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
 
-## SIRUS: formulation
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variable $X$ and $Y$  takes values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs that takes values respectively in $\mathbb{R}^p$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
 
-In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$  [@benard2021sirus-classif]. A path $\mathcal{P}$ is thus defined as
+In a tree $\mathcal{T}$, we denote the path of successive splits from the root node by $\mathcal{P}$, defined as
 $$
     \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
 $$
-where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ corresponds to the chosen child node (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
-Thus, each path defines a hyperrectangle in the input space using $\mathcal{D}_n$, denoted $\hat{H}_n(\mathcal{P})$. Hence, each path can be associated with a rule $\hat{g}_{n,\mathcal{P}}(x)$, that returns the mean of $Y$ from its training sample for each of the two different cells. Thus,
+where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ the corresponding sign (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
+Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{D},\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$:
 $$
-    \hat{g}_{n,\mathcal{P}}(x) =
+    \hat{g}_{\mathcal{D},\mathcal{P}}(x) =
     \begin{cases}
-        \frac{1}{|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}_n(\mathcal{P})\}} \text{ if } x \in \hat{H}_n(\mathcal{P})\\
-        \frac{1}{n-|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}_n(\mathcal{P})\}} \text{ otherwise }.
+        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}  \text{ if } x \in \hat{H}(\mathcal{P})\\
+        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}  \text{ otherwise }.
     \end{cases}
 $$
-The probability that a given path $\mathcal{P}$ belongs to a $\Theta$-random tree is
+
+For a path $\mathcal{P}$ and a set of trees $\mathcal{T}_l (l=1..M)$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}_{M,n}$,
 $$
-    p_n\left(\mathcal{P}\right) = \mathbb{P}\left(\mathcal{P}\in T(\Theta,\mathcal{D}_n|\mathcal{D}_n)\right).
+    \hat{p}_{}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.
 $$
-For a path $\mathcal{P}$, $p_n\left(\mathcal{P}\right)$ is estimated via Monte-Carlo sampling with $\hat{p}_{M,n}$,
+Which corresponds to the probability that the path $\mathcal{P}$ belongs to a $\Theta$-random tree, if $\mathcal{T}_l$ parameters are following the $\Theta$ distribution.
+
+The set of finals rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,p_0}\}$ where $\hat{\mathcal{P}}_{M,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M}(\mathcal{P}) > p_0\right\}$ with $p_0 \in (0,1)$. The finals rules are aggregated as follows for building the final estimator:
 $$
-    \hat{p}_{M,n}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.
+    \hat{\eta}_{M,p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
-The set of finals rules is $\{\hat{g}_{n,\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,n,p_0}\}$ where $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$ with $p_0 \in (0,1)$. The finals rules are aggregated as follows for building the final estimator:
-$$
-    \hat{\eta}_{M,np_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,n,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,n,p_0}} \hat{g}_{n,\mathcal{P}}(x).
-$$
+So far, we have focused on binary classification for clarity.
+We also implemented SIRUS for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression. It also leverages scikit-learn's implementations for tree-based models fitting.
 
-So far, we have focused on binary classification for clarity. SIRUS was originally implemented in R for both binary classification and regression, with the regression version differing only in how the final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression.
-
-## SIRUS: implementation
+## Implementation and running time
 WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $fit$, $predict$, and $get\_params$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
 
 : **Comparison of SIRUS implementations across softwares.**\label{tab:comparison}
 
 | **Feature**                 | **WoodTapper (Py)**                        | **SIRUS (R)**                          | **SIRUS (Jl)**           |
 |-----------------------------|--------------------------------------------|----------------------------------------|---------------------------|
-| Language ecosystem          | Python 3.x                                 | R 4.x                                  | Julia 1.x                 |
+| Language          | Python 3.x                                 | R 4.x                                  | Julia 1.x                 |
 | Forest implementation       | `scikit-learn`                             | `ranger`                               | Own                       |
 | Package availability        | PyPI (`woodtapper`)                    | CRAN (`sirus`)                         | General registry          |
 | Parallel computation        | $\checkmark$  (via `joblib`)                           | Limited (via `parallel`)               | $\checkmark$  (native)               |
 | ML pipelines                | $\checkmark$                                           | Partial                                | Partial                   |
 | Tree-based models           | All                                        | random forest                          | random forest             |
 | Rules interface             | Unified class methods                      | Function-based                         | Function-based            |
-| Tree depth ≥ 3              | $\checkmark$                                           | $\checkmark$                                       | $\times$                          |
+| Tree depth $≥ 3$            | $\checkmark$                                           | $\checkmark$                                       | $\times$                          |
 | Classification              | Multiclass                                | Binary                                 | Multiclass                |
 
+We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
 
-## SIRUS: rules and predictive performances
+![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
-We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}. On the Titanic dataset, both implementations yield identical rules, confirming that our Python version faithfully reproduces the original algorithm.
+![SIRUS running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-dim-log-5threads-final.pdf){ width=100% }
+
+
+## Extracted rules and predictive performances
+
+We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic dataset. Both implementations yield identical rules, and very similar predictive performance (see Table \ref{tab:perf_metrics}), confirming that our Python version faithfully reproduces the original algorithm.
 
 ![SIRUS (R).\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
 
 ![Python (Ours). \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
 
-We also observe that the predictive performance of our implementation is similar to that of the original algorithm (see Table \ref{tab:perf_metrics}).
 
 : **Performance metrics for Titanic and House Sales datasets.**\label{tab:perf_metrics}
 
@@ -117,27 +122,23 @@ We also observe that the predictive performance of our implementation is similar
 |                | MAE        | 0.26 ± 0.01            | 0.26 ± 0.01     |
 
 
-## SIRUS: running time
-We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn’s $\texttt{make\_classification}$. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
+# Example-based explainability module
 
-![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
+## Formulation
 
-![SIRUS running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
-
-# Example-based explainability
-The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides a measure of example-based explainability. For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
-
-The $\texttt{ExampleExplanation}$ module enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. Letting $w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
+The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides an example-based explainability.
+It enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample $x_i \in \mathcal{D}$ is defined as the proportion of trees in which the sample and $x$ fall into the same leaf.
+For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
+Letting $w_{x}(x_i)$ be the similarity between $x$ and $x_i$, we have
 $$
-w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{X_i \in \mathcal{L}_l(Z)\}}}{|\mathcal{L}_l(Z)|}.
+w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_l(x)\}}}{|\mathcal{L}_l(x)|}.
 $$
 
+Finally the $p$ training samples with the  highest $w_{x}(x_i)$ values are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
-Let $\mathcal{W}_{x} = \left\{ w_{x}(x_i), x_i \in \mathcal{D}_n\right\}$ be the set of similarities between $x$ and each training sample. Finally the $p$ training samples with the  highest values in $\mathcal{W}_{x}$ are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
+%The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
-The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specififc number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernenl weights deribvation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
-
-## ExampleExplanation: implementation
+## Implementation and running time
 As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is implemented as a Python Mixin for handling example-based explanations. It is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses.
 
 : **Comparison of GRF weight computations in several Python packages.**\label{tab:comparison-grf}
@@ -145,20 +146,19 @@ As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres
 | **Feature**              | **WoodTapper (Py)**             | **skgrf (Py)**            |
 |---------------------------|----------------------------------|----------------------------|
 | Forest implementation     | `scikit-learn`                  | `ranger`                   |
-| Language ecosystem        | Python                          | Python & R                 |
+| Language                  | Python                          | Python & R                 |
 | Package availability      | PyPI (`woodtapper`)             | PyPI (`skgrf`)             |
 | scikit-learn API compatible | $\checkmark$                            | $\checkmark$                         |
 | Tree-based models         | All                             | Tree and random forest     |
 | GRF                       | $\times$                               | $\checkmark$                        |
 
 
-## ExampleExplanation: running time
 We compare the runtime of $\texttt{ExampleExplanation}$ with the kernel weight computation in $\textit{skgrf}$ [@skgrf] using the same hardware as in the SIRUS experiments. $\texttt{ExampleExplanation}$ is consistently faster (see figure \ref{fig:run-time-grf}).
 
 ![Weights computation running time for simulated data using.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
 
-# Conclusions
-WoodTapper is a Python package that extracts interpretability and explainability insights from tree ensembles. SIRUS, a more parsimonious alternative to random forests, naturally supports interpretability, and a Python implementation can boost its adoption. Example-based explainability is provided by the $\texttt{ExampleExplanation}$ module, offering precise insights at the individual sample level.
+## Sampled examples
+
 
 # Acknowledgements
 

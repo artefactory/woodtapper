@@ -5,14 +5,14 @@ First you can clone the repository:
 git clone git@github.com:artefactory/mgs-grf.git
 ```
 
-And install the required packages into your environment (conda, mamba or pip):
+And install the required packages into your environment (conda, mamba or pip; python=3.12):
 ```bash
 pip install -r requirements.txt
 ```
 
 Then, you **need** to run the following command from the repository root directory :
 ```
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 ## 💾 Data sets

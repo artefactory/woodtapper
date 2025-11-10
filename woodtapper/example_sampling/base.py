@@ -4,6 +4,7 @@ ExampleExplanation mixin for tree-based models.
 
 import copy
 import numpy as np
+from sklearn.utils.validation import validate_data
 
 from .utils.utils import compute_leaf_sizes
 from .utils.weights import compute_kernel_weights
@@ -32,6 +33,7 @@ class ExplanationMixin:
         self : object
             Fitted estimator.
         """
+        X, y = validate_data(self, X, y)
         super().fit(X=X, y=y, sample_weight=sample_weight)
         self.train_y = y
         self.train_X = X
@@ -65,7 +67,9 @@ class ExplanationMixin:
         )
 
         explanation_model = cls()
+        X, y = validate_data(explanation_model, X, y)
         vars(explanation_model).update(copy.deepcopy(vars(model)))
+        explanation_model.train_X = X
         explanation_model.train_y = y
         explanation_model.train_samples_leaves = model.apply(X).astype(
             np.int32
@@ -120,7 +124,7 @@ class ExplanationMixin:
             leafs_by_sample, self.train_samples_leaves, leaf_sizes
         )
 
-    def explanation(self, X, batch_size=None):
+    def explanation(self, X, n_examples=5, batch_size=None):
         """
         Explanation procedure.
         Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
@@ -137,6 +141,7 @@ class ExplanationMixin:
             If the model is a classifier, the output will be class labels.
             If the model is a regressor, the output will be real numbers.
         """
+        X = validate_data(self, X)
         if batch_size is None:
             weights = self.get_weights_cython(X)
         else:
@@ -144,6 +149,6 @@ class ExplanationMixin:
             for batch in np.array_split(X, len(X) // batch_size):
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
-        most_similar_idx = np.argsort(-weights, axis=1)[:, :5]
+        most_similar_idx = np.argsort(-weights, axis=1)[:, :n_examples]
         # Get the 5 most similar samples
         return self.train_X[most_similar_idx], self.train_y[most_similar_idx]
