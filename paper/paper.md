@@ -73,7 +73,7 @@ Which corresponds to the probability that the path $\mathcal{P}$ belongs to a $\
 
 The set of finals rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,p_0}\}$ where $\hat{\mathcal{P}}_{M,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M}(\mathcal{P}) > p_0\right\}$ with $p_0 \in (0,1)$. The finals rules are aggregated as follows for building the final estimator:
 $$
-    \hat{\eta}_{M,p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,n,p_0}} \hat{g}_{\mathcal{P}}(x).
+    \hat{\eta}_{M,p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
 So far, we have focused on binary classification for clarity. 
