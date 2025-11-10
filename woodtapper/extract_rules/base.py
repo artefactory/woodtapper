@@ -210,7 +210,7 @@ class RulesExtractorMixin:
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
         estimators = (
-            self.estimators_[:, 0]
+            self.estimators_.flatten()  # flattened if needed
             if isinstance(self.estimators_[0], np.ndarray)
             else self.estimators_
         )
