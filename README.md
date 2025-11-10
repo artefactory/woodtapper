@@ -12,7 +12,7 @@
 
 [![CI Status](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml/badge.svg)](https://github.com/artefactory/woodtapper/actions/workflows/ci.yaml?query=branch%3Amain)
 [![Linting , formatting, imports sorting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/choice-learn/blob/main/.pre-commit-config.yaml)
+[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-informational?logo=pre-commit&logoColor=white)](https://github.com/artefactory/woodtapper/blob/main/.pre-commit-config.yaml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](#-documentation)
 
 [![License](https://img.shields.io/github/license/artefactory/woodtapper)](LICENSE)
@@ -22,12 +22,13 @@
 
 </div>
 
-WoodTapper is a Python toolbox for interpretable and manipulable ensembles of tree-based models, fully compatible with scikit-learn forests and boosting models. 
-
 ## 🪵 Key Features
+WoodTapper is a Python toolbox for:
+
 - Rule extraction from tree-based ensembles.
 - Example-based explanation module that links predictions to a small set of representative samples.
 
+Woodtapper is fully compatible with scikit-learn forests and boosting models.
 
 ## 🛠 Installation
 
@@ -44,11 +45,13 @@ pip install -e '.[dev]'
 ```python
 ## RandomForestClassifier rules extraction
 from woodtapper.extract_rules import SirusClassifier
+from woodtapper.extract_rules.visualization import show_rules
 
-SIRUS = SirusClassifier(n_estimators=1000,max_depth=2,
+sirus = SirusClassifier(n_estimators=1000,max_depth=2,
                           quantile=10,p0=0.01, random_state=0)
-SIRUS.fit(X_train,y_train)
-y_pred_sirus = SIRUS.predict(X_test)
+sirus.fit(X_train,y_train)
+y_pred_sirus = sirus.predict(X_test)
+show_rules(Sirus,max_rules=10) # Show rules
 ```
 
 ## 🌱 WoodTapper ExampleExplanation module
@@ -56,9 +59,9 @@ y_pred_sirus = SIRUS.predict(X_test)
 ## RandomForestClassifier rules extraction
 from woodtapper.example_sampling import RandomForestClassifierExplained
 
-RFExplained = RandomForestClassifierExplained(n_estimators=100)
-RFExplained.fit(X_train,y_train)
-example_explanation = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
+rf_explained = RandomForestClassifierExplained(n_estimators=100)
+rf_explained.fit(X_train,y_train)
+X_explain, y_explain = rf_explained.explanation(X_test) # Get the 5 most similar samples for each test sample
 ```
 
 ## 🙏 Acknowledgements
