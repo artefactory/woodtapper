@@ -1,18 +1,18 @@
 # Tutorials
 
- The tutorials to get started with the Woodtapper package trough examples are aiavailble here:
+ A few tutorials to get started with the Woodtapper package are available here:
 
   - [Rules extractor](1_tutorials.md)
   - [Example-based expalinability](2_tutorials_example_exp.md)
 
-Here are a mathematical formulation of Wooodtaper's modules.
+Let's describe some mathematical background that will be used in the different modules:
 
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variable $X$ and $Y$  takes values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
+We define the training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variables $X$ and $Y$ take values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
 
 ## Rules extraction:
 
 
-In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$. A path $\mathcal{P}$ is thus defined as
+In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$. A path $\mathcal{P}$ is thus defined as:
 $$
     \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
 $$
@@ -35,10 +35,10 @@ For a path $\mathcal{P}$, $p_n\left(\mathcal{P}\right)$ is estimated via Monte-C
 
 $$\hat{p}_{M,n}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.$$
 
-All in all, SIRUS algorithm follows the following steps:
+All in all, the SIRUS algorithm follows the following steps:
 
 
-1. Train a random forest of $M$ trees where splits can only be performed on the empirical $q$-quantiles (computed on the whole data set) of each variable.
+1. Train a random forest with $M$ trees where splits can only be performed on the empirical $q$-quantiles (computed on the whole data set) of each variable.
 2. Extract all paths $\mathcal{P}$ from the random forest. Let $\Pi$ be the set of these  paths.
 3. Let $p_0 \in (0,1)$ be an hyperparameter of SIRUS. Only the paths that have a frequency superior to $p_0$ are kept. Denote the set of such paths by $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$. Then all paths that are linearly dependent on paths with higher $\hat{p}_{M,n}$ are removed from $\hat{\mathcal{P}}_{M,n,p_0}$.
 

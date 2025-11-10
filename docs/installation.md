@@ -3,7 +3,7 @@
 
 To install the required packages in a virtual environment, run the following command:
 
-## From TestPyPi
+## From PyPi
 The easiest is to pip-install the package:
 ```bash
 pip install woodtapper

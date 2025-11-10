@@ -1,34 +1,12 @@
 """
-
-Generalized Random Forest implementation based on scikit-learn, for categorical variables.
-
+ExampleExplanation mixin for tree-based models.
 """
 
+import copy
 import numpy as np
-from sklearn.ensemble import (
-    ExtraTreesClassifier,
-    RandomForestClassifier,
-)
+
 from .utils.utils import compute_leaf_sizes
 from .utils.weights import compute_kernel_weights
-
-
-def iterative_random_choice(probas):
-    """
-    Function for applying a np.random.choice several times with succesive values of probas.
-
-    Parameters
-    ----------
-    probas : np.ndarray of shape (n_samples, n_classes)
-        Probabilities for each class for each sample.
-    Returns
-    -------
-    np.ndarray of shape (n_samples,)
-        Chosen class for each sample.
-    """
-    thresholds = np.random.uniform(size=len(probas))
-    cumulative_weights = np.cumsum(probas, axis=1)
-    return np.argmax((cumulative_weights.T > thresholds), axis=0)
 
 
 class ExplanationMixin:
@@ -41,7 +19,6 @@ class ExplanationMixin:
     def fit(self, X, y, sample_weight=None):
         """
         Fit the model to the training data.
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -50,7 +27,6 @@ class ExplanationMixin:
             Target values (class labels in classification, real numbers in regression).
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
-
         Returns
         -------
         self : object
@@ -58,20 +34,53 @@ class ExplanationMixin:
         """
         super().fit(X=X, y=y, sample_weight=sample_weight)
         self.train_y = y
+        self.train_X = X
         self.train_samples_leaves = (
             super().apply(X).astype(np.int32)
         )  # train_samples_leaves: size n_train x n_trees
+
+    def load_forest(cls, model, X, y):
+        """
+        Loads a pre-fitted forest from scikit-learn into a Explanation class.
+        Parameters
+        ----------
+        model: scikit-learn model of forest, previously fitted on X, y
+            Needs to be of the corresponding skclass class (e.g RandomForestClassifier, GradientBoostingRegressor)
+        X : array-like of shape (n_samples, n_features)
+            Training data used for the fitting of model.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Target values used for the fitting of model.
+        Returns
+        -------
+        A instance of the current class, with a deep copy of pre-fitted model, and saved X, y for examples sampling.
+        """
+        is_model_right_sklearn_class = False
+        for parent_class in cls.__bases__:
+            is_model_right_sklearn_class += isinstance(model, parent_class)
+
+        assert is_model_right_sklearn_class, (
+            "Needs to load a model of same class. {} not found in: {}".format(
+                type(model), cls.__bases__
+            )
+        )
+
+        explanation_model = cls()
+        vars(explanation_model).update(copy.deepcopy(vars(model)))
+        explanation_model.train_y = y
+        explanation_model.train_samples_leaves = model.apply(X).astype(
+            np.int32
+        )  # train_samples_leaves: size n_train x n_trees
+
+        return explanation_model
 
     def get_weights(self, X):
         """
         Derive frequency of training samples ending in the same leaf as the new sample X.
         (see GRF algorithm for details)
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             New samples for which to compute the weights.
-
         Returns
         -------
         np.ndarray of shape (n_samples, n_train)
@@ -115,14 +124,12 @@ class ExplanationMixin:
         """
         Explanation procedure.
         Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             New samples for which to predict the target values.
         batch_size : int, optional
             Size of the batch to process at once. If None, the entire dataset is processed at once.
-
         Returns
         -------
         np.ndarray of shape (n_samples,) or (n_samples, n_outputs)
@@ -137,16 +144,6 @@ class ExplanationMixin:
             for batch in np.array_split(X, len(X) // batch_size):
                 list_weights.extend(self.get_weights_cython(batch))
             weights = np.array(list_weights)  # n_samples x n_train
-
-        # return self.train_y[iterative_random_choice(weights)]
-        return self.train_y[
-            np.argsort(-weights, axis=1)[:, :5]
-        ]  # Get the 5 most similar samples
-
-
-class RandomForestClassifierExplained(ExplanationMixin, RandomForestClassifier):
-    """ExplanationExample RandomForestClassifier"""
-
-
-class ExtraTreesClassifierExplained(ExplanationMixin, ExtraTreesClassifier):
-    """ExplanationExample ExtraTreesClassifier"""
+        most_similar_idx = np.argsort(-weights, axis=1)[:, :5]
+        # Get the 5 most similar samples
+        return self.train_X[most_similar_idx], self.train_y[most_similar_idx]

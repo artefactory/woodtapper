@@ -20,7 +20,7 @@ def random_seed():
 @pytest.fixture
 def simple_dataset(random_seed):
     """Generate a simple synthetic dataset for binary classification."""
-    X = np.random.randn(100, 5)
+    X = np.random.randn(100, 6)
     y = (X[:, 0] + 0.5 * X[:, 1] > 0).astype(int)
     return X, y
 
@@ -29,7 +29,7 @@ def simple_dataset(random_seed):
 def trained_sirus_on_simple(simple_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = simple_dataset
-    model = SirusClassifier(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
+    model = SirusClassifier(n_estimators=100, p0=0.0, max_n_rules=5, random_state=0)
     model.fit(X, y)
     return model
 
@@ -74,6 +74,6 @@ def simple_regression_data(random_seed):
 def trained_regression(simple_regression_data):
     """Train a small SIRUS model on the simple dataset."""
     X, y = simple_regression_data
-    model = SirusRegressor(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
+    model = SirusRegressor(n_estimators=100, p0=0.0, max_n_rules=5, random_state=0)
     model.fit(X, y)
     return model
