@@ -129,7 +129,7 @@ We compare the rules produced by the original SIRUS (R) and our Python implement
 The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides an example-based explainability. 
 It enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample $x_i \in \mathcal{D}$ is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. 
 For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
-Letting $w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
+Letting $w_{x}(x_i)$ be the similarity between $x$ and $x_i$, we have
 $$
 w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_l(x)\}}}{|\mathcal{L}_l(x)|}.
 $$
