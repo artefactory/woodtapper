@@ -105,7 +105,7 @@ def load_wine_data():
 
 def load_titatnic_data():
     """
-    Load PIMA diabates data set from data folder
+    Load Titanic diabates data set from data folder
     The name of the file shoulde be : diabetes.csv
     """
     filename = "Titanic-Dataset.csv"
@@ -128,7 +128,7 @@ def load_titatnic_data():
 
 def load_titatnic_benard_data():
     """
-    Load PIMA diabates data set from data folder
+    Load Titanic diabates data set from data folder
     The name of the file shoulde be : diabetes.csv
     """
     filename = "titanic.csv"
@@ -168,3 +168,46 @@ def load_adult_data():
     X_adult = df_adult.drop(["income"], axis=1).to_numpy()
     y_adult = df_adult[["income"]].to_numpy().ravel()
     return X_adult, y_adult
+
+
+def load_BankChurners_data():
+    r"""
+    Load BankChurners data set from data\dexternals folder
+    The name of the file shoulde be : BankChurners.csv
+    """
+    filename = "BankChurners.csv"
+    df_bankchurners = pd.read_csv(os.path.join(DATA_DIR, filename))
+
+    X_bankChurners = df_bankchurners.drop(
+        [
+            "CLIENTNUM",
+            "Attrition_Flag",
+            "Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1",
+            "Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2",
+        ],
+        axis=1,
+    ).to_numpy()
+    y_bankChurners = (
+        df_bankchurners[["Attrition_Flag"]]
+        .replace({"Attrition_Flag": {"Existing Customer": 0, "Attrited Customer": 1}})
+        .to_numpy()
+        .ravel()
+    )
+    return X_bankChurners, y_bankChurners
+
+
+def load_BankMarketing_data():
+    """
+    Load BankMarketing data set from UCI Irvine.
+    """
+    # fetch dataset
+    bank_marketing = fetch_ucirepo(id=222)
+    # data (as pandas dataframes)
+    X = bank_marketing.data.features
+    y = bank_marketing.data.targets
+
+    X.fillna("unknow", inplace=True)  # fillna
+    y.replace({"y": {"yes": 1, "no": 0}}, inplace=True)
+    X = X.to_numpy()
+    y = y.to_numpy().ravel()
+    return X, y
