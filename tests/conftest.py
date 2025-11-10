@@ -29,7 +29,7 @@ def simple_dataset(random_seed):
 def trained_sirus_on_simple(simple_dataset):
     """Train a small SIRUS model on the simple dataset."""
     X, y = simple_dataset
-    model = SirusClassifier(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
+    model = SirusClassifier(n_estimators=100, p0=0.0, max_n_rules=5, random_state=0)
     model.fit(X, y)
     return model
 
@@ -74,6 +74,6 @@ def simple_regression_data(random_seed):
 def trained_regression(simple_regression_data):
     """Train a small SIRUS model on the simple dataset."""
     X, y = simple_regression_data
-    model = SirusRegressor(n_estimators=100, p0=0.0, num_rule=5, random_state=0)
+    model = SirusRegressor(n_estimators=100, p0=0.0, max_n_rules=5, random_state=0)
     model.fit(X, y)
     return model

@@ -9,11 +9,8 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
-from sklearn.utils.validation import validate_data
-import time
 
 from .base import RulesExtractorClassifierMixin
-from .utils import compute_staibility_criterion, _extract_single_tree_rules
 
 
 class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
@@ -133,70 +130,8 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
-    def fit(self, X, y, sample_weight=None):
-        """
-        Fit the SIRUS model.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The training input samples.
-        y : array-like of shape (n_samples,)
-            The target values (class labels) as integers or strings.
-        sample_weight : array-like of shape (n_samples,), default=None
 
-        Returns
-        -------
-        self : object
-            Fitted estimator.
-
-        """
-        X, y = validate_data(self, X, y)
-        start = time.time()
-        self._fit_quantile_classifier(X, y, sample_weight)
-        rules_ = []
-        for dtree in self.estimators_:  ## extraction  of all trees rules
-            tree = dtree.tree_
-            rules_.extend(_extract_single_tree_rules(tree))
-        self._fit_rules(X, y, rules_, sample_weight)
-        end = time.time()
-        print(f"All fit took {end - start:.4f} seconds")
-        compute_staibility_criterion(self)
-
-    def predict_proba(self, X):
-        """
-        Predict class probabilities for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        proba : ndarray of shape (n_samples, n_classes)
-            The class probabilities of the input samples. The order of the
-            classes corresponds to that in the attribute `classes_`.
-        """
-        X = validate_data(self, X)
-        return super().predict_proba(X)
-
-    def predict(self, X):
-        """
-        Predict class for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y : ndarray of shape (n_samples,)
-            The predicted classes.
-        """
-        X = validate_data(self, X)
-        return super().predict(X)
-
-
-class QuantileDecisionTreeRegressor(
-    RulesExtractorClassifierMixin, DecisionTreeRegressor
-):
+class QuantileDecisionTreeRegressor(DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
     Used for GradientBoostingClassifier in GbExtractorClassifier
@@ -397,67 +332,3 @@ class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClass
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
-    def fit(self, X, y, sample_weight=None):
-        """
-        Fit the SIRUS model.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The training input samples.
-        y : array-like of shape (n_samples,)
-            The target values (class labels) as integers or strings.
-        sample_weight : array-like of shape (n_samples,), default=None
-
-        Returns
-        -------
-        self : object
-            Fitted estimator.
-
-        """
-        X, y = validate_data(self, X, y)
-        self._fit_quantile_classifier(X, y, sample_weight)
-        rules_ = []
-        for dtree in self.estimators_[
-            :, 0
-        ]:  ## extraction  of all trees rules ## [:,0] WORKS only for binary clf (see n_tree_per_iter = 1)
-            tree = dtree.tree_
-            curr_tree_rules = _extract_single_tree_rules(tree)
-            if (
-                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
-            ):  # to avoid empty rules
-                # Boosting may produce trees with no splits, for example when the number of estimators is high
-                rules_.extend(curr_tree_rules)
-        self._fit_rules(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
-
-    def predict_proba(self, X):
-        """
-        Predict class probabilities for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        proba : ndarray of shape (n_samples, n_classes)
-            The class probabilities of the input samples. The order of the
-            classes corresponds to that in the attribute `classes_`.
-        """
-        X = validate_data(self, X)
-        return super().predict_proba(X)
-
-    def predict(self, X):
-        """
-        Predict class for X.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y : ndarray of shape (n_samples,)
-            The predicted classes.
-        """
-        X = validate_data(self, X)
-        return super().predict(X)

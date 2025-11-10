@@ -86,7 +86,7 @@ def get_top_rules(rules_str, p0):
     return rules_, rules_freq_
 
 
-def compute_staibility_criterion(model):
+def compute_stability_criterion(model):
     """
     Compute the stability criterion for a given model.
     Parameters
@@ -460,3 +460,121 @@ def generate_masks_rules(X, rules):
         rules_mask[:, rule_number] = generate_mask_rule(X=X, rules=current_rules)
 
     return rules_mask
+
+
+def _rules_filtering_stochastic(
+    rules,
+    probas,
+    max_n_rules,
+    n_features_in_,
+    quantiles,
+    list_categorical_indexes,
+    list_unique_categorical_values,
+    random_state,
+):
+    """
+    Post-treatment for rules when tree depth is at most 2 (deterministic algorithm).
+    Parameters
+    ----------
+    rules : list
+        List of rules (each rule is a list of splits; each split [var, thr, dir])
+    probas : list
+        Probabilities associated with each rule
+    max_n_rules : int
+        Max number of rules to keep
+    n_features_in_ : int
+        Number of input features, on which rules where extracted.
+    quantiles: np.array of shape (n_quantiles, n_dim)
+        Quantiles for each continuous dimension. Used to sample values within this range.
+    list_categorical_indexes: list of int or None
+        List of categorical indexes (if provided)
+    random_state : int or None
+
+    Returns
+    ----------
+    dict: {'rules': filtered rules, 'probas': corresponding probabilities}
+    1. Generate an independent dataset for checking rule redundancy.
+    2. Iterate through the rules and apply redundancy checks.
+    3. Return the filtered rules and their associated probabilities.
+    4. The redundancy check is based on the rank of a matrix formed by the masks of the rules.
+    5. If the rank of the matrix increases when adding a new rule, it is considered non-redundant and kept.
+    6. This method ensures that the selected rules are diverse and not linearly dependent.
+    7. The process continues until the desired number of rules is reached or all rules are evaluated.
+    8. The function returns a dictionary containing the filtered rules and their probabilities.
+    """
+    rules_ftr = []
+    probas_ftr = []
+    # split_gen = []
+    ind_max = len(rules)
+    ind = 0
+    max_n_rules_temp = 0
+
+    n_samples_indep = 10000
+    data_indep = np.zeros((n_samples_indep, n_features_in_), dtype=float)
+    ind_dim_continuous_array_quantile = 0
+    # indice dans array_quantile des variables continues
+    ind_dim_categorcial_list_unique_elements = 0
+    # indice dans _list_unique_categorical_values des variables catégorielles
+    # Generate an independent data set for checking rule redundancy
+    for ind_dim_abs in range(n_features_in_):
+        np.random.seed(ind_dim_abs)
+        if (list_categorical_indexes is not None) and (
+            ind_dim_abs in list_categorical_indexes
+        ):  # Categorical variable
+            data_indep[:, ind_dim_abs] = np.random.choice(
+                np.unique(
+                    list_unique_categorical_values[
+                        ind_dim_categorcial_list_unique_elements
+                    ]
+                ),
+                size=n_samples_indep,
+                replace=True,
+            )
+            ind_dim_categorcial_list_unique_elements += 1
+        else:  # Continuous variable
+            elem_low = quantiles[:, ind_dim_continuous_array_quantile].min() - 1
+            elem_high = quantiles[:, ind_dim_continuous_array_quantile].max() + 1
+            data_indep[:, ind_dim_abs] = np.random.uniform(
+                low=elem_low, high=elem_high, size=n_samples_indep
+            )
+            ind_dim_continuous_array_quantile += 1
+    np.random.seed(random_state)
+
+    while max_n_rules_temp < max_n_rules and ind < ind_max:
+        curr_path = rules[ind]
+        if len(rules_ftr) == 0:  ## If there are no filtered rules yet
+            rules_ftr.append(curr_path)
+            probas_ftr.append(probas[ind])
+            ind += 1
+            max_n_rules_temp = len(rules_ftr)
+        elif curr_path in rules_ftr:  ## Avoid duplicates
+            ind += 1
+            max_n_rules_temp = len(rules_ftr)
+            continue
+        else:  ## If there are already filtered rules
+            related_rules_ftr = rules_ftr  # We comlpare the new rule to all the previous ones already selected.
+            if len(related_rules_ftr) == 0:  ## If there are no related rules
+                rules_ftr.append(curr_path)
+                probas_ftr.append(probas[ind])
+            else:
+                rules_ensemble = related_rules_ftr + [curr_path]
+                list_matrix = [[] for i in range(len(rules_ensemble))]
+                for i, x in enumerate(rules_ensemble):
+                    mask_x = generate_mask_rule(X=data_indep, rules=x)
+                    list_matrix[i] = mask_x
+
+                if len(list_matrix) > 0:
+                    # Check if the current rule is redundant with the previous ones trough matrix rank
+                    matrix = np.array(list_matrix).T
+                    ones_vector = np.ones((len(matrix), 1))  # Vector of ones
+                    matrix = np.hstack((matrix, ones_vector))
+                    matrix_rank = np.linalg.matrix_rank(matrix)
+                    n_rules_compared = len(rules_ensemble)
+                    if matrix_rank == (n_rules_compared) + 1:
+                        # The current rule is not redundant with the previous ones
+                        rules_ftr.append(curr_path)
+                        probas_ftr.append(probas[ind])
+            ind += 1
+            max_n_rules_temp = len(rules_ftr)
+
+    return {"rules": rules_ftr, "probas": probas_ftr}

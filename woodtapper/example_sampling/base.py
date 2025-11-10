@@ -2,6 +2,7 @@
 ExampleExplanation mixin for tree-based models.
 """
 
+import copy
 import numpy as np
 
 from .utils.utils import compute_leaf_sizes
@@ -18,7 +19,6 @@ class ExplanationMixin:
     def fit(self, X, y, sample_weight=None):
         """
         Fit the model to the training data.
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -27,7 +27,6 @@ class ExplanationMixin:
             Target values (class labels in classification, real numbers in regression).
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
-
         Returns
         -------
         self : object
@@ -40,16 +39,48 @@ class ExplanationMixin:
             super().apply(X).astype(np.int32)
         )  # train_samples_leaves: size n_train x n_trees
 
+    def load_forest(cls, model, X, y):
+        """
+        Loads a pre-fitted forest from scikit-learn into a Explanation class.
+        Parameters
+        ----------
+        model: scikit-learn model of forest, previously fitted on X, y
+            Needs to be of the corresponding skclass class (e.g RandomForestClassifier, GradientBoostingRegressor)
+        X : array-like of shape (n_samples, n_features)
+            Training data used for the fitting of model.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Target values used for the fitting of model.
+        Returns
+        -------
+        A instance of the current class, with a deep copy of pre-fitted model, and saved X, y for examples sampling.
+        """
+        is_model_right_sklearn_class = False
+        for parent_class in cls.__bases__:
+            is_model_right_sklearn_class += isinstance(model, parent_class)
+
+        assert is_model_right_sklearn_class, (
+            "Needs to load a model of same class. {} not found in: {}".format(
+                type(model), cls.__bases__
+            )
+        )
+
+        explanation_model = cls()
+        vars(explanation_model).update(copy.deepcopy(vars(model)))
+        explanation_model.train_y = y
+        explanation_model.train_samples_leaves = model.apply(X).astype(
+            np.int32
+        )  # train_samples_leaves: size n_train x n_trees
+
+        return explanation_model
+
     def get_weights(self, X):
         """
         Derive frequency of training samples ending in the same leaf as the new sample X.
         (see GRF algorithm for details)
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             New samples for which to compute the weights.
-
         Returns
         -------
         np.ndarray of shape (n_samples, n_train)
@@ -93,14 +124,12 @@ class ExplanationMixin:
         """
         Explanation procedure.
         Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
-
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             New samples for which to predict the target values.
         batch_size : int, optional
             Size of the batch to process at once. If None, the entire dataset is processed at once.
-
         Returns
         -------
         np.ndarray of shape (n_samples,) or (n_samples, n_outputs)

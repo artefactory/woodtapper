@@ -8,14 +8,12 @@ from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils._param_validation import StrOptions
-from sklearn.utils.validation import validate_data
 
-from .base import RulesExtractorMixin
-from .utils import compute_staibility_criterion, _extract_single_tree_rules
+from .base import RulesExtractorRegressorMixin
 from .classification_extractors import QuantileDecisionTreeRegressor
 
 
-class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
+class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
     """
     SIRUS class applied with a RandomForestRegressor.
 
@@ -128,49 +126,8 @@ class SirusRegressor(RulesExtractorMixin, RandomForestRegressor):
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
-    def fit(self, X, y, sample_weight=None, check_input=True):
-        """
-        Fit the SIRUS model.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The training input samples.
-        y : array-like of shape (n_samples,)
-            The target values (class labels) as integers or strings.
-        sample_weight : array-like of shape (n_samples,), default=None
 
-        Returns
-        -------
-        self : object
-            Fitted estimator.
-
-        """
-        X, y = validate_data(self, X, y)
-        self._fit_quantile_classifier(X, y, sample_weight)
-        rules_ = []
-        for dtree in self.estimators_:  ## extraction  of all trees rules
-            tree = dtree.tree_
-            rules_.extend(_extract_single_tree_rules(tree))
-        self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
-
-    def predict(self, X):
-        """
-        Predict using the SIRUS regressor.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-                The predicted values.
-        """
-        X = validate_data(self, X)
-        return self._predict_regressor(X)
-
-
-class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
+class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters
@@ -362,51 +319,3 @@ class GbExtractorRegressor(RulesExtractorMixin, GradientBoostingRegressor):
             self.estimators_[i, k] = tree
 
         return raw_predictions
-
-    def fit(self, X, y, sample_weight=None, check_input=True):
-        """
-        Fit the RulesExtractor model.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The training input samples.
-        y : array-like of shape (n_samples,)
-            The target values (class labels) as integers or strings.
-        sample_weight : array-like of shape (n_samples,), default=None
-
-        Returns
-        -------
-        self : object
-            Fitted estimator.
-
-        """
-        X, y = validate_data(self, X, y)
-        self._fit_quantile_classifier(X, y, sample_weight)
-        rules_ = []
-        for dtree in self.estimators_[:, 0]:  ## extraction  of all trees rules
-            tree = dtree.tree_
-            curr_tree_rules = _extract_single_tree_rules(tree)
-            if (
-                len(curr_tree_rules) > 0 and len(curr_tree_rules[0]) > 0
-            ):  # to avoid empty rules
-                # Boosting may produce trees with no splits, for example when the number of estimators is high
-                rules_.extend(curr_tree_rules)
-        self._fit_rules_regressor(X, y, rules_, sample_weight)
-        compute_staibility_criterion(self)
-
-    def predict(self, X):
-        """
-        Predict using the RulesExtractorMixin regressor.
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The input samples.
-        Returns
-        -------
-        y_pred : ndarray of shape (n_samples,)
-            The predicted values.
-
-        """
-        X = validate_data(self, X)
-        y_pred = self._predict_regressor(X)
-        return y_pred
