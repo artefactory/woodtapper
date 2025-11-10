@@ -43,7 +43,6 @@ pip install -e '.[dev]'
 
 ## 🌿 WoodTapper RulesExtraction module
 ```python
-## RandomForestClassifier rules extraction
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
 
@@ -56,7 +55,6 @@ show_rules(Sirus,max_rules=10) # Show rules
 
 ## 🌱 WoodTapper ExampleExplanation module
 ```python
-## RandomForestClassifier rules extraction
 from woodtapper.example_sampling import RandomForestClassifierExplained
 
 rf_explained = RandomForestClassifierExplained(n_estimators=100)
