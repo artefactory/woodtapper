@@ -3,6 +3,13 @@ import os
 import pandas as pd
 from scipy.io.arff import loadarff
 from ucimlrepo import fetch_ucirepo
+from sklearn.datasets import (
+    fetch_california_housing,
+    load_breast_cancer,
+    load_diabetes,
+    fetch_openml,
+)
+
 
 DATA_DIR = os.path.join(
     os.path.abspath(os.getcwd()),
@@ -67,7 +74,7 @@ def load_california_data():
     return X_cal_housing, y_cal_housing
 
 
-def load_houses_sales_data():
+def load_houses_sales_reg_data():
     """
     Load House Sales of Léo Grinsztajn data set from data folder
     The name of the file shoulde be : house_sales_leo.arff
@@ -210,4 +217,36 @@ def load_BankMarketing_data():
     y.replace({"y": {"yes": 1, "no": 0}}, inplace=True)
     X = X.to_numpy()
     y = y.to_numpy().ravel()
+    return X, y
+
+
+def load_california_reg_data():
+    """
+    Load California Housing data set from sklearn datasets.
+    """
+    X, y = fetch_california_housing(return_X_y=True)
+    return X, y
+
+
+def load_bcw_data():
+    """
+    Load Breast Cancer Wisconsin data set from sklearn datasets.
+    """
+    X, y = load_breast_cancer(return_X_y=True)
+    return X, y
+
+
+def load_diabetes_reg_data():
+    """
+    Load diabetes data set from sklearn datasets.
+    """
+    X, y = load_diabetes(return_X_y=True)
+    return X, y
+
+
+def load_house_16H_reg_data():
+    """
+    Load House 16H data set from openml datasets.
+    """
+    X, y = fetch_openml(data_id=44139, return_X_y=True)
     return X, y
