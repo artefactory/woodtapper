@@ -2,6 +2,8 @@ import numpy as np
 from woodtapper.extract_rules import (
     SirusClassifier,
     SirusRegressor,
+    ETExtractorClassifier,
+    ETExtractorRegressor,
     GbExtractorClassifier,
     GbExtractorRegressor,
 )
@@ -17,6 +19,16 @@ def test_sirus_fit(simple_dataset, simple_regression_data):
     assert model.max_n_rules > 0
 
     model_regressor = SirusRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
+    model_regressor.fit(X_reg, y_reg)
+    assert len(model_regressor.estimators_) > 0
+    assert model_regressor.max_n_rules > 0
+
+    model = ETExtractorClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
+    model.fit(X, y)
+    assert len(model.estimators_) > 0
+    assert model.max_n_rules > 0
+
+    model_regressor = ETExtractorRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
     model_regressor.fit(X_reg, y_reg)
     assert len(model_regressor.estimators_) > 0
     assert model_regressor.max_n_rules > 0
