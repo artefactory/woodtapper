@@ -76,8 +76,8 @@ $$
     \hat{\eta}_{M,p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
-So far, we have focused on binary classification for clarity. 
-We also implemented SIRUS for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression. It also leverage their implementations for tree-based models fitting.
+So far, we have focused on binary classification for clarity.
+We also implemented SIRUS for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression. It also leverages scikit-learn's implementations for tree-based models fitting.
 
 ## Implementation and running time
 WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $fit$, $predict$, and $get\_params$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
@@ -100,7 +100,7 @@ We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads 
 
 ![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
-![SIRUS running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
+![SIRUS running time for simulated data using 5 threads, with $n$=300K and $M$=1000.\label{fig:run-time-dim}](images/run-time-dim-log-5threads-final.pdf){ width=100% }
 
 
 ## Extracted rules and predictive performances
@@ -126,17 +126,17 @@ We compare the rules produced by the original SIRUS (R) and our Python implement
 
 ## Formulation
 
-The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides an example-based explainability. 
-It enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample $x_i \in \mathcal{D}$ is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. 
+The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides an example-based explainability.
+It enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample $x_i \in \mathcal{D}$ is defined as the proportion of trees in which the sample and $x$ fall into the same leaf.
 For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
 Letting $w_{x}(x_i)$ be the similarity between $x$ and $x_i$, we have
 $$
 w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_l(x)\}}}{|\mathcal{L}_l(x)|}.
 $$
- 
+
 Finally the $p$ training samples with the  highest $w_{x}(x_i)$ values are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
-%The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specififc number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernenl weights deribvation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
+%The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
 ## Implementation and running time
 As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is implemented as a Python Mixin for handling example-based explanations. It is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses.
