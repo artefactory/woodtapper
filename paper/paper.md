@@ -146,7 +146,7 @@ As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres
 | **Feature**              | **WoodTapper (Py)**             | **skgrf (Py)**            |
 |---------------------------|----------------------------------|----------------------------|
 | Forest implementation     | `scikit-learn`                  | `ranger`                   |
-| Language.                 | Python                          | Python & R                 |
+| Language                  | Python                          | Python & R                 |
 | Package availability      | PyPI (`woodtapper`)             | PyPI (`skgrf`)             |
 | scikit-learn API compatible | $\checkmark$                            | $\checkmark$                         |
 | Tree-based models         | All                             | Tree and random forest     |
