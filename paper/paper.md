@@ -133,7 +133,7 @@ $$
 w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_l(x)\}}}{|\mathcal{L}_l(x)|}.
 $$
 
-Finally the $p$ training samples with the  highest $w_{x}(x_i)$ values are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
+Finally the $p$ training samples with the highest $w_{x}(x_i)$ values, along with their target values, are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
 The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
