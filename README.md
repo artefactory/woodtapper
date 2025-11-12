@@ -23,12 +23,15 @@
 </div>
 
 ## 🪵 Key Features
-WoodTapper is a Python toolbox for:
+WoodTapper is a Python toolbox that provides:
 
-- Rule extraction from tree-based ensembles.
-- Example-based explanation module that links predictions to a small set of representative samples.
+- Rule extraction from tree-based ensembles: Generates a final estimator composed of a sequence of simple rule-based on features and thresholds.
 
-Woodtapper is fully compatible with scikit-learn forests and boosting models.
+- Example-based explanations: Connects predictions to a small set of representative samples, returning the most similar examples along with their target values.
+
+Detailed information about the modules can be found [here.](https://artefactory.github.io/woodtapper/0_tutorials/)
+
+WoodTapper is fully compatible with scikit-learn tree ensemble models.
 
 ## 🛠 Installation
 
