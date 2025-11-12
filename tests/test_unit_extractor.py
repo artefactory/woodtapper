@@ -74,7 +74,7 @@ def test_rules_vizualization(simple_dataset, simple_regression_data):
     X, y = simple_dataset
     X_reg, y_reg = simple_regression_data
 
-    model = SirusClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
+    model = SirusClassifier(n_estimators=100, p0=0.0, max_n_rules=5, random_state=0)
     model.fit(X, y)  # Capture printed output
     captured_output = io.StringIO()
     sys.stdout = captured_output  # Call the function
@@ -83,14 +83,15 @@ def test_rules_vizualization(simple_dataset, simple_regression_data):
     )  # Reset stdout
     sys.stdout = sys.__stdout__  # Check the result
     output = captured_output.getvalue().strip()
-    expected_output = """Estimated average rate for target class 1 (from 'else' clauses) p_s = 53%.
+    expected_output = """Estimated average rate for target class 1 (from 'else' clauses) p_s = 66%.
 (Note: True average rate should be P(Class=1) from training data).
 
-IF Condition               THEN P(C1)      ELSE P(C1)
-----------------------------------------------------------
-if   Feature[0] <= 0.42    then 20%                else 90%
-if   Feature[0] > -0.29    then 75%                else 8%
-if   Feature[4] <= -0.77   then 75%                else 41%"""
+IF Condition              THEN P(C1)      ELSE P(C1)
+---------------------------------------------------------
+if   Feature[0] <= 0.42   then 20%                else 90%
+if   Feature[1] > -0.37   then 63%                else 13%
+if   Feature[1] <= 0.97   then 38%                else 90%"""
+    print(output)
     assert output == expected_output, f"Unexpected output: {output}"
 
     model_regressor = SirusRegressor(
@@ -102,10 +103,9 @@ if   Feature[4] <= -0.77   then 75%                else 41%"""
     show_rules(model_regressor, max_rules=3, is_regression=True)
     sys.stdout = sys.__stdout__
     output = captured_output.getvalue().strip()
-    print(output)
-    expected_output = """IF Condition              THEN P(C1)      ELSE P(C1)
----------------------------------------------------------
-if   Feature[1] <= 0.53   then -1.33              else 4.02
-if   Feature[1] <= 0.34   then -19.55             else 37.07
-if   Feature[1] > -0.51   then 36.21              else -65.94"""
+    expected_output = """---------------------------------------------------------
+Intercept : -6.896237002187981
+if   Feature[1] <= 0.53   then -42.01             else 127.47 | coeff=0.03
+if   Feature[1] <= 0.34   then -55.79             else 105.77 | coeff=0.35
+if   Feature[1] > -0.51   then 57.46              else -104.64 | coeff=0.63"""
     assert output == expected_output, f"Unexpected output: {output}"
