@@ -2,7 +2,7 @@
 title: 'WoodTapper: a Python package for tapping decision tree ensembles'
 tags:
   - Python
-  - machine learning
+  - Machine Learning
   - XAI
 authors:
   - name: Abdoulaye SAKHO
@@ -135,7 +135,7 @@ $$
 
 Finally the $p$ training samples with the  highest $w_{x}(x_i)$ values are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
-%The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
+The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
 ## Implementation and running time
 As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is implemented as a Python Mixin for handling example-based explanations. It is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses.
@@ -156,11 +156,9 @@ We compare the runtime of $\texttt{ExampleExplanation}$ with the kernel weight c
 
 ![Weights computation running time for simulated data using.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
 
-## Sampled examples
-
 
 # Acknowledgements
 
-We would like to express our gratitude to Clément Bénard, Alexandre CHAUSSARD and Vincent AURIAU for their valuable help and feedbacks.
+We would like to express our gratitude to Clément BENARD, Alexandre CHAUSSARD and Vincent AURIAU for their valuable help and feedbacks.
 
 # References
