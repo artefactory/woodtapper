@@ -42,8 +42,9 @@ def show_rules(
         or not hasattr(RulesExtractorModel, "list_probas_by_rules")
         or not hasattr(RulesExtractorModel, "list_probas_outside_by_rules")
     ):
-        print("Model does not have the required rule attributes. Ensure it's fitted.")
-        return
+        raise ValueError(
+            "Model does not have the required rule attributes. Ensure it's fitted."
+        )
     list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
 
     rules_all = RulesExtractorModel.rules_
@@ -51,13 +52,13 @@ def show_rules(
     probas_if_false_all = RulesExtractorModel.list_probas_outside_by_rules
 
     if not (len(rules_all) == len(probas_if_true_all) == len(probas_if_false_all)):
-        print("Error: Mismatch in lengths of rule attributes.")
-        return
+        raise ValueError("Error: Mismatch in lengths of rule attributes.")
 
     num_rules_to_show = min(max_rules, len(rules_all))
     if num_rules_to_show == 0:
-        print("No rules to display.")
-        return
+        raise ValueError(
+            "No rules to display. try to increase the number of rules extracted or check model fitting."
+        )
 
     # Attempt to build/use feature mapping
     feature_mapping = None
