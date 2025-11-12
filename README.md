@@ -41,8 +41,10 @@ pip install woodtapper
 ```
 
 **From this repository, within a pip/conda/mamba environment (python=3.12)**:
+```bash
 pip install -r requirements.txt
 pip install -e '.[dev]'
+```
 
 ## 🌿 WoodTapper RulesExtraction module
 ```python
