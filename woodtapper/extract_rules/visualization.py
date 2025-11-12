@@ -45,11 +45,27 @@ def show_rules(
         raise ValueError(
             "Model does not have the required rule attributes. Ensure it's fitted."
         )
+    if is_regression and not hasattr(
+        RulesExtractorModel, "list_probas_by_rules_without_coefficients"
+    ):
+        raise ValueError(
+            "For regression, model must have 'list_probas_by_rules_without_coefficients' attribute."
+        )
     list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
 
     rules_all = RulesExtractorModel.rules_
-    probas_if_true_all = RulesExtractorModel.list_probas_by_rules
-    probas_if_false_all = RulesExtractorModel.list_probas_outside_by_rules
+    if is_regression:
+        probas_if_true_all = (
+            RulesExtractorModel.list_probas_by_rules_without_coefficients
+        )
+        probas_if_false_all = (
+            RulesExtractorModel.list_probas_outside_by_rules_without_coefficients
+        )
+        coefficients_all = RulesExtractorModel.list_coefficients_by_rules
+        coeff_intercept = RulesExtractorModel.coeff_intercept
+    else:
+        probas_if_true_all = RulesExtractorModel.list_probas_by_rules
+        probas_if_false_all = RulesExtractorModel.list_probas_outside_by_rules
 
     if not (len(rules_all) == len(probas_if_true_all) == len(probas_if_false_all)):
         raise ValueError("Error: Mismatch in lengths of rule attributes.")
@@ -150,10 +166,13 @@ def show_rules(
 
     condition_col_width = max(max_condition_len, len(header_condition)) + 2
 
-    print(
-        f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}"
-    )
+    if not is_regression:
+        print(
+            f"{header_condition:<{condition_col_width}} {header_then:<15} {header_else:<15}"
+        )
     print("-" * (condition_col_width + 15 + 15 + 2 + 5))
+    if is_regression:
+        print("Intercept :", coeff_intercept)
 
     for i in range(num_rules_to_show):
         condition_str_formatted = condition_strings_for_rules[i]
@@ -167,7 +186,7 @@ def show_rules(
             p_s_if_true = prob_if_true_list
             then_val_str = f"{p_s_if_true:.2f}"
             p_s_if_false = prob_if_false_list
-            else_val_str = f"{p_s_if_false:.2f}"
+            else_val_str = f"{p_s_if_false:.2f} | coeff={coefficients_all[i]:.2f}"
 
         else:  # classification
             if prob_if_true_list and len(prob_if_true_list) > target_class_index:

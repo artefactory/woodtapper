@@ -440,6 +440,14 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
             random_state=self.random_state,
         )
         self.ridge.fit(gamma_array, y)
+        self.list_probas_by_rules_without_coefficients = (
+            self.list_probas_by_rules.copy()
+        )
+        self.list_probas_outside_by_rules_without_coefficients = (
+            self.list_probas_outside_by_rules.copy()
+        )
+        self.list_coefficients_by_rules = self.ridge.coef_
+        self.coeff_intercept = self.ridge.intercept_
         for indice in range(len(self.rules_)):
             # Scale the probabilities by the learned coefficients
             coeff = (
