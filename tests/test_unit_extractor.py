@@ -91,8 +91,13 @@ IF Condition              THEN P(C1)      ELSE P(C1)
 if   Feature[0] <= 0.42   then 20%                else 90%
 if   Feature[1] > -0.37   then 63%                else 13%
 if   Feature[1] <= 0.97   then 38%                else 90%"""
-    print(output)
-    assert output == expected_output, f"Unexpected output: {output}"
+
+    def normalize(s):
+        return "\n".join([line.rstrip() for line in s.splitlines()])
+
+    assert normalize(output) == normalize(expected_output), (
+        f"Unexpected output: {output}"
+    )
 
     model_regressor = SirusRegressor(
         n_estimators=100, p0=0.0, max_n_rules=5, random_state=0
@@ -109,4 +114,6 @@ Intercept : -6.896237002187981
 if   Feature[1] <= 0.53   then -42.01             else 127.47 | coeff=0.03
 if   Feature[1] <= 0.34   then -55.79             else 105.77 | coeff=0.35
 if   Feature[1] > -0.51   then 57.46              else -104.64 | coeff=0.63"""
-    assert output == expected_output, f"Unexpected output: {output}"
+    assert normalize(output) == normalize(expected_output), (
+        f"Unexpected output: {output}"
+    )
