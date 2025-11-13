@@ -17,7 +17,7 @@ from woodtapper.extract_rules.visualization import show_rules
 
 ```python
 iris = load_iris()
-X = iris.data
+X = pd.DataFrame(iris.data, columns=iris.feature_names )
 y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 ```
@@ -26,7 +26,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
 ```python
 ## RandomForestClassifier rules extraction
-RFSirus = SirusClassifier(n_estimators=1000,max_depth=4,quantile=10,p0=0.01, random_state=0,splitter="quantile")
+RFSirus = SirusClassifier(n_estimators=1000,max_depth=2,quantile=10,p0=0.0,max_n_rules=25, random_state=0,splitter="quantile")
 RFSirus.fit(X_train,y_train)
 ```
 
@@ -39,19 +39,22 @@ print('PR AUC :', average_precision_score(y_test, y_pred_proba_sirus))
 print('ROC AUC :', roc_auc_score(y_test, y_pred_proba_sirus,average='micro',multi_class='ovr'))
 print('Accuracy :', accuracy_score(y_test, y_pred_sirus))
 ```
+![](images/metrics-rules-extractors.png)
 
 ## Rules illustration
 The rules are the same for all three classes but the output probabilities are specfici to each class:
 
 ```python
-RFSirus.feature_names_in_ = ['sepal length','sepal width','petal length','petal width'] ## Fix colomns names
+show_rules(RFSirus,max_rules=10,target_class_index=0) ## show class Y=0
+```
+![](images/rules-extracted-0.png)
+
+```python
 show_rules(RFSirus,max_rules=10,target_class_index=1) ## show class Y=1 trough target_class_index=1 argument
 ```
+![](images/rules-extracted-1.png)
 
 ```python
 show_rules(RFSirus,max_rules=10,target_class_index=2) ## show class Y=2
 ```
-
-```python
-show_rules(RFSirus,max_rules=10,target_class_index=0) ## show class Y=1
-```
+![](images/rules-extracted-2.png)
