@@ -50,7 +50,7 @@ show_rules(RFSirus,max_rules=10,target_class_index=0) ## show class Y=0
 ![](images/rules-extracted-0.png)
 
 ```python
-show_rules(RFSirus,max_rules=10,target_class_index=1) ## show class Y=1 trough target_class_index=1 argument
+show_rules(RFSirus,max_rules=10,target_class_index=1) ## show class Y=1 through target_class_index=1 argument
 ```
 ![](images/rules-extracted-1.png)
 
