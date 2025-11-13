@@ -37,9 +37,12 @@ class ExplanationMixin:
         super().fit(X=X, y=y, sample_weight=sample_weight)
         self.train_y = y
         self.train_X = X
-        self.train_samples_leaves = (
-            super().apply(X).astype(np.int32)
-        )  # train_samples_leaves: size n_train x n_trees
+        self.train_samples_leaves = super().apply(X).astype(np.int32)
+        if self.train_samples_leaves.ndim == 3:
+            self.train_samples_leaves = self.train_samples_leaves.reshape(
+                self.train_samples_leaves.shape[0], -1
+            )
+        # train_samples_leaves: size n_train x n_trees
 
     def load_forest(cls, model, X, y):
         """
@@ -74,7 +77,12 @@ class ExplanationMixin:
         explanation_model.train_samples_leaves = model.apply(X).astype(
             np.int32
         )  # train_samples_leaves: size n_train x n_trees
-
+        if explanation_model.train_samples_leaves.ndim == 3:
+            explanation_model.train_samples_leaves = (
+                explanation_model.train_samples_leaves.reshape(
+                    explanation_model.train_samples_leaves.shape[0], -1
+                )
+            )
         return explanation_model
 
     def get_weights(self, X):
@@ -91,9 +99,10 @@ class ExplanationMixin:
             Weights for each sample in X based on the training samples leaves.
             Each element is the frequency of the training sample's leaf in the new sample.
         """
-        leafs_by_sample = (
-            super().apply(X).astype(np.int16)
-        )  # taille n_samples x n_trees
+        leafs_by_sample = super().apply(X).astype(np.int16)
+        if leafs_by_sample.ndim == 3:
+            leafs_by_sample = leafs_by_sample.reshape(leafs_by_sample.shape[0], -1)
+        # shape n_samples x n_trees
         leaves_match = np.array(
             [leafs_by_sample[i] == self.train_samples_leaves for i in range(len(X))]
         )
@@ -116,9 +125,10 @@ class ExplanationMixin:
             Weights for each sample in X based on the training samples leaves.
             Each element is the frequency of the training sample's leaf in the new sample.
         """
-        leafs_by_sample = (
-            super().apply(X).astype(np.int32)
-        )  # taille n_samples x n_trees
+        leafs_by_sample = super().apply(X).astype(np.int32)
+        if leafs_by_sample.ndim == 3:
+            leafs_by_sample = leafs_by_sample.reshape(leafs_by_sample.shape[0], -1)
+        # shape n_samples x n_trees
         leaf_sizes = compute_leaf_sizes(self.train_samples_leaves)
         return compute_kernel_weights(
             leafs_by_sample, self.train_samples_leaves, leaf_sizes

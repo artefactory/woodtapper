@@ -18,7 +18,7 @@ from woodtapper.example_sampling import RandomForestClassifierExplained
 
 ```python
 iris = load_iris()
-X = iris.data
+X = pd.DataFrame(iris.data, columns=iris.feature_names)
 y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 ```
@@ -27,11 +27,37 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
 ```python
 ## RandomForestClassifier rules extraction
-RFExplained = RandomForestClassifierExplained(n_estimators=100)
+RFExplained = RandomForestClassifierExplained(n_estimators=100,random_state=0)
 RFExplained.fit(X_train,y_train)
 ```
 
 ## Generate example-based explainability
 ```python
-example_explanation = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
+X_explain, y_explain = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
+```
+
+```python
+X_test.iloc[0,:]  # First test sample
+```
+![](images/x-test-0.png)
+
+```python
+X_explain[0] # Explanations for the first test sample
+```
+![](images/x-explain-0.png)
+
+```python
+y_explain[0] # Corresponding labels for the explanations of the first test sample
+```
+![](images/y-explain-0.png)
+
+## Load an existing RandomForestClassifier into the explainer
+
+```python
+RF = RandomForestClassifier(n_estimators=100) # Standard RandomForestClassifier
+RF.fit(X_train, y_train)
+
+# Load an existing RandomForestClassifier into the explainer
+RFExplained = RandomForestClassifierExplained.load_forest(RandomForestClassifierExplained,RF,X_train,y_train)
+X_explain, y_explain = RFExplained.explanation(X_test)
 ```

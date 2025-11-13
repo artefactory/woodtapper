@@ -1,12 +1,13 @@
 import numpy as np
 from sklearn.ensemble import (
     RandomForestRegressor,
+    ExtraTreesRegressor,
     GradientBoostingRegressor,
 )
 from sklearn.ensemble._forest import ForestRegressor
 from sklearn.ensemble._gb import set_huber_delta, _update_terminal_regions
 from sklearn._loss.loss import HuberLoss
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils._param_validation import StrOptions
 
 from .base import RulesExtractorRegressorMixin
@@ -127,7 +128,120 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
 
-class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
+class ExtraTreesRulesRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor):
+    """
+    Rules extractor applied with a ExtraTreeRegressor.
+
+    Parameters
+    ----------
+    n_estimators : int, default=100
+        The number of trees in the forest.
+    criterion : {"gini", "entropy", "log_loss"}, default="gini"
+        The function to measure the quality of a split. Supported criteria are
+        "gini" for the Gini impurity, "entropy" for the information gain and
+        "log_loss" for the reduction in log loss.
+    max_depth : int, default=2
+        The maximum depth of the tree. If None, then nodes are expanded until
+        all leaves are pure or until all leaves contain less than min_samples_split samples.
+    splitter : {"best", "random", "quantile"}, default="quantile"
+        The strategy used to choose the split at each node. Supported strategies
+        are "best" to choose the best split and "random" to choose the best random
+        split. "quantile" is similar to "best" but the split point is chosen to
+        be a a value in the training set and not the beetween to values as for best and random.
+    p0 : float, default=0.01
+        The threshold for rule selection.
+    max_n_rules : int, default=25
+        The maximum number of rules to extract.
+    quantile : int, default=10
+        The number of quantiles to use for the "quantile" splitter.
+    to_not_binarize_colindexes : list of int, default=None
+        List of column indexes to not binarize when extracting the rules.
+    starting_index_one_hot : int, default=None
+        Index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules).
+
+    Attributes
+    ----------
+    rules_ : list
+        List of all possible rules extracted from the forest.
+    ridge: ridge regression model fitted on the rules
+
+    """
+
+    _parameter_constraints: dict = {**ExtraTreesRegressor._parameter_constraints}
+    _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
+
+    def __init__(
+        self,
+        n_estimators=100,
+        *,
+        criterion="squared_error",
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        min_weight_fraction_leaf=0.0,
+        max_features=1.0,
+        max_leaf_nodes=None,
+        min_impurity_decrease=0.0,
+        bootstrap=False,
+        oob_score=False,
+        n_jobs=None,
+        random_state=None,
+        verbose=0,
+        warm_start=False,
+        ccp_alpha=0.0,
+        max_samples=None,
+        monotonic_cst=None,
+        splitter="quantile",
+        p0=0.01,
+        max_n_rules=25,
+        quantile=10,
+        to_not_binarize_colindexes=None,
+        starting_index_one_hot=None,
+    ):
+        super(ForestRegressor, self).__init__(
+            estimator=ExtraTreeRegressor(),
+            n_estimators=n_estimators,
+            estimator_params=(
+                "criterion",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "min_weight_fraction_leaf",
+                "max_features",
+                "max_leaf_nodes",
+                "min_impurity_decrease",
+                "random_state",
+                "ccp_alpha",
+                "monotonic_cst",
+            ),
+            bootstrap=bootstrap,
+            oob_score=oob_score,
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose,
+            warm_start=warm_start,
+            max_samples=max_samples,
+        )
+
+        self.criterion = criterion
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.min_weight_fraction_leaf = min_weight_fraction_leaf
+        self.max_features = max_features
+        self.max_leaf_nodes = max_leaf_nodes
+        self.min_impurity_decrease = min_impurity_decrease
+        self.ccp_alpha = ccp_alpha
+        self.monotonic_cst = monotonic_cst
+        self.splitter = splitter
+        self.p0 = p0
+        self.max_n_rules = max_n_rules
+        self.quantile = quantile
+        self.to_not_binarize_colindexes = to_not_binarize_colindexes
+        self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+
+
+class GBRulesRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters

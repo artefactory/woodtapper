@@ -2,7 +2,7 @@
 title: 'WoodTapper: a Python package for tapping decision tree ensembles'
 tags:
   - Python
-  - machine learning
+  - Machine Learning
   - XAI
 authors:
   - name: Abdoulaye SAKHO
@@ -12,6 +12,7 @@ authors:
     orcid: 0009-0000-1456-3056
     affiliation: 1
   - name: Carl-Erik GAUTHIER
+    orcid: 0009-0009-4256-5425
     affiliation: 3
   - name: Emmanuel MALHERBE
     orcid: 0009-0006-0898-6873
@@ -22,7 +23,6 @@ authors:
 affiliations:
  - name: Artefact Research Center, Paris, France
    index: 1
-   ror: 00hx57361
  - name: Laboratoire de Probabilités, Statistique et Modélisation Sorbonne Université and Université Paris Cité, CNRS, F-75005, Paris
    index: 2
  - name: Societe Générale, Paris, France
@@ -87,9 +87,9 @@ WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interfac
 | **Feature**                 | **WoodTapper (Py)**                        | **SIRUS (R)**                          | **SIRUS (Jl)**           |
 |-----------------------------|--------------------------------------------|----------------------------------------|---------------------------|
 | Language          | Python 3.x                                 | R 4.x                                  | Julia 1.x                 |
-| Forest implementation       | `scikit-learn`                             | `ranger`                               | Own                       |
-| Package availability        | PyPI (`woodtapper`)                    | CRAN (`sirus`)                         | General registry          |
-| Parallel computation        | $\checkmark$  (via `joblib`)                           | Limited (via `parallel`)               | $\checkmark$  (native)               |
+| Forest        | `scikit-learn`                             | `ranger`                               | Own                       |
+| Availability        | PyPI (`woodtapper`)                    | CRAN (`sirus`)                         | General registry          |
+| Parallelism        | $\checkmark$  (via `joblib`)                           | Limited (via `parallel`)               | $\checkmark$  (native)               |
 | ML pipelines                | $\checkmark$                                           | Partial                                | Partial                   |
 | Tree-based models           | All                                        | random forest                          | random forest             |
 | Rules interface             | Unified class methods                      | Function-based                         | Function-based            |
@@ -107,9 +107,9 @@ We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads 
 
 We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic dataset. Both implementations yield identical rules, and very similar predictive performance (see Table \ref{tab:perf_metrics}), confirming that our Python version faithfully reproduces the original algorithm.
 
-![SIRUS (R).\label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
+![SIRUS (R) rules on Titanic data set. \label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
 
-![Python (Ours). \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
+![Woodtapper SIRUS (Ours) rules on Titanic data set. \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
 
 
 : **Performance metrics for Titanic and House Sales datasets.**\label{tab:perf_metrics}
@@ -134,9 +134,9 @@ $$
 w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_l(x)\}}}{|\mathcal{L}_l(x)|}.
 $$
 
-Finally the $p$ training samples with the  highest $w_{x}(x_i)$ values are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
+Finally the $p$ training samples with the highest $w_{x}(x_i)$ values, along with their target values, are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
-%The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
+The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifier for specfific learning task (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
 ## Implementation and running time
 As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is implemented as a Python Mixin for handling example-based explanations. It is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses.
@@ -157,11 +157,9 @@ We compare the runtime of $\texttt{ExampleExplanation}$ with the kernel weight c
 
 ![Weights computation running time for simulated data using.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
 
-## Sampled examples
-
 
 # Acknowledgements
 
-We would like to express our gratitude to Alexandre CHAUSSARD and Vincent AURIAU for their valuable help and feedbacks.
+We would like to express our gratitude to Clément BENARD, Alexandre CHAUSSARD and Vincent AURIAU for their valuable help and feedbacks.
 
 # References

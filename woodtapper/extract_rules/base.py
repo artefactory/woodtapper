@@ -210,7 +210,7 @@ class RulesExtractorMixin:
         self._fit_quantile_classifier(X, y, sample_weight)
         rules_ = []
         estimators = (
-            self.estimators_[:, 0]
+            self.estimators_.flatten()  # flattened if needed
             if isinstance(self.estimators_[0], np.ndarray)
             else self.estimators_
         )
@@ -440,6 +440,14 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
             random_state=self.random_state,
         )
         self.ridge.fit(gamma_array, y)
+        self.list_probas_by_rules_without_coefficients = (
+            self.list_probas_by_rules.copy()
+        )
+        self.list_probas_outside_by_rules_without_coefficients = (
+            self.list_probas_outside_by_rules.copy()
+        )
+        self.list_coefficients_by_rules = self.ridge.coef_
+        self.coeff_intercept = self.ridge.intercept_
         for indice in range(len(self.rules_)):
             # Scale the probabilities by the learned coefficients
             coeff = (
@@ -461,8 +469,6 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
         ----------
         X : array-like of shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, default=True
-            Whether to add the predictions from outside the rules.
         Returns
         -------
         y_pred : ndarray of shape (n_samples,)

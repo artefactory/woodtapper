@@ -27,7 +27,7 @@ pip install -e .[dev]
 
 WoodTapper requires the following:
 
-* Python (>=3.12)
+* Python (==3.12)
 * Numpy (>=2.3.1)
 * Pandas (>=2.3.0)
 * Scikit-learn (>=1.6.1)

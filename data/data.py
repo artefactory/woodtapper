@@ -3,6 +3,13 @@ import os
 import pandas as pd
 from scipy.io.arff import loadarff
 from ucimlrepo import fetch_ucirepo
+from sklearn.datasets import (
+    fetch_california_housing,
+    load_breast_cancer,
+    load_diabetes,
+    fetch_openml,
+)
+
 
 DATA_DIR = os.path.join(
     os.path.abspath(os.getcwd()),
@@ -67,7 +74,7 @@ def load_california_data():
     return X_cal_housing, y_cal_housing
 
 
-def load_houses_sales_data():
+def load_houses_sales_reg_data():
     """
     Load House Sales of Léo Grinsztajn data set from data folder
     The name of the file shoulde be : house_sales_leo.arff
@@ -105,8 +112,8 @@ def load_wine_data():
 
 def load_titatnic_data():
     """
-    Load PIMA diabates data set from data folder
-    The name of the file shoulde be : diabetes.csv
+    Load Titanic data set from data folder
+    The name of the file should be : Titanic-Dataset.csv
     """
     filename = "Titanic-Dataset.csv"
     try:
@@ -128,7 +135,7 @@ def load_titatnic_data():
 
 def load_titatnic_benard_data():
     """
-    Load PIMA diabates data set from data folder
+    Load Titanic diabates data set from data folder
     The name of the file shoulde be : diabetes.csv
     """
     filename = "titanic.csv"
@@ -168,3 +175,78 @@ def load_adult_data():
     X_adult = df_adult.drop(["income"], axis=1).to_numpy()
     y_adult = df_adult[["income"]].to_numpy().ravel()
     return X_adult, y_adult
+
+
+def load_BankChurners_data():
+    r"""
+    Load BankChurners data set from data/externals folder
+    The name of the file should be : BankChurners.csv
+    """
+    filename = "BankChurners.csv"
+    df_bankchurners = pd.read_csv(os.path.join(DATA_DIR, filename))
+
+    X_bankChurners = df_bankchurners.drop(
+        [
+            "CLIENTNUM",
+            "Attrition_Flag",
+            "Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1",
+            "Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2",
+        ],
+        axis=1,
+    ).to_numpy()
+    y_bankChurners = (
+        df_bankchurners[["Attrition_Flag"]]
+        .replace({"Attrition_Flag": {"Existing Customer": 0, "Attrited Customer": 1}})
+        .to_numpy()
+        .ravel()
+    )
+    return X_bankChurners, y_bankChurners
+
+
+def load_BankMarketing_data():
+    """
+    Load BankMarketing data set from UCI Irvine.
+    """
+    # fetch dataset
+    bank_marketing = fetch_ucirepo(id=222)
+    # data (as pandas dataframes)
+    X = bank_marketing.data.features
+    y = bank_marketing.data.targets
+
+    X.fillna("unknow", inplace=True)  # fillna
+    y.replace({"y": {"yes": 1, "no": 0}}, inplace=True)
+    X = X.to_numpy()
+    y = y.to_numpy().ravel()
+    return X, y
+
+
+def load_california_reg_data():
+    """
+    Load California Housing data set from sklearn datasets.
+    """
+    X, y = fetch_california_housing(return_X_y=True)
+    return X, y
+
+
+def load_bcw_data():
+    """
+    Load Breast Cancer Wisconsin data set from sklearn datasets.
+    """
+    X, y = load_breast_cancer(return_X_y=True)
+    return X, y
+
+
+def load_diabetes_reg_data():
+    """
+    Load diabetes data set from sklearn datasets.
+    """
+    X, y = load_diabetes(return_X_y=True)
+    return X, y
+
+
+def load_house_16H_reg_data():
+    """
+    Load House 16H data set from openml datasets.
+    """
+    X, y = fetch_openml(data_id=44139, return_X_y=True)
+    return X, y

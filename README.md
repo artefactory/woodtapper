@@ -23,12 +23,15 @@
 </div>
 
 ## 🪵 Key Features
-WoodTapper is a Python toolbox for:
+WoodTapper is a Python toolbox that provides:
 
-- Rule extraction from tree-based ensembles.
-- Example-based explanation module that links predictions to a small set of representative samples.
+- Rule extraction from tree-based ensembles: Generates a final estimator composed of a sequence of simple rule-based on features and thresholds.
 
-Woodtapper is fully compatible with scikit-learn forests and boosting models.
+- Example-based explanations: Connects predictions to a small set of representative samples, returning the most similar examples along with their target values.
+
+Detailed information about the modules can be found [here.](https://artefactory.github.io/woodtapper/0_tutorials/)
+
+WoodTapper is fully compatible with scikit-learn tree ensemble models.
 
 ## 🛠 Installation
 
@@ -38,12 +41,13 @@ pip install woodtapper
 ```
 
 **From this repository, within a pip/conda/mamba environment (python=3.12)**:
+```bash
 pip install -r requirements.txt
 pip install -e '.[dev]'
+```
 
 ## 🌿 WoodTapper RulesExtraction module
 ```python
-## RandomForestClassifier rules extraction
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
 
@@ -56,7 +60,6 @@ show_rules(Sirus,max_rules=10) # Show rules
 
 ## 🌱 WoodTapper ExampleExplanation module
 ```python
-## RandomForestClassifier rules extraction
 from woodtapper.example_sampling import RandomForestClassifierExplained
 
 rf_explained = RandomForestClassifierExplained(n_estimators=100)
