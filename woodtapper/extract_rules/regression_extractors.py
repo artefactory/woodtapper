@@ -128,7 +128,7 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
 
-class ETExtractorRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor):
+class ExtraTreesRulesRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor):
     """
     Rules extractor applied with a ExtraTreeRegressor.
 
@@ -241,7 +241,7 @@ class ETExtractorRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
 
-class GbExtractorRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
+class GBRulesRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
     """
     Class for rules extraction from a GradientBoostingRegressor
     Parameters

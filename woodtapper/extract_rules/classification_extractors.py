@@ -131,7 +131,7 @@ class SirusClassifier(RulesExtractorClassifierMixin, RandomForestClassifier):
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
 
 
-class ETExtractorClassifier(RulesExtractorClassifierMixin, ExtraTreesClassifier):
+class ExtraTreesRulesClassifier(RulesExtractorClassifierMixin, ExtraTreesClassifier):
     """
     Rules extractor applied with a ExtraTreesClassifier.
 
@@ -250,14 +250,14 @@ class ETExtractorClassifier(RulesExtractorClassifierMixin, ExtraTreesClassifier)
 class QuantileDecisionTreeRegressor(DecisionTreeRegressor):
     """
     DecisionTreeRegressor of scikit -learn with the "quantile" spliiter option.
-    Used for GradientBoostingClassifier in GbExtractorClassifier
+    Used for GradientBoostingClassifier in GBRulesClassifier
     """
 
     _parameter_constraints: dict = {**DecisionTreeRegressor._parameter_constraints}
     _parameter_constraints["splitter"] = [StrOptions({"best", "random", "quantile"})]
 
 
-class GbExtractorClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
+class GBRulesClassifier(RulesExtractorClassifierMixin, GradientBoostingClassifier):
     """
     Class for rules extraction from  a GradientBoostingClassifier
     Parameters

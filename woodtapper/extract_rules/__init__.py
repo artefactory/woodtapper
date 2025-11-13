@@ -2,20 +2,20 @@
 
 from .classification_extractors import (
     SirusClassifier,
-    ETExtractorClassifier,
-    GbExtractorClassifier,
+    ExtraTreesRulesClassifier,
+    GBRulesClassifier,
 )
 from .regression_extractors import (
     SirusRegressor,
-    ETExtractorRegressor,
-    GbExtractorRegressor,
+    ExtraTreesRulesRegressor,
+    GBRulesRegressor,
 )
 
 __all__ = [
     "SirusClassifier",
-    "ETExtractorClassifier",
+    "ExtraTreesRulesClassifier",
     "SirusRegressor",
-    "ETExtractorRegressor",
-    "GbExtractorClassifier",
-    "GbExtractorRegressor",
+    "ExtraTreesRulesRegressor",
+    "GBRulesClassifier",
+    "GBRulesRegressor",
 ]
