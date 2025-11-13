@@ -469,8 +469,6 @@ class RulesExtractorRegressorMixin(RulesExtractorMixin):
         ----------
         X : array-like of shape (n_samples, n_features)
             The input samples.
-        to_add_probas_outside_rules : bool, default=True
-            Whether to add the predictions from outside the rules.
         Returns
         -------
         y_pred : ndarray of shape (n_samples,)
