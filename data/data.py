@@ -179,8 +179,8 @@ def load_adult_data():
 
 def load_BankChurners_data():
     r"""
-    Load BankChurners data set from data\dexternals folder
-    The name of the file shoulde be : BankChurners.csv
+    Load BankChurners data set from data/externals folder
+    The name of the file should be : BankChurners.csv
     """
     filename = "BankChurners.csv"
     df_bankchurners = pd.read_csv(os.path.join(DATA_DIR, filename))
