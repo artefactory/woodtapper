@@ -18,7 +18,7 @@ from woodtapper.example_sampling import RandomForestClassifierExplained
 
 ```python
 iris = load_iris()
-X = pd.DataFrame(iris.data, columns=["a","b","c","d"] )
+X = pd.DataFrame(iris.data, columns=iris.feature_names)
 y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 ```
