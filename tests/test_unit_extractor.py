@@ -5,10 +5,10 @@ import numpy as np
 from woodtapper.extract_rules import (
     SirusClassifier,
     SirusRegressor,
-    ETExtractorClassifier,
-    ETExtractorRegressor,
-    GbExtractorClassifier,
-    GbExtractorRegressor,
+    ExtraTreesRulesClassifier,
+    ExtraTreesRulesRegressor,
+    GBRulesClassifier,
+    GBRulesRegressor,
 )
 from woodtapper.extract_rules.visualization import show_rules
 
@@ -27,22 +27,22 @@ def test_sirus_fit(simple_dataset, simple_regression_data):
     assert len(model_regressor.estimators_) > 0
     assert model_regressor.max_n_rules > 0
 
-    model = ETExtractorClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
+    model = ExtraTreesRulesClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
     model.fit(X, y)
     assert len(model.estimators_) > 0
     assert model.max_n_rules > 0
 
-    model_regressor = ETExtractorRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
+    model_regressor = ExtraTreesRulesRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
     model_regressor.fit(X_reg, y_reg)
     assert len(model_regressor.estimators_) > 0
     assert model_regressor.max_n_rules > 0
 
-    model_gb_clf = GbExtractorClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
+    model_gb_clf = GBRulesClassifier(n_estimators=100, p0=0.0, max_n_rules=5)
     model_gb_clf.fit(X, y)
     assert len(model_gb_clf.estimators_) > 0
     assert model_gb_clf.max_n_rules > 0
 
-    model_gb_regressor = GbExtractorRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
+    model_gb_regressor = GBRulesRegressor(n_estimators=100, p0=0.0, max_n_rules=5)
     model_gb_regressor.fit(X_reg, y_reg)
     assert len(model_gb_regressor.estimators_) > 0
     assert model_gb_regressor.max_n_rules > 0
@@ -103,6 +103,7 @@ if   Feature[1] <= 0.97   then 38%                else 90%"""
     show_rules(model_regressor, max_rules=3, is_regression=True)
     sys.stdout = sys.__stdout__
     output = captured_output.getvalue().strip()
+    print(output)
     expected_output = """---------------------------------------------------------
 Intercept : -6.896237002187981
 if   Feature[1] <= 0.53   then -42.01             else 127.47 | coeff=0.03
