@@ -112,8 +112,8 @@ def load_wine_data():
 
 def load_titatnic_data():
     """
-    Load Titanic diabates data set from data folder
-    The name of the file shoulde be : diabetes.csv
+    Load Titanic data set from data folder
+    The name of the file should be : Titanic-Dataset.csv
     """
     filename = "Titanic-Dataset.csv"
     try:
