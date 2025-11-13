@@ -12,6 +12,7 @@ authors:
     orcid: 0009-0000-1456-3056
     affiliation: 1
   - name: Carl-Erik GAUTHIER
+    orcid: 0009-0009-4256-5425
     affiliation: 3
   - name: Emmanuel MALHERBE
     orcid: 0009-0006-0898-6873
