@@ -64,7 +64,7 @@ from woodtapper.example_sampling import RandomForestClassifierExplained
 
 rf_explained = RandomForestClassifierExplained(n_estimators=100)
 rf_explained.fit(X_train,y_train)
-X_explain, y_explain = rf_explained.explanation(X_test) # Get the 5 most similar samples for each test sample
+Xy_explain = rf_explained.explanation(X_test) # Get the 5 most similar samples (and target) for each test sample
 ```
 
 ## 🙏 Acknowledgements
