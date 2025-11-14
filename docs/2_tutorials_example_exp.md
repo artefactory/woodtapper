@@ -33,7 +33,7 @@ RFExplained.fit(X_train,y_train)
 
 ## Generate example-based explainability
 ```python
-X_explain, y_explain = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
+Xy_explain = RFExplained.explanation(X_test) # Get the 5 most similar samples for each test sample
 ```
 
 ```python
@@ -42,14 +42,9 @@ X_test.iloc[0,:]  # First test sample
 ![](images/x-test-0.png)
 
 ```python
-X_explain[0] # Explanations for the first test sample
+Xy_explain[0] # Explanation for the first test sample
 ```
-![](images/x-explain-0.png)
-
-```python
-y_explain[0] # Corresponding labels for the explanations of the first test sample
-```
-![](images/y-explain-0.png)
+![](images/Xy-explain-0.png)
 
 ## Load an existing RandomForestClassifier into the explainer
 
