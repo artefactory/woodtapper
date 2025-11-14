@@ -10,7 +10,7 @@ pip install woodtapper
 ```
 
 ## From Source
-Otherwise you can use the git repository to get the latest version (with python 3.11 or 2.12):
+Otherwise you can use the git repository to get the latest version (with python 3.11 or 3.12):
 ```bash
 git clone https://github.com/artefactory/woodtapper.git
 ```
