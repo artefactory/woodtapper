@@ -118,7 +118,7 @@ def show_rules(
                 )
 
     print(base_ps_text)
-    header_condition = "IF Condition"
+    header_condition = "   Condition"
     header_then = f"     THEN P(C{target_class_index})"
     header_else = f"     ELSE P(C{target_class_index})"
 
