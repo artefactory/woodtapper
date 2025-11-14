@@ -64,11 +64,11 @@ $$
         \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}  \text{ otherwise }.
     \end{cases}
 $$
-We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a random forest, each grown with randomness $\Theta_m$. For a path $\mathcal{P}$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}_{M,n}$,
+We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a random forest, each grown with randomness $\Theta_m$. For a path $\mathcal{P}$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}$,
 $$
     \hat{p}_{}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{m=1}^{M} \mathbb{1}_{\{\mathcal{P} \in \mathcal{T}(\Theta_m,\mathcal{D}_n)\}},
 $$
-which corresponds to the probability that the path $\mathcal{P}$ belongs to the set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$. We denote by $\Pi $ the set of extracted rules from $\{\mathcal{T}_m, m=1, \dots, M \}$.
+which corresponds to the probability that the path $\mathcal{P}$ belongs to the set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$. We denote by $\Pi$ the set of extracted rules from $\{\mathcal{T}_m, m=1, \dots, M \}$.
 
 The set of final rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{p_0}\}$ where $\hat{\mathcal{P}}_{p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}(\mathcal{P}) > p_0\right\}$ with $p_0 \in [0,1)$. The finals rules are aggregated as follows for building the final estimator:
 $$
