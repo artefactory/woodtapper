@@ -31,9 +31,7 @@ jobs:
       - name: Install dependencies and Build Cython extensions
         run: |
           pip install -e .[dev,docs]
-      #python setup.py build_ext --inplace
 
-      # --- Run pytest with coverage
       - name: Run tests with coverage
         run: |
           pytest --cov=woodtapper/extract_rules --cov=woodtapper/example_sampling/ --cov-report=term-missing --cov-report=xml

@@ -83,10 +83,11 @@ def test_rules_vizualization(simple_dataset, simple_regression_data):
     )  # Reset stdout
     sys.stdout = sys.__stdout__  # Check the result
     output = captured_output.getvalue().strip()
+    print(output)
     expected_output = """Estimated average rate for target class 1 (from 'else' clauses) p_s = 66%.
 (Note: True average rate should be P(Class=1) from training data).
 
-IF Condition              THEN P(C1)      ELSE P(C1)
+   Condition              THEN P(C1)      ELSE P(C1)
 ---------------------------------------------------------
 if   Feature[0] <= 0.42   then 20%                else 90%
 if   Feature[1] > -0.37   then 63%                else 13%
@@ -108,7 +109,6 @@ if   Feature[1] <= 0.97   then 38%                else 90%"""
     show_rules(model_regressor, max_rules=3, is_regression=True)
     sys.stdout = sys.__stdout__
     output = captured_output.getvalue().strip()
-    print(output)
     expected_output = """---------------------------------------------------------
 Intercept : -6.896237002187981
 if   Feature[1] <= 0.53   then -42.01             else 127.47 | coeff=0.03
