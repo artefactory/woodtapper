@@ -55,7 +55,7 @@ In a tree $\mathcal{T}$, we denote the path of successive splits from the root n
 $$
     \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, K\},
 $$
-where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ the corresponding sign (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
+where $K$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ the corresponding sign (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
 Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{D},\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$:
 $$
     \hat{g}_{\mathcal{P}}(x) =
@@ -126,14 +126,14 @@ We compare the rules produced by the original SIRUS (R) and our Python implement
 ## Formulation
 
 The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of the rule extraction module and provides an example-based explainability.
-It enables tree-based models to identify the $k \in \mathbb{N}$ most similar training samples to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf].
-For a new sample $x$ with unknown label and $T_m$a decision tree, let $\mathcal{L}_m(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_m$, $m = 1, \dots, M$.
+It enables tree-based models to identify the $l \in \mathbb{N}$ most similar training samples to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf].
+For a new sample $x$ with unknown label and $\mathcal{T}_m$ a decision tree, let $\mathcal{L}_m(x)$ denote the set of training samples that share the same leaf as $x$ in tree $\mathcal{T}_m$, $m = 1, \dots, M$.
 Letting $w(x,x_i)$ be the similarity between $x$ and $x_i$, we have
 $$
 w(x,x_i) = \frac{1}{M} \sum_{m=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_m(x)\}}}{|\mathcal{L}_m(x)|}.
 $$
 
-Finally the $k$ training samples with the highest $w(x,x_i)$ values, along with their target values, are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
+Finally the $l$ training samples with the highest $w(x,x_i)$ values, along with their target values, are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
 
 The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
