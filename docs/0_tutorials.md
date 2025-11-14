@@ -35,12 +35,12 @@ For a path $\mathcal{P}$, $p_n\left(\mathcal{P}\right)$ is estimated via Monte-C
 
 $$\hat{p}_{M,n}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.$$
 
-All in all, the SIRUS algorithm follows the following steps:
+All in all, the extraction algorithm follows the following steps:
 
 
 1. Train a random forest with $M$ trees where splits can only be performed on the empirical $q$-quantiles (computed on the whole data set) of each variable.
 2. Extract all paths $\mathcal{P}$ from the random forest. Let $\Pi$ be the set of these  paths.
-3. Let $p_0 \in (0,1)$ be an hyperparameter of SIRUS. Only the paths that have a frequency superior to $p_0$ are kept. Denote the set of such paths by $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$. Then all paths that are linearly dependent on paths with higher $\hat{p}_{M,n}$ are removed from $\hat{\mathcal{P}}_{M,n,p_0}$.
+3. Let $p_0 \in (0,1)$ be an hyperparameter of the extraction procedure. Only the paths that have a frequency superior to $p_0$ are kept. Denote the set of such paths by $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$. Then all paths that are linearly dependent on paths with higher $\hat{p}_{M,n}$ are removed from $\hat{\mathcal{P}}_{M,n,p_0}$.
 
 
 The set of finals rules is $\{\hat{g}_{n,\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,n,p_0}\}$ is aggregated as follows for building the final estimator:
@@ -49,7 +49,7 @@ $$
     \hat{\eta}_{M,np_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,n,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,n,p_0}} \hat{g}_{n,\mathcal{P}}(x).
 $$
 
-So far, we have focused on binary classification for clarity. SIRUS was originally implemented in R for both binary classification and regression, with the regression version differing only in how the final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS to multiclass classification (not available in the original R version) as well as regression.
+So far, we have focused on binary classification for clarity. The extraction procedure was originally implemented in R for both binary classification and regression, with the regression version differing only in how the final rules are aggregated using weights learned via ridge regression. Our implementation extends the procedure to multiclass classification (not available in the original R version) as well as regression.
 
 ## Example-based explainability:
 

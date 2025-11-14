@@ -10,9 +10,9 @@ pip install woodtapper
 ```
 
 ## From Source
-Otherwise you can use the git repository to get the latest version:
+Otherwise you can use the git repository to get the latest version (with python 3.11 or 2.12):
 ```bash
-git clone git@github.com:artefactory/mgs-grf.git
+git clone https://github.com/artefactory/woodtapper.git
 ```
 And install the required packages into your environment (conda, mamba or pip):
 ```bash
@@ -27,7 +27,7 @@ pip install -e .[dev]
 
 WoodTapper requires the following:
 
-* Python (==3.12)
+* Python (>=3.11,<3.13)
 * Numpy (>=2.3.1)
 * Pandas (>=2.3.0)
 * Scikit-learn (>=1.6.1)

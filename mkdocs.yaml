@@ -4,6 +4,7 @@ theme:
   name: "material"
   repo_url: https://github.com/artefactory/woodtapper
   repo_name: WoodTapper
+  edit_uri: edit/name/docs/
   palette:
       - media: "(prefers-color-scheme: dark)"
         scheme: default
