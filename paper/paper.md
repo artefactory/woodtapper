@@ -49,31 +49,30 @@ In addition, WoodTapper introduces an example-based explainability methodology t
 
 In this section, we present our $\texttt{RulesExtractor}$ module, which is compatible with any ensemble of trees. In the following, we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
 
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs that takes values respectively in $\mathbb{R}^p$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs that takes values respectively in $\mathbb{R}^p$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ component of a $i$-th sample in $\mathcal{D}_n$.
 
 In a tree $\mathcal{T}$, we denote the path of successive splits from the root node by $\mathcal{P}$, defined as
 $$
-    \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
+    \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, K\},
 $$
 where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ the corresponding sign (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
 Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{D},\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$:
 $$
-    \hat{g}_{\mathcal{D},\mathcal{P}}(x) =
+    \hat{g}_{\mathcal{P}}(x) =
     \begin{cases}
         \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}  \text{ if } x \in \hat{H}(\mathcal{P})\\
         \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}  \text{ otherwise }.
     \end{cases}
 $$
+We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a random forest, each growned with randomness $\Theta_m$. For a path $\mathcal{P}$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}_{M,n}$,
+$$
+    \hat{p}_{}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{m=1}^{M} \mathbb{1}_{\{\mathcal{P} \in \mathcal{T}(\Theta_m,\mathcal{D}_n)\}},
+$$
+which corresponds to the probability that the path $\mathcal{P}$ belongs set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$. We denote by $\Pi $ the set of extracted rules from $\{\mathcal{T}_m, m=1, \dots, M \}$.
 
-For a path $\mathcal{P}$ and a set of trees $\mathcal{T}_l (l=1..M)$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}_{M,n}$,
+The set of finals rules set is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{p_0}\}$ where $\hat{\mathcal{P}}_{p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}(\mathcal{P}) > p_0\right\}$ with $p_0 \in [0,1)$. The finals rules are aggregated as follows for building the final estimator:
 $$
-    \hat{p}_{}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.
-$$
-Which corresponds to the probability that the path $\mathcal{P}$ belongs to a $\Theta$-random tree, if $\mathcal{T}_l$ parameters are following the $\Theta$ distribution.
-
-The set of finals rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,p_0}\}$ where $\hat{\mathcal{P}}_{M,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M}(\mathcal{P}) > p_0\right\}$ with $p_0 \in (0,1)$. The finals rules are aggregated as follows for building the final estimator:
-$$
-    \hat{\eta}_{M,p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,p_0}} \hat{g}_{\mathcal{P}}(x).
+    \hat{\eta}_{p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
 So far, we have focused on binary classification for clarity.
@@ -96,7 +95,7 @@ WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interfac
 | Tree depth $≥ 3$            | $\checkmark$                                           | $\checkmark$                                       | $\times$                          |
 | Classification              | Multiclass                                | Binary                                 | Multiclass                |
 
-We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, independent of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
+We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM, tested on the same dataset generated via scikit-learn. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, regardless of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
 
 ![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
@@ -107,9 +106,9 @@ We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads 
 
 We compare the rules produced by the original SIRUS (R) and our Python implementation (WoodTapper) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic dataset. Both implementations yield identical rules, and very similar predictive performance (see Table \ref{tab:perf_metrics}), confirming that our Python version faithfully reproduces the original algorithm.
 
-![SIRUS (R) rules on Titanic data set. \label{fig:sub-titanic-r}](images/rules-titanic-r.pdf){ width=70% }
+![SIRUS (R) rules on Titanic data set. \label{fig:sub-titanic-r}](images/rules-titanic-r-final.pdf){ width=70% }
 
-![Woodtapper SIRUS (Ours) rules on Titanic data set. \label{fig:sub-titanic-py}](images/rules-titanic-py.pdf){ width=70% }
+![Woodtapper SIRUS (Ours) rules on Titanic data set. \label{fig:sub-titanic-py}](images/rules-titanic-py-final.pdf){ width=70% }
 
 
 : **Performance metrics for Titanic and House Sales datasets.**\label{tab:perf_metrics}
@@ -126,7 +125,7 @@ We compare the rules produced by the original SIRUS (R) and our Python implement
 
 ## Formulation
 
-The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides an example-based explainability.
+The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of the rule extraction module and provides an example-based explainability.
 It enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests [@breiman2001random;@grf]. Specifically, the similarity between $x$ and a training sample $x_i \in \mathcal{D}$ is defined as the proportion of trees in which the sample and $x$ fall into the same leaf.
 For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
 Letting $w_{x}(x_i)$ be the similarity between $x$ and $x_i$, we have
