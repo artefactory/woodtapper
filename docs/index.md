@@ -24,7 +24,7 @@ The mathematical formulation of WoodTapper modules are available [here](./0_tuto
 Example tutorials are also available for each module:
 
   - [Tutorials for Rules Extraction](1_tutorials.md)
-  - [Tutorials for Example-based Expalinability](2_tutorials_example_exp.md)
+  - [Tutorials for Example-based Explainability](2_tutorials_example_exp.md)
 
 
 ## What's in there ?
