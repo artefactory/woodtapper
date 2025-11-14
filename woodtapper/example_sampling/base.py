@@ -161,4 +161,4 @@ class ExplanationMixin:
             weights = np.array(list_weights)  # n_samples x n_train
         most_similar_idx = np.argsort(-weights, axis=1)[:, :n_examples]
         # Get the 5 most similar samples
-        return self.train_X[most_similar_idx], self.train_y[most_similar_idx]
+        return list(zip(self.train_X[most_similar_idx], self.train_y[most_similar_idx]))
