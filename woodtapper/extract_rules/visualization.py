@@ -8,34 +8,59 @@ from .utils import _from_rules_to_constraint
 
 
 def show_rules(
-    RulesExtractorModel, max_rules=9, target_class_index=1, is_regression=False
+    RulesExtractorModel,
+    max_rules=9,
+    target_class_index=1,
+    is_regression=False,
+    value_mappings=None,
 ):
     """
-    Display the rules in a structured format, showing the conditions and associated probabilities for a specified target class.
+    Display the rules in a structured format, showing the conditions and associated probabilities for a specified
+    target class (classification) or contributions (regression).
+
     Parameters
     ----------
     RulesExtractorModel : object
-        The fitted rules extraction model containing the rules and probabilities.
+        The fitted rules extraction model containing the rules and probability / score attributes.
     max_rules : int, optional (default=9)
         The maximum number of rules to display.
     target_class_index : int, optional (default=1)
-        The index of the target class for which to display probabilities.
-    list_indices_features_bin : list of int, optional (default=None)
-        List of feature indices that are binary (0/1) for special formatting.
+        The index of the target class for which to display probabilities (classification only).
+    is_regression : bool, optional (default=False)
+        If True, interpret probas lists as regression contributions instead of class probabilities.
+    value_mappings : dict, optional (default=None)
+        Optional mapping to display human-readable categorical levels instead of raw 0/1 or numeric codes.
+        Expected structure:
+            {
+                <feature_id or feature_name>: {
+                    <raw_value>: <display_string>,
+                    ...
+                },
+                ...
+            }
+        Keys for the outer dict can be either:
+            - the feature index (int) as used internally
+            - the resolved feature name (str) from feature_names_in_ / feature_names_
+        Nested dict maps raw threshold/indicator values (e.g., 0, 1, 2) to strings.
+        For one-hot / binary encoded features:
+            - If both 0 and 1 are available, the function will attempt to render
+              "FeatureName is <mapped_1>" when the rule implies presence (> threshold),
+              and "FeatureName is not <mapped_1>" (or "is <mapped_0>") when implying absence.
+        If a mapping is missing for a value, the raw numeric value is shown.
+
     Returns
-    ----------
+    -------
     None
-    1. Validate the presence of necessary attributes in the model.
-    2. Extract rules and their associated probabilities.
-    3. Format and display the rules in a tabular format.
-    4. Include estimated average rates for the specified target class.
-    5. Handle feature names for better readability, using provided mappings if available.
-    6. Adjust formatting for binary features if specified.
-    7. Ensure that the display is clear and informative, with appropriate headers and alignment.
-    8. If the model lacks the required attributes, print an error message and exit.
-    9. If there are no rules to display, print a corresponding message and exit.
-    10. Calculate and display the estimated average probability for the target class based on 'else' clauses.
-    11. Print the rules along with their conditions, 'then' probabilities, and 'else' probabilities in a structured table.
+        Prints a table of rules with their THEN / ELSE probabilities (classification) or contributions (regression).
+
+    Notes
+    -----
+    1. Validates required model attributes.
+    2. Builds feature name mapping if available.
+    3. Applies value_mappings when provided.
+    4. Handles binary / categorical formatting.
+    5. Prints estimated outside probability baseline (classification).
+    6. For regression, prints intercept and coefficient info.
     """
     if (
         not hasattr(RulesExtractorModel, "rules_")
@@ -51,7 +76,10 @@ def show_rules(
         raise ValueError(
             "For regression, model must have 'list_probas_by_rules_without_coefficients' attribute."
         )
-    list_indices_features_bin = RulesExtractorModel._list_categorical_indexes
+
+    list_indices_features_bin = getattr(
+        RulesExtractorModel, "_list_categorical_indexes", None
+    )
 
     rules_all = RulesExtractorModel.rules_
     if is_regression:
@@ -76,27 +104,19 @@ def show_rules(
             "No rules to display. try to increase the number of rules extracted or check model fitting."
         )
 
-    # Attempt to build/use feature mapping
+    # Build feature mapping (index -> name)
     feature_mapping = None
-    if hasattr(
-        RulesExtractorModel, "feature_names_in_"
-    ):  # Standard scikit-learn attribute
-        # Create a mapping from index to name if feature_names_in_ is a list
+    if hasattr(RulesExtractorModel, "feature_names_in_"):
         feature_mapping = {
             i: name for i, name in enumerate(RulesExtractorModel.feature_names_in_)
         }
-    elif hasattr(
-        RulesExtractorModel, "feature_names_"
-    ):  # Custom attribute for feature names
+    elif hasattr(RulesExtractorModel, "feature_names_"):
         if isinstance(RulesExtractorModel.feature_names_, dict):
-            feature_mapping = (
-                RulesExtractorModel.feature_names_
-            )  # Assumes it's already index:name
+            feature_mapping = RulesExtractorModel.feature_names_
         elif isinstance(RulesExtractorModel.feature_names_, list):
             feature_mapping = {
                 i: name for i, name in enumerate(RulesExtractorModel.feature_names_)
             }
-    # If no mapping, column_name will default to using indices.
 
     base_ps_text = ""
     if not is_regression:
@@ -125,6 +145,26 @@ def show_rules(
     max_condition_len = 0
     condition_strings_for_rules = []
 
+    # Helper to resolve mapped value
+    def _map_value(dim, dim_name, raw_val):
+        if value_mappings is None:
+            return None
+        candidates = []
+        # Try using index, then name
+        candidates.append(dim)
+        if dim_name is not None:
+            candidates.append(dim_name)
+        for c in candidates:
+            if c in value_mappings:
+                # Try exact raw_val, int(raw_val), string cast
+                nested = value_mappings[c]
+                if raw_val in nested:
+                    return nested[raw_val]
+                # If raw_val is float like 0.0 / 1.0
+                if isinstance(raw_val, (float, np.floating)) and int(raw_val) in nested:
+                    return nested[int(raw_val)]
+        return None
+
     for i in range(num_rules_to_show):
         current_rule_conditions = rules_all[i]
         condition_parts_str = []
@@ -133,7 +173,8 @@ def show_rules(
                 rule=current_rule_conditions[j]
             )
 
-            column_name = f"Feature[{dimension}]"  # Default if no mapping
+            # Resolve feature name
+            column_name = f"Feature[{dimension}]"
             if feature_mapping and dimension in feature_mapping:
                 column_name = feature_mapping[dimension]
             elif (
@@ -141,23 +182,63 @@ def show_rules(
                 and isinstance(dimension, str)
                 and dimension in feature_mapping.values()
             ):
-                # If dimension is already a name that's in the mapping's values (less common for index)
-                column_name = dimension
-            if (
+                column_name = dimension  # Already a name
+
+            is_binary = (
                 list_indices_features_bin is not None
                 and dimension in list_indices_features_bin
-            ):
-                sign_display = "is"  # if sign_internal == "L" else "is not"
-                # treshold_display = str(treshold)
-                treshold_display = str(0) if sign_internal == "L" else str(1)
-            else:
-                sign_display = "<=" if sign_internal == "L" else ">"
-                treshold_display = (
-                    f"{treshold:.2f}" if isinstance(treshold, float) else str(treshold)
-                )
-            condition_parts_str.append(
-                f"{column_name} {sign_display} {treshold_display}"
             )
+
+            if is_binary:
+                # Interpret binary presence/absence
+                # Original logic forced "is 0" / "is 1". We improve display using mapping if available.
+                # sign_internal == "L" -> "<=" threshold (often absence if threshold ~0.5)
+                # sign_internal == "R" -> ">" threshold (presence)
+                # We still manufacture a pseudo raw indicator (0 or 1) to feed mapping.
+                raw_indicator = 0 if sign_internal == "L" else 1
+                mapped = _map_value(dimension, column_name, raw_indicator)
+
+                if mapped is not None:
+                    if sign_internal == "R":
+                        # presence
+                        condition_parts_str.append(f"{column_name} is {mapped}")
+                    else:
+                        # absence (choose a readable negation form)
+                        # If both 0 and 1 mapped and we used 0, we can show "is {mapped}" or "is not <value_of_1>"
+                        mapped_one = _map_value(dimension, column_name, 1)
+                        if mapped_one is not None:
+                            condition_parts_str.append(
+                                f"{column_name} is not {mapped_one}"
+                            )
+                        else:
+                            condition_parts_str.append(f"{column_name} is {mapped}")
+                else:
+                    # Fallback to numeric
+                    sign_display = "is"
+                    treshold_display = str(raw_indicator)
+                    condition_parts_str.append(
+                        f"{column_name} {sign_display} {treshold_display}"
+                    )
+            else:
+                # Numeric / non-binary
+                sign_display = "<=" if sign_internal == "L" else ">"
+                if isinstance(treshold, float):
+                    treshold_display_raw = float(f"{treshold:.2f}")
+                else:
+                    treshold_display_raw = treshold
+                mapped = _map_value(dimension, column_name, treshold_display_raw)
+                treshold_display = (
+                    mapped
+                    if mapped is not None
+                    else (
+                        f"{treshold:.2f}"
+                        if isinstance(treshold, float)
+                        else str(treshold)
+                    )
+                )
+                condition_parts_str.append(
+                    f"{column_name} {sign_display} {treshold_display}"
+                )
 
         full_condition_str = " & ".join(condition_parts_str)
         condition_strings_for_rules.append(full_condition_str)
@@ -187,12 +268,10 @@ def show_rules(
             then_val_str = f"{p_s_if_true:.2f}"
             p_s_if_false = prob_if_false_list
             else_val_str = f"{p_s_if_false:.2f} | coeff={coefficients_all[i]:.2f}"
-
         else:  # classification
             if prob_if_true_list and len(prob_if_true_list) > target_class_index:
                 p_s_if_true = prob_if_true_list[target_class_index] * 100
                 then_val_str = f"{p_s_if_true:.0f}%"
-
             if prob_if_false_list and len(prob_if_false_list) > target_class_index:
                 p_s_if_false = prob_if_false_list[target_class_index] * 100
                 else_val_str = f"{p_s_if_false:.0f}%"
