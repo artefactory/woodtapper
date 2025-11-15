@@ -54,5 +54,5 @@ RF.fit(X_train, y_train)
 
 # Load an existing RandomForestClassifier into the explainer
 RFExplained = RandomForestClassifierExplained.load_forest(RandomForestClassifierExplained,RF,X_train,y_train)
-X_explain, y_explain = RFExplained.explanation(X_test)
+Xy_explain = RFExplained.explanation(X_test)
 ```
