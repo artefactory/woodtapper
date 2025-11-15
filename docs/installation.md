@@ -16,11 +16,7 @@ git clone https://github.com/artefactory/woodtapper.git
 ```
 And install the required packages into your environment (conda, mamba or pip):
 ```bash
-pip install -r requirements.txt
-```
-Then run the following command from the repository root directory :
-```
-pip install -e .[dev]
+pip install -e .[dev,docs]
 ```
 
 ## Dependencies
