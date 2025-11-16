@@ -7,6 +7,7 @@ WoodTapper example-based explainability modules enables seamless integration of 
 First, import necessary modules:
 
 ```python
+import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import average_precision_score, accuracy_score,roc_auc_score
