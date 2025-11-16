@@ -229,7 +229,7 @@ def show_rules(
         )
     print("-" * (condition_col_width + 15 + 15 + 2 + 5))
     if is_regression:
-        print("Intercept :", coeff_intercept)
+        print(f"Intercept : {coeff_intercept:.2f}")
 
     for i in range(num_rules_to_show):
         condition_str_formatted = condition_strings_for_rules[i]
