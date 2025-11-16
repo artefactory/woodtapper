@@ -110,7 +110,7 @@ if   Feature[1] <= 0.97   then 38%                else 90%"""
     sys.stdout = sys.__stdout__
     output = captured_output.getvalue().strip()
     expected_output = """---------------------------------------------------------
-Intercept : -6.896237002187981
+Intercept : -6.90
 if   Feature[1] <= 0.53   then -42.01             else 127.47 | coeff=0.03
 if   Feature[1] <= 0.34   then -55.79             else 105.77 | coeff=0.35
 if   Feature[1] > -0.51   then 57.46              else -104.64 | coeff=0.63"""
