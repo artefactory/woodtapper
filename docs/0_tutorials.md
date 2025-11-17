@@ -7,58 +7,49 @@
 
 Let's describe some mathematical background that will be used in the different modules:
 
-We define the training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs of independent and identically distributed (i.i.d) as $(X, Y)$. The random variables $X$ and $Y$ take values respectively in $\mathbb{R}^d$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ components of the $i$-th sample in $\mathcal{D}_n$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs that takes values respectively in $\mathbb{R}^p$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ component of a $i$-th sample in $\mathcal{D}_n$.
 
 ## Rules extraction:
 
 
-In a tree, we denote the path of successive splits from the root node by $\mathcal{P}$. A path $\mathcal{P}$ is thus defined as:
-$$
-    \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, d\},
-$$
-where $d$ is the path length, $j_k$ is the selected feature at depth $k$, $r_k$ the selected splitting position along $X^{(j_k)}$ and $s_k$ corresponds to the chosen child node (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
-Thus, each path defines a hyperrectangle in the input space using $\mathcal{D}_n$, denoted $\hat{H}_n(\mathcal{P})$. Hence, each path can be associated with a rule $\hat{g}_{n,\mathcal{P}}(x)$, that returns the mean of $Y$ from its training sample for each of the two different cells. Thus,
+In this section, we present our $\texttt{RulesExtractor}$ module, which is compatible with any ensemble of trees. In the following, we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm.
 
+
+In a tree $\mathcal{T}$, we denote the path of successive splits from the root node by $\mathcal{P}$, defined as
 $$
-    \hat{g}_{n,\mathcal{P}}(x) =
+    \mathcal{P} = \{(j_k,r_k,s_k), k=1, \dots, K\},
+$$
+where $K$ is the path length, $j_k \in \{1, \dots,p\}$ is the selected feature at depth $k$, $r_k \in \mathbb{R}$ the selected splitting position along $x^{(j_k)}$ and $s_k$ the corresponding sign (either $\leq$ corresponding to the left node or $>$ corresponding to the right node).
+Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$:
+$$
+    \hat{g}_{\mathcal{P}}(x) =
     \begin{cases}
-        \frac{1}{|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}_n(\mathcal{P})\}} \text{ if } x \in \hat{H}_n(\mathcal{P})\\
-        \frac{1}{n-|\hat{H}_n(\mathcal{P})|} \sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}_n(\mathcal{P})\}} \text{ otherwise }.
+        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}  \text{ if } x \in \hat{H}(\mathcal{P})\\
+        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}  \text{ otherwise }.
     \end{cases}
 $$
-
-The probability that a given path $\mathcal{P}$ belongs to a $\Theta$-random tree is
-
-$$p_n\left(\mathcal{P}\right) = \mathbb{P}\left(\mathcal{P}\in T(\Theta,\mathcal{D}_n|\mathcal{D}_n)\right).$$
-
-For a path $\mathcal{P}$, $p_n\left(\mathcal{P}\right)$ is estimated via Monte-Carlo sampling with $\hat{p}_{M,n}$,
-
-$$\hat{p}_{M,n}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{l=1}^{M} \mathbb{1}_{\{\mathcal{P} \in T(\Theta_l,\mathcal{D}_n)\}}.$$
-
-All in all, the extraction algorithm follows the following steps:
-
-
-1. Train a random forest with $M$ trees where splits can only be performed on the empirical $q$-quantiles (computed on the whole data set) of each variable.
-2. Extract all paths $\mathcal{P}$ from the random forest. Let $\Pi$ be the set of these  paths.
-3. Let $p_0 \in (0,1)$ be an hyperparameter of the extraction procedure. Only the paths that have a frequency superior to $p_0$ are kept. Denote the set of such paths by $\hat{\mathcal{P}}_{M,n,p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}_{M,n}(\mathcal{P}) > p_0\right\}$. Then all paths that are linearly dependent on paths with higher $\hat{p}_{M,n}$ are removed from $\hat{\mathcal{P}}_{M,n,p_0}$.
-
-
-The set of finals rules is $\{\hat{g}_{n,\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{M,n,p_0}\}$ is aggregated as follows for building the final estimator:
-
+We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$. We denote by $\Pi$ the set of all possibles paths from $\{\mathcal{T}_m, m=1, \dots, M \}$. For a path $\mathcal{P} \in \Pi$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}\left(\mathcal{P}\right)$:
 $$
-    \hat{\eta}_{M,np_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{M,n,p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{M,n,p_0}} \hat{g}_{n,\mathcal{P}}(x).
+    \hat{p}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{m=1}^{M} \mathbb{1}_{\{\mathcal{P} \in \mathcal{T}(\Theta_m,\mathcal{D}_n)\}},
+$$
+which corresponds to the empirical probability that the path $\mathcal{P} \in \Pi$ belongs to the set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$.
+
+The set of final rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{p_0}\}$ where $\hat{\mathcal{P}}_{p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}(\mathcal{P}) > p_0\right\}$ with $p_0 \in [0,1)$. The finals rules are aggregated as follows for building the final estimator:
+$$
+    \hat{\eta}_{p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
-So far, we have focused on binary classification for clarity. The extraction procedure was originally implemented in R for both binary classification and regression, with the regression version differing only in how the final rules are aggregated using weights learned via ridge regression. Our implementation extends the procedure to multiclass classification (not available in the original R version) as well as regression.
+So far, we have focused on binary classification for clarity.
+We also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS, i.e. rules extracted from random forest, to multiclass classification (not available in the original R version). Finally, our implementation also leverages scikit-learn's implementations for tree-based models fitting.
 
 ## Example-based explainability:
 
-The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of rule extraction and provides a measure of example-based explainability. For a new sample $x$ with unknown label, let $\mathcal{L}_l(x)$ denote the set of training samples that share the same leaf as $x$ in tree $T_l$, $l = 1, \dots, M$.
-
-The $\texttt{ExampleExplanation}$ module enables tree-based models to identify the $p \in \mathbb{N}$ training samples most similar to $x$, using the similarity measure induced by random forests. Specifically, the similarity between $x$ and a training sample is defined as the proportion of trees in which the sample and $x$ fall into the same leaf. Letting $w_{x}(X_i)$ the similarity between $x$ and $x_i$, we have
+The $\texttt{ExampleExplanation}$ module of WoodTapper is independent of the rule extraction module and provides an example-based explainability.
+It enables tree-based models to identify the $l \in \mathbb{N}$ most similar training samples to $x$, using the similarity measure induced by generalized random forests.
+For a new sample $x$ with unknown label and $\mathcal{T}_m$ a decision tree, let $\mathcal{L}_m(x)$ denote the set of training samples that share the same leaf as $x$ in tree $\mathcal{T}_m$ for $m = 1, \dots, M$.
+Letting $w(x,x_i)$ be the similarity between $x$ and $x_i$, we have
 $$
-w_{x}(x_i) = \frac{1}{M} \sum_{l=1}^{M} \frac{\mathbb{1}_{\{X_i \in \mathcal{L}_l(Z)\}}}{|\mathcal{L}_l(Z)|}.
+w(x,x_i) = \frac{1}{M} \sum_{m=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_m(x)\}}}{|\mathcal{L}_m(x)|}.
 $$
 
-
-Let $\mathcal{W}_{x} = \left\{ w_{x}(x_i), x_i \in \mathcal{D}_n\right\}$ be the set of similarities between $x$ and each training sample. Finally the $p$ training samples with the  highest values in $\mathcal{W}_{x}$ are proposed as the examples that explain the most the prediction of $x$ by the tree-based ensemble model.
+Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with their target values, are proposed as the examples that best explain the prediction of $x$ by the tree-based ensemble model.
