@@ -31,11 +31,10 @@ date: 14 November 2025
 bibliography: paper.bib
 ---
 
-# Summary
+# Introduction
 
 Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models, such as tree-based ensemble methods, often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance. Among interpretable models, rule-based methods are especially attractive because they are explained in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations. Stable and Interpretable RUle Set (SIRUS)[@benard2021sirus-classif;@benard2021interpretable-regression] is one such method.
 
-This article presents WoodTapper, a Python toolbox for tree ensemble models fully compatible with scikit-learn [@pedregosa2011scikit]. WoodTapper enables seamless integration of interpretable rule extraction based on SIRUS methodology into existing machine learning workflows. To enhance human interpretability, a second module of WoodTapper introduces an example-based explanation that links predictions to a small set of representative samples, leveraging the weighting scheme of Generalized Random Forest (GRF).
 
 # Statement of need
 
@@ -75,8 +74,7 @@ $$
     \hat{\eta}_{p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
 
-So far, we have focused on binary classification for clarity.
-We also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS, i.e. rules extracted from random forest, to multiclass classification (not available in the original R version). Finally, our implementation also leverages scikit-learn's implementations for tree-based models fitting.
+So far, we have focused on binary classification for clarity. We also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression.
 
 ## Implementation and running time
 WoodTapper adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $fit$, $predict$, and $get\_params$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
@@ -138,7 +136,7 @@ Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with
 The $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest in Python. $\textit{skgrf}$ has a specific number of classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, which are equivalent to our leaf frequency match introduce above. Thus, we aim at comparing the kernel weights derivation from $\textit{skgrf}$ to our $\texttt{ExampleExplanation}$ module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. Thus, the tree building (splitting criterion) of our forest are different from the ones from $\textit{skgrf}$.
 
 ## Implementation and running time
-As for SIRUS, our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses. We also have implemented a method to load an already trained tree-based model into an $\texttt{ExampleExplanation}$ classifier.
+Our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface. Our $\texttt{ExampleExplanation}$ module is agnostic to the underlying tree ensemble, and can be used with random forests or extra trees (\ref{tab:comparison-grf}). The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explain}$ method provides example-based explanations for new samples. This allows users to train and predict using standard scikit-learn workflows, while enabling access to $\texttt{ExampleExplanation}$ for interpretability analyses. We also have implemented a method to load an already trained tree-based model into an $\texttt{ExampleExplanation}$ classifier.
 
 : **Comparison of GRF weight computations in several Python packages.**\label{tab:comparison-grf}
 
