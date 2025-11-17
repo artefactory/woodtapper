@@ -40,8 +40,10 @@ WoodTapper is fully compatible with scikit-learn tree ensemble models.
 pip install woodtapper
 ```
 
-**From this repository, within a pip/conda/mamba environment (python=3.12)**:
+**From source**:
 ```bash
+git clone https://github.com/artefactory/woodtapper.git
+cd woodtapper
 pip install -e .[dev,docs]
 ```
 
