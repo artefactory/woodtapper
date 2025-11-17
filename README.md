@@ -43,6 +43,7 @@ pip install woodtapper
 **From source**:
 ```bash
 git clone https://github.com/artefactory/woodtapper.git
+cd woodtapper
 pip install -e .[dev,docs]
 ```
 
