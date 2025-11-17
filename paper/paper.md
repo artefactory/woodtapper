@@ -45,19 +45,13 @@ In addition, `WoodTapper` introduces an example-based explainability methodology
 # Rules Extraction Module
 
 ## Formulation
-In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
+In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by [@benard2021sirus-classif].
 
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ i.i.d. pairs taking values  in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ i.i.d. pairs taking values  in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$. We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$.
 
-In a tree $\mathcal{T}$, we denote the path of successive splits from the root node by $\mathcal{P}$. Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{P}}$:
-$$
-    \hat{g}_{\mathcal{P}}(x) =
-    \begin{cases}
-        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \in \hat{H}(\mathcal{P})\}}}  \text{ if } x \in \hat{H}(\mathcal{P})\\
-        \frac{\sum_{i=1}^{n}y_i \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}{\sum_{i=1}^{n} \mathbb{I}_{\{x_i \not\in \hat{H}(\mathcal{P})\}}}  \text{ otherwise }.
-    \end{cases}
-$$
-We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$. We denote by $\Pi$ the set of all possibles paths from $\{\mathcal{T}_m, m=1, \dots, M \}$. For a path $\mathcal{P} \in \Pi$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}\left(\mathcal{P}\right)$:
+In a tree $\mathcal{T}_m$, we denote the path of successive splits from the root node by $\mathcal{P}$. Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$.
+
+We denote by $\Pi$ the set of all possibles paths from $\{\mathcal{T}_m, m=1, \dots, M \}$. For a path $\mathcal{P} \in \Pi$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}\left(\mathcal{P}\right)$:
 $$
     \hat{p}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{m=1}^{M} \mathbb{1}_{\{\mathcal{P} \in \mathcal{T}(\Theta_m,\mathcal{D}_n)\}},
 $$
@@ -70,7 +64,7 @@ $$
 So far, we have focused on binary classification for clarity. We also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression.
 
 ## Implementation and running time
-`WoodTapper` $\texttt{RulesExtraction}$ module adheres to the scikit-learn [@pedregosa2011scikit] estimator interface and enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
+$\texttt{RulesExtraction}$ module adheres to the scikit-learn [@pedregosa2011scikit] estimator interface and enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
 
 : **Comparison of SIRUS implementations across softwares.**\label{tab:comparison}
 
@@ -95,7 +89,7 @@ We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads 
 
 ## Extracted rules and predictive performances
 
-We compare the rules produced by the original SIRUS (R) and our Python implementation ($\texttt{RulesExtraction}$) in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic dataset. Both implementations yield identical rules, and very similar predictive performance (see Table \ref{tab:perf_metrics}), confirming that our Python version faithfully reproduces the original algorithm.
+We compare the rules produced by the original SIRUS (R) and our $\texttt{RulesExtraction}$ in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic data set. Both implementations yield identical rules, and very similar predictive performance (see Table \ref{tab:perf_metrics}), confirming that our Python version faithfully reproduces the original algorithm.
 
 ![SIRUS (R) rules on Titanic data set. \label{fig:sub-titanic-r}](images/rules-titanic-r-final.pdf){ width=70% }
 
