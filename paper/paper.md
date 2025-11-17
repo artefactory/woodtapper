@@ -48,7 +48,7 @@ In addition, WoodTapper introduces an example-based explainability methodology t
 
 In this section, we present our $\texttt{RulesExtractor}$ module, which is compatible with any ensemble of trees. In the following, we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
 
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs that takes values respectively in $\mathbb{R}^p$ and $\{0,1\}$ (binary classification). We denote by $x_i^{(j)}$ the $j$ component of a $i$-th sample in $\mathcal{D}_n$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ i.i.d. pairs taking values  in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$.
 
 In a tree $\mathcal{T}$, we denote the path of successive splits from the root node by $\mathcal{P}$, defined as
 $$
@@ -69,7 +69,7 @@ $$
 $$
 which corresponds to the empirical probability that the path $\mathcal{P} \in \Pi$ belongs to the set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$.
 
-The set of final rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{p_0}\}$ where $\hat{\mathcal{P}}_{p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}(\mathcal{P}) > p_0\right\}$ with $p_0 \in [0,1)$. The finals rules are aggregated as follows for building the final estimator:
+The set of final rules is $\{\hat{g}_{\mathcal{P}}, \mathcal{P} \in  \hat{\mathcal{P}}_{p_0}\}$ where $\hat{\mathcal{P}}_{p_0} = \left\{ \mathcal{P} \in \Pi, \, \hat{p}(\mathcal{P}) > p_0\right\}$ with $p_0 \in [0,1)$. The final rules are aggregated as follows for building the final estimator:
 $$
     \hat{\eta}_{p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{p_0}|} \sum_{\mathcal{P} \in \hat{\mathcal{P}}_{p_0}} \hat{g}_{\mathcal{P}}(x).
 $$
