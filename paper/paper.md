@@ -45,13 +45,13 @@ In addition, `WoodTapper` introduces an example-based explainability methodology
 # Rules Extraction Module
 
 ## Formulation
-In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by [@benard2021sirus-classif].
+In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
 
-We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ i.i.d. pairs taking values  in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$. We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$.
+We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs taking values in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$. We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$.
 
 In a tree $\mathcal{T}_m$, we denote the path of successive splits from the root node by $\mathcal{P}$. Thus, each path defines a hyperrectangle in the input space, denoted $\hat{H}(\mathcal{P}) \subset \mathbb{R}^p$. Hence, each path can be associated with a rule function $\hat{g}_{\mathcal{P}}$, that returns the mean of $Y$ from the training sample inside and outside of $\hat{H}(\mathcal{P})$.
 
-We denote by $\Pi$ the set of all possibles paths from $\{\mathcal{T}_m, m=1, \dots, M \}$. For a path $\mathcal{P} \in \Pi$, we estimate the rule probability $p\left(\mathcal{P}\right)$ via Monte-Carlo sampling with $\hat{p}\left(\mathcal{P}\right)$:
+We denote by $\Pi$ the set of all possibles paths from $\{\mathcal{T}_m, m=1, \dots, M \}$. For a path $\mathcal{P} \in \Pi$, we define:
 $$
     \hat{p}\left(\mathcal{P}\right) = \frac{1}{M} \sum_{m=1}^{M} \mathbb{1}_{\{\mathcal{P} \in \mathcal{T}(\Theta_m,\mathcal{D}_n)\}},
 $$
