@@ -25,7 +25,7 @@ affiliations:
    index: 1
  - name: Laboratoire de Probabilités, Statistique et Modélisation Sorbonne Université and Université Paris Cité, CNRS, F-75005, Paris
    index: 2
- - name: Societe Générale, Paris, France
+ - name: Société Générale, Paris, France
    index: 3
 date: 14 November 2025
 bibliography: paper.bib
@@ -113,14 +113,14 @@ The rules produced by the original SIRUS (R) and our $\texttt{RulesExtraction}$ 
 The $\texttt{ExampleExplanation}$ module of `WoodTapper` is independent of the $\texttt{RulesExtraction}$ module and provides an example-based explainability.
 It enables tree-based models to identify the most similar training samples to $x$, using the similarity measure induced by generalized random forests [@breiman2001random;@grf].
 For a new sample $x$ with unknown label and a decision tree $\mathcal{T}_m$, let $\mathcal{L}_m(x)$ denote the set of training samples that share the same leaf as $x$.
-We define the similarity $w(x,x_i)$ bbetween $x$ and $x_i$ as:
+We define the similarity $w(x,x_i)$ between $x$ and $x_i$ as:
 $$
 w(x,x_i) = \frac{1}{M} \sum_{m=1}^{M} \frac{\mathbb{1}_{\{x_i \in \mathcal{L}_m(x)\}}}{|\mathcal{L}_m(x)|}.
 $$
 
 Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with their target values $y_i$, are shown as the examples that best explain the prediction of $x$ by the tree-based ensemble model.
 
-In python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compared the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
+In python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compare the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
 
 ## Implementation and running time
 Our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface and is agnostic to the underlying tree ensemble (\ref{tab:comparison-grf}). The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explanation}$ method provides example-based explanations for new samples. The user can also load an already trained tree-based model into an $\texttt{ExampleExplanation}$ classifier.
