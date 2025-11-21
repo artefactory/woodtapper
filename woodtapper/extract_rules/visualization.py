@@ -45,6 +45,8 @@ def show_rules(
         not hasattr(RulesExtractorModel, "rules_")
         or not hasattr(RulesExtractorModel, "list_probas_by_rules")
         or not hasattr(RulesExtractorModel, "list_probas_outside_by_rules")
+        or not hasattr(RulesExtractorModel, "_list_categorical_indexes")
+        or not hasattr(RulesExtractorModel, "_list_unique_categorical_values")
     ):
         raise ValueError(
             "Model does not have the required rule attributes. Ensure it's fitted."
@@ -58,6 +60,9 @@ def show_rules(
 
     list_indices_features_bin = getattr(
         RulesExtractorModel, "_list_categorical_indexes", None
+    )
+    _list_unique_categorical_values = getattr(
+        RulesExtractorModel, "_list_unique_categorical_values", None
     )
 
     rules_all = RulesExtractorModel.rules_
@@ -125,6 +130,9 @@ def show_rules(
     condition_strings_for_rules = []
 
     def _map_value(dim, dim_name, raw_val):
+        """
+        Map a raw value to its display string using value_mappings.
+        """
         if value_mappings is None:
             return None
         candidates = [dim]
@@ -187,12 +195,17 @@ def show_rules(
             ):
                 column_name = dimension
 
-            is_binary = (
+            is_categorical = (
                 list_indices_features_bin is not None
                 and dimension in list_indices_features_bin
             )
+            is_binary = False
+            if is_categorical and _list_unique_categorical_values:
+                cat_index = list_indices_features_bin.index(dimension)
+                if cat_index < len(_list_unique_categorical_values):
+                    is_binary = len(_list_unique_categorical_values[cat_index]) == 2
 
-            if is_binary:
+            if is_categorical and is_binary:
                 condition_parts_str.append(
                     _format_binary_condition(dimension, column_name, sign_internal)
                 )
