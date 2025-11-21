@@ -199,16 +199,11 @@ def show_rules(
                 list_indices_features_bin is not None
                 and dimension in list_indices_features_bin
             )
-            is_binary = (
-                list_indices_features_bin is not None
-                and dimension in list_indices_features_bin
-                and len(
-                    _list_unique_categorical_values[
-                        np.where(list_indices_features_bin == dimension)[0][0]
-                    ]
-                )
-                == 2
-            )
+            is_binary = False
+            if is_categorical and _list_unique_categorical_values:
+                cat_index = list_indices_features_bin.index(dimension)
+                if cat_index < len(_list_unique_categorical_values):
+                    is_binary = len(_list_unique_categorical_values[cat_index]) == 2
 
             if is_categorical and is_binary:
                 condition_parts_str.append(
