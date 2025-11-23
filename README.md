@@ -56,7 +56,7 @@ sirus = SirusClassifier(n_estimators=1000,max_depth=2,
                           quantile=10,p0=0.01, random_state=0)
 sirus.fit(X_train,y_train)
 y_pred_sirus = sirus.predict(X_test)
-show_rules(Sirus,max_rules=10) # Show rules
+show_rules(sirus,max_rules=10) # Show rules
 ```
 
 ## 🌱 WoodTapper ExampleExplanation module
