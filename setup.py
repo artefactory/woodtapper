@@ -16,12 +16,15 @@ extensions = [
     ),
 ]
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
 setup(
     name="woodtapper",  # must be unique on PyPI
     author="Abdoulaye SAKHO",
     author_email="abdoulaye.sakho@artefact.com",
     description="A Python toolbox for interpretable and explainable tree ensembles.",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     packages=find_packages(),
     ext_modules=cythonize(extensions),
     include_dirs=[numpy.get_include()],
