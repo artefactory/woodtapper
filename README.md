@@ -91,7 +91,7 @@ If you find the code useful, please consider citing us:
 ```bibtex
 @misc{woodtapper,
   title        = {WoodTapper: a Python package for tapping decision tree ensembles},
-  author       = {Sakho, Abdoulaye and AOUAD, Jad and Malherbe, Emmanuel and Scornet, Erwan},
+  author       = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
   year         = {2025},
   howpublished = {\url{https://github.com/artefactory/woodtapper}},
 }
