@@ -6,6 +6,7 @@
 <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed_light.png" >
 <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed_light.png" width="300">
 
+
 </picture>
 
 *User-friendly Python toolbox for interpreting and manipulating decision tree ensembles from scikit-learn*
@@ -18,6 +19,7 @@
 [![License](https://img.shields.io/github/license/artefactory/woodtapper)](LICENSE)
 [![Python Versions](https://img.shields.io/pypi/pyversions/woodtapper?label=python)](https://pypi.org/project/woodtapper/)
 [![PyPI Version](https://img.shields.io/pypi/v/woodtapper.svg)](https://pypi.org/project/woodtapper/)
+[![status](https://joss.theoj.org/papers/4a4e11dc5d6fb657d3bd74bd7bd3f8e9/status.svg)](https://joss.theoj.org/papers/4a4e11dc5d6fb657d3bd74bd7bd3f8e9)
 
 
 </div>
@@ -29,7 +31,7 @@ WoodTapper is a Python toolbox that provides:
 
 - Example-based explanations: Connects predictions to a small set of representative samples, returning the most similar examples along with their target values.
 
-Detailed information about the modules can be found [here.](https://artefactory.github.io/woodtapper/0_tutorials/)
+[**Detailed information about the modules can be found here.**](https://artefactory.github.io/woodtapper/0_tutorials/)
 
 WoodTapper is fully compatible with scikit-learn tree ensemble models.
 
