@@ -46,6 +46,7 @@ git clone https://github.com/artefactory/woodtapper.git
 cd woodtapper
 pip install -e .[dev,docs]
 ```
+> **Warning:** If you are a Windows user, you need to have a C/C++ compilator before installing woodtapper.
 
 ## 🌿 WoodTapper RulesExtraction module
 ```python
@@ -90,7 +91,7 @@ If you find the code useful, please consider citing us:
 
 ```bibtex
 @misc{woodtapper,
-  title        = {WoodTapper: a Python package for tapping decision tree ensembles},
+  title        = {WoodTapper: a Python package for explaining decision tree ensembles},
   author       = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
   year         = {2025},
   howpublished = {\url{https://github.com/artefactory/woodtapper}},
