@@ -19,13 +19,14 @@ And install the required packages into your environment (conda, mamba or pip):
 pip install -e .[dev,docs]
 ```
 
+**Warning:** If you are a Windows user, you need to have a C/C++ compiler before installing woodtapper.
+
 ## Dependencies
 
 WoodTapper requires the following:
 
 * Python (>=3.11,<3.13)
 * Numpy (>=2.3.1)
-* Pandas (>=2.3.0)
 * Scikit-learn (>=1.6.1)
 
 ## Contributing

@@ -8,7 +8,7 @@ authors = [
     {name = "Abdoulaye SAKHO", email = "abdoulaye7020@gmail.com"},
     {name = "artefactory", email = "abdoulaye.sakho@artefact.com"},
 ]
-version = "0.0.13"
+version = "0.0.14"
 description = "A Python toolbox for interpretable and explainable tree ensembles."
 readme = "README.md"
 license = "MIT"
@@ -22,9 +22,7 @@ classifiers = [
 requires-python = ">=3.11,<3.13"
 dependencies = [
     "numpy>=2.3.1",
-    "pandas>=2.3.0",
     "scikit-learn>=1.6.1",
-    "ucimlrepo>=0.0.7",
 ]
 
 [project.urls]
@@ -38,6 +36,8 @@ dev = [
     "pytest-cov>=7.0.0",
     "pre-commit>=4.3.0",
     "matplotlib>=3.10.0",
+    "pandas>=2.3.0",
+    "ucimlrepo>=0.0.7",
 ]
 docs = [
     "mkdocs>=1.6.1",
