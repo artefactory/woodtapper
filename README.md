@@ -48,7 +48,7 @@ git clone https://github.com/artefactory/woodtapper.git
 cd woodtapper
 pip install -e .[dev,docs]
 ```
-> **Warning:** If you are a Windows user, you need to have a C/C++ compilator before installing woodtapper.
+> **Warning:** If you are a Windows user, you need to have a C/C++ compiler before installing woodtapper.
 
 ## 🌿 WoodTapper RulesExtraction module
 ```python
