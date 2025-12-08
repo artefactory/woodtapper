@@ -19,7 +19,7 @@ In this documentation you will find examples to be quickly getting started as we
 
 ## Tutorials
 
-The mathematical formulation of WoodTapper modules are available [here](./0_tutorials.md)
+[**The mathematical formulation of WoodTapper modules are available here.**](./0_tutorials.md)
 
 Example tutorials are also available for each module:
 
