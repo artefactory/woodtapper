@@ -42,6 +42,18 @@ The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-
 
 In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
 
+# Software design
+`WoodTapper` is developed to closely follow the algorithmic structure of the original SIRUS, translating its statistical logic into efficient Python code. The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\Cref{tab:comparison}).
+The implementation uses a mixin inherited by all tree-based models to improve code reuse and factorization. For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available. Thus, the package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $\texttt{fit}$ and $\texttt{predict}$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
+
+
+# Research impact statement
+Many machine learning applications require interpretability and trustworthy models such as such as healthcare, marketing or finance [^1]. WoodTapper enables practitioners to perform rule extraction using SIRUS—cited roughly 200 times on Google Scholar—and integrate these rules into their projects. Furthermore, WoodTapper provides an example-based auditing tool for black-box, tree-based models already deployed in production.
+
+`WoodTapper` has demonstrated significant research impact and has grown both its user base and contributor community since its initial release. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements.
+
+[^1]: See authors’ affiliations.
+
 # Rules Extraction Module
 
 ## Formulation
@@ -63,8 +75,7 @@ $$
 
 Beyond the binary classification detailed here, we also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression.
 
-## Implementation and running time
-$\texttt{RulesExtraction}$ module adheres to the scikit-learn [@pedregosa2011scikit] estimator interface and enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
+## Running time
 
 : **Comparison of SIRUS implementations across softwares.**\label{tab:comparison}
 
@@ -123,7 +134,6 @@ Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with
 In python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compare the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
 
 ## Implementation and running time
-Our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit-learn interface and is agnostic to the underlying tree ensemble (\ref{tab:comparison-grf}). The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while an additional $\texttt{explanation}$ method provides example-based explanations for new samples. The user can also load an already trained tree-based model into an $\texttt{ExampleExplanation}$ classifier.
 
 : **Comparison of GRF weight computations in several Python packages.**\label{tab:comparison-grf}
 
@@ -140,6 +150,10 @@ Our Python implementation of $\texttt{ExampleExplanation}$ adheres to the scikit
 In figure \ref{fig:run-time-grf}, we compare the kernel weight computation runtime of $\texttt{ExampleExplanation}$ and $\textit{skgrf}$ [@skgrf] using the same hardware as previous experiments. $\texttt{ExampleExplanation}$ is consistently faster.
 
 ![Weights computation running time for simulated data using.\label{fig:run-time-grf}](images/run-time-grf-dim-log.pdf){ width=100% }
+
+# AI usage disclosure
+
+Generative AI tools were used in this software only to implement the Cython function in the $\texttt{ExampleExplanation}$ module and to draft certain docstring elements. For writing this manuscript and preparing supporting materials, generative AI was employed solely for formatting.
 
 
 # Acknowledgements
