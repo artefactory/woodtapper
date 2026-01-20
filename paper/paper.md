@@ -44,7 +44,7 @@ In addition, `WoodTapper` introduces an example-based explainability methodology
 
 # Software design
 `WoodTapper` is developed to closely follow the algorithmic structure of the original SIRUS, translating its statistical logic into efficient Python code. The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
-The implementation uses a mixin inherited by all tree-based models to improve code reuse and factorization. For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available. Thus, the package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $\texttt{fit}$ and $\texttt{predict}$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
+The implementation uses a mixin inherited by all tree-based models to improve code reuse and factorization. For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available. Thus, the package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $\texttt{fit}$ and $\texttt{predict}$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection. Finally, we compared our Python implementation with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observed that WoodTapper provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Research impact statement
@@ -52,7 +52,7 @@ Many machine learning applications require interpretability and trustworthy mode
 
 `WoodTapper` has demonstrated significant research impact and has grown both its user base and contributor community since its initial release. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements.
 
-[^1]: See authors’ affiliations.
+[^1]: See authors affiliations.
 
 # Rules Extraction Module
 
@@ -133,7 +133,7 @@ Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with
 
 In python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compare the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
 
-## Implementation and running time
+## Running time
 
 : **Comparison of GRF weight computations in several Python packages.**\label{tab:comparison-grf}
 
