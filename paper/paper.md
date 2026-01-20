@@ -43,7 +43,7 @@ The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-
 In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
 
 # Software design
-`WoodTapper` is developed to closely follow the algorithmic structure of the original SIRUS, translating its statistical logic into efficient Python code. The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\Cref{tab:comparison}).
+`WoodTapper` is developed to closely follow the algorithmic structure of the original SIRUS, translating its statistical logic into efficient Python code. The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
 The implementation uses a mixin inherited by all tree-based models to improve code reuse and factorization. For each ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available. Thus, the package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface, providing familiar methods such as $\texttt{fit}$ and $\texttt{predict}$. This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection (see Table \ref{tab:comparison}).
 
 
