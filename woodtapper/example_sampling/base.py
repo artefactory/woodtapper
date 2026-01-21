@@ -74,7 +74,7 @@ class ExplanationMixin:
         vars(explanation_model).update(copy.deepcopy(vars(model)))
         explanation_model.train_X = X_np
         explanation_model.train_y = y_np
-        explanation_model.train_samples_leaves = model.apply(X).astype(
+        explanation_model.train_samples_leaves = model.apply(X_np).astype(
             np.int32
         )  # train_samples_leaves: size n_train x n_trees
         if explanation_model.train_samples_leaves.ndim == 3:
@@ -151,6 +151,7 @@ class ExplanationMixin:
             If the model is a classifier, the output will be class labels.
             If the model is a regressor, the output will be real numbers.
         """
+        X = validate_data(self, X)
         if batch_size is None:
             weights = self.get_weights_cython(X)
         else:
