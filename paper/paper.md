@@ -53,10 +53,10 @@ We compared our Python implementation with the Julia, R and skgrf versions (see 
 # Research impact statement
 As a Python package, `WoodTapper` provides a practical interface for extracting decision rules with SIRUS and integrating those rules into downstream projects. The SIRUS rule-extraction procedure, originally developed for random forests, has been applied in more than 200 publications (according to Google Scholar) and has since been extended to diverse domains, including microbiome analysis, time-series analysis, and hydrological process analysis. Python adaptation of SIRUS has been requested multiple times by practitioners and researcher to the authors, which `WoodTapper` addresses. Beyond rule extraction, `WoodTapper` offers an example-based auditing tool for black-box, tree-based models deployed in production, and has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking[^1].
 
-`WoodTapper` has demonstrated notable research impact and has grown its user and contributor communities since its initial release. It has been downloaded more than 1,500 times[^2], indicating strong demand for a Python implementation. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements. Furthermore, the fully reproducible benchmarks described below show concrete improvements in both generalisation to all tree-based models and computation time.
+`WoodTapper` has demonstrated notable research impact and has grown its user and contributor communities since its initial release. It has been downloaded more than 1,500 times[^2], indicating strong demand for a Python implementation. The package has evolved through contributions from multiple developers, with community members able to add new features, reporting and fixing bugs, and proposing enhancements. Furthermore, the fully reproducible benchmarks described below show concrete improvements in both generalisation to all tree-based models and computation time.
 
-[^1]: The details of these deployment remain confidential and are beyond the scope of this paper.
-[^2]: Counted on pepy in the 2 first months.
+[^1]: The details of these deployments remain confidential and are beyond the scope of this paper.
+[^2]: Counted on pepy in first 2 months.
 
 # Rules Extraction Module
 
