@@ -43,22 +43,20 @@ The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-
 In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
 
 # Software design
-`WoodTapper` package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface. 
+`WoodTapper` package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface.
 This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection, and enables to efficiently benefit from future maintenance updates and improvements to scikit-learn.
 The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
-The code architecture uses a Mixin inherited by all tree-based models to improve code reuse and factorization. For each tree-based ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available.  
-We compared our Python implementation with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observed that WoodTapper provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
+The code architecture uses a Mixin inherited by all tree-based models to improve code reuse and factorization. For each tree-based ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available.
+We compared our Python implementation with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observed that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Research impact statement
-Being a Python package, WoodTapper enables practitioners to perform rule extraction using SIRUS[^1], and easily integrate these rules into their projects.
-Furthermore, WoodTapper provides an example-based auditing tool for black-box, tree-based models already deployed in production. It has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking[^2].
+As a Python package, `WoodTapper` provides a practical interface for extracting decision rules with SIRUS and integrating those rules into downstream projects. The SIRUS rule-extraction procedure, originally developed for random forests, has been applied in more than 200 publications (according to Google Scholar) and has since been extended to diverse domains, including microbiome analysis, time-series analysis, and hydrological process analysis. Python extensions and generalizations of SIRUS have been requested multiple times by practitioners to the authors, which `WoodTapper` addresses. Beyond rule extraction, `WoodTapper` offers an example-based auditing tool for black-box, tree-based models deployed in production, and has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking[^1].
 
-`WoodTapper` has demonstrated significant research impact and has grown both its user base and contributor community since its initial release[^3]. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements. Furthermore, our fully reproducible benchmarks described in the following show concrete improvements in terms of model accuracy and computation time. 
+`WoodTapper` has demonstrated notable research impact and has grown its user and contributor communities since its initial release. It has been downloaded more than 1,500 times[^2], indicating strong demand for a Python implementation. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements. Furthermore, the fully reproducible benchmarks described below show concrete improvements in both generalisation to all tree-based models and computation time.
 
-[^1]: Cited roughly 200 times at end 2025.
-[^2]: The details of these deployment remain confidential and are beyond the scope of this paper.
-[^3]: More than 1,000 downloads were counted on pypi in the 2 first months.
+[^1]: The details of these deployment remain confidential and are beyond the scope of this paper.
+[^2]: Counted on pepy in the 2 first months.
 
 # Rules Extraction Module
 
