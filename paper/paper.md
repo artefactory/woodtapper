@@ -51,11 +51,14 @@ We compared our Python implementation with the Julia, R and skgrf versions (see 
 
 
 # Research impact statement
-Many machine learning applications require interpretability and trustworthy models such as such as healthcare, marketing or finance [^1]. WoodTapper enables practitioners to perform rule extraction using SIRUS—cited roughly 200 times on Google Scholar—and integrate these rules into their projects. Furthermore, WoodTapper provides an example-based auditing tool for black-box, tree-based models already deployed in production.
+Being a Python package, WoodTapper enables practitioners to perform rule extraction using SIRUS[^1], and easily integrate these rules into their projects.
+Furthermore, WoodTapper provides an example-based auditing tool for black-box, tree-based models already deployed in production. It has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking[^2].
 
-`WoodTapper` has demonstrated significant research impact and has grown both its user base and contributor community since its initial release. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements.
+`WoodTapper` has demonstrated significant research impact and has grown both its user base and contributor community since its initial release[^3]. The package has evolved through contributions from multiple developers, with community members able to adding new features, reporting and fixing bugs, and proposing enhancements. Furthermore, our fully reproducible benchmarks described in the following show concrete improvements in terms of model accuracy and computation time. 
 
-[^1]: See authors affiliations.
+[^1]: Cited roughly 200 times at end 2025.
+[^2]: The details of these deployment remain confidential and are beyond the scope of this paper.
+[^3]: More than 1,000 downloads were counted on pypi in the 2 first months.
 
 # Rules Extraction Module
 
