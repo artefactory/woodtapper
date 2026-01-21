@@ -70,11 +70,11 @@ class ExplanationMixin:
         )
 
         explanation_model = cls()
-        X, y = validate_data(explanation_model, X, y)
+        X_np, y_np = validate_data(explanation_model, X, y)
         vars(explanation_model).update(copy.deepcopy(vars(model)))
-        explanation_model.train_X = X
-        explanation_model.train_y = y
-        explanation_model.train_samples_leaves = model.apply(X).astype(
+        explanation_model.train_X = X_np
+        explanation_model.train_y = y_np
+        explanation_model.train_samples_leaves = model.apply(X_np).astype(
             np.int32
         )  # train_samples_leaves: size n_train x n_trees
         if explanation_model.train_samples_leaves.ndim == 3:
