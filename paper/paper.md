@@ -31,21 +31,24 @@ date: 14 November 2025
 bibliography: paper.bib
 ---
 
-# State of the Field
-
-Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector.
-
-Widely used libraries such as scikit-learn [@pedregosa2011scikit], XGBoost [@chen2016xgboost] and CatBoost [@prokhorenkova2018catboost] provide efficient implementations of tree-based models, but their primary focus is predictive performance and training scalability rather than interpretability. In parallel, explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles.
-`WoodTapper` complements these ecosystems by treating tree ensembles as first-class objects for interpretability: it provides a dedicated Python toolbox to inspect, decompose, and explain predictions using methods that directly leverage the discrete structure of trees, enabling faithful explanations that are aligned with the model’s internal logic.
-
-We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
-
 
 # Statement of need
+
+Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models, such as tree-based ensemble methods, often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance.
+Popular explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles, and their computation remain a black-box estimation.
+Another field of interpretable models are rule-based methods. They are especially attractive because they are in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations.
+
+`WoodTapper` complements these ecosystems by providing a dedicated Python toolbox to inspect, decompose, and explain predictions using methods that directly leverage the discrete structure of trees.
+More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module explains example-based explanations given an input sample.  We describe these two modules below.
+
+
+# State of the Field
 
 The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-regression] offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. `WoodTapper` addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, `WoodTapper` extends rules extraction $(i)$ from all the tree-based models in scikit learn (Random Forest, Gradient Boosting and Extremely Randomized Trees) and $(ii)$ to the multiclass classification setting.
 
 In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
+
+We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Research impact statement
