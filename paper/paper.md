@@ -34,9 +34,11 @@ bibliography: paper.bib
 # State of the Field
 
 Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector.
-Widely used libraries such as scikit-learn [@pedregosa2011scikit], XGBoost [@chen2016xgboost] and CatBoost [@prokhorenkova2018catboost] provide efficient implementations of tree-based models, but their primary focus is predictive performance and training scalability rather than interpretability. In parallel, explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles.
 
-`WoodTapper` complements these ecosystems by treating tree ensembles as first-class objects for interpretability: it provides a dedicated Python toolbox to inspect, decompose, and explain predictions using methods that directly leverage the discrete structure of trees, enabling faithful explanations that are aligned with the model’s internal logic. This focus supports reproducible analysis workflows for researchers who need transparent decision rules, feature interactions grounded in splits, and diagnostic views of ensemble behavior. Rather than extending training libraries (which are optimized for fitting), `WoodTapper` targets the distinct scholarly need of interpretable ensemble analysis, offering functionality that is not sufficiently addressed by general-purpose learners or purely model-agnostic explainers.
+Widely used libraries such as scikit-learn [@pedregosa2011scikit], XGBoost [@chen2016xgboost] and CatBoost [@prokhorenkova2018catboost] provide efficient implementations of tree-based models, but their primary focus is predictive performance and training scalability rather than interpretability. In parallel, explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles.
+`WoodTapper` complements these ecosystems by treating tree ensembles as first-class objects for interpretability: it provides a dedicated Python toolbox to inspect, decompose, and explain predictions using methods that directly leverage the discrete structure of trees, enabling faithful explanations that are aligned with the model’s internal logic.
+
+We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Statement of need
@@ -59,7 +61,6 @@ As a Python package, `WoodTapper` provides a practical interface for extracting 
 This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection, and enables to efficiently benefit from future maintenance updates and improvements to scikit-learn.
 The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
 The code architecture uses a Mixin inherited by all tree-based models to improve code reuse and factorization. For each tree-based ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available.
-We compared our Python implementation with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observed that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Rules Extraction Module
