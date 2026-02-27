@@ -55,11 +55,11 @@ pip install -e .[dev,docs]
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
 
-sirus = SirusClassifier(n_estimators=1000,max_depth=2,
-                          quantile=10,p0=0.01, random_state=0)
-sirus.fit(X_train,y_train)
+sirus = SirusClassifier(n_estimators=1000, max_depth=2,
+                        quantile=10, p0=0.01, random_state=0)
+sirus.fit(X_train, y_train)
 y_pred_sirus = sirus.predict(X_test)
-show_rules(sirus,max_rules=10) # Show rules
+show_rules(sirus, max_rules=10)
 ```
 
 ## 🌱 WoodTapper ExampleExplanation module
@@ -67,8 +67,10 @@ show_rules(sirus,max_rules=10) # Show rules
 from woodtapper.example_sampling import RandomForestClassifierExplained
 
 rf_explained = RandomForestClassifierExplained(n_estimators=100)
-rf_explained.fit(X_train,y_train)
-Xy_explain = rf_explained.explanation(X_test) # Get the 5 most similar samples (and target) for each test sample
+rf_explained.fit(X_train, y_train)
+
+# Get the 5 most similar samples (and target) for each test sample
+Xy_explain = rf_explained.explanation(X_test)
 ```
 
 ## 🙏 Acknowledgements
