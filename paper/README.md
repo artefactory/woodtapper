@@ -1,28 +1,21 @@
+# Paper for JOSS
+
+The elements of the JOSS submission are avialable in this folder.
+
+## 🧪 Experiments
+
+If you want to reproduce our experiments of our paper on google colab, this [Python notebook](https://colab.research.google.com/github/artefactory/woodtapper/blob/main/paper/exp_py.ipynb) and [R notebook](https://colab.research.google.com/github/artefactory/woodtapper/blob/main/paper/exp_r.ipynb) are available. Otherwise you can clone the reporsitory following the instructions below.
 
 ## 🛠 Installation
-First you can clone the repository:
+**From source**:
 ```bash
-git clone git@github.com:artefactory/mgs-grf.git
-```
-
-And install the required packages into your environment (conda, mamba or pip; python=3.12):
-```bash
-pip install -r requirements.txt
-```
-
-Then, you **need** to run the following command from the repository root directory :
-```
-pip install -e '.[dev]'
+git clone https://github.com/artefactory/woodtapper.git
+cd woodtapper
+pip install -e .[dev,docs]
 ```
 
 ## 💾 Data sets
-* [Pima](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database)
-* Phoneme : https://github.com/jbrownlee/Datasets/blob/master/phoneme.csv
-* Adult : https://archive.ics.uci.edu/dataset/2/adult
-* Houses sales : https://www.openml.org/d/44144
 
-* California : https://www.openml.org/d/44090
-* Titanic : https://www.kaggle.com/datasets/yasserh/titanic-dataset?resource=download
-* Wine : https://archive.ics.uci.edu/dataset/186/wine+quality
-* Haberman : https://archive.ics.uci.edu/dataset/43/haberman+s+survival
-* Yeast : https://archive.ics.uci.edu/dataset/110/yeast
+The data sets are available at the following adresses:
+* Titanic : https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/problem12.html
+* Houses sales : https://www.openml.org/d/44144
