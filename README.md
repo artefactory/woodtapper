@@ -41,6 +41,15 @@ WoodTapper is fully compatible with scikit-learn tree ensemble models.
 ```bash
 pip install woodtapper
 ```
+> **Warning (scikit-learn already installed):**
+> If you install `woodtapper` in an environment where `scikit-learn` is already present, the prebuilt PyPI wheel may not be compatible with your existing `scikit-learn` binary. In that case, reinstall `woodtapper` from source so it is compiled against the `scikit-learn` version in your environment:
+>
+> ```bash
+> pip uninstall -y woodtapper
+> pip install -U pip setuptools wheel
+> pip install -U Cython pybind11
+> pip install --no-binary=woodtapper --no-build-isolation woodtapper
+> ```
 
 **From source**:
 ```bash
