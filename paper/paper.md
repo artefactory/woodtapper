@@ -31,15 +31,15 @@ date: 14 November 2025
 bibliography: paper.bib
 ---
 
+# Summary
+`WoodTapper` provides a dedicated Python toolbox to inspect, decompose, and explain predictions from tree-based classifiers using methods that directly leverage the discrete structure of trees.
+More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module provides example-based explanations for a given input sample.  We describe these two modules below.
 
 # Statement of need
 
 Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models, such as tree-based ensemble methods, often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance.
 Popular explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles, and their computation remains a black-box estimation.
 Another field of interpretable models are rule-based methods. They are especially attractive because they are in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations.
-
-`WoodTapper` complements these ecosystems by providing a dedicated Python toolbox to inspect, decompose, and explain predictions using methods that directly leverage the discrete structure of trees.
-More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module explains example-based explanations given an input sample.  We describe these two modules below.
 
 
 # State of the Field
