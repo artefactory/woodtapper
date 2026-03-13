@@ -33,7 +33,7 @@ bibliography: paper.bib
 
 # Summary
 `WoodTapper` provides a dedicated Python toolbox to inspect, decompose, and explain predictions from tree-based classifiers using methods that directly leverage the discrete structure of trees.
-More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module explains example-based explanations given an input sample.  We describe these two modules below.
+More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module provides example-based explanations for a given input sample.  We describe these two modules below.
 
 # Statement of need
 
