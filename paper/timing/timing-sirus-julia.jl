@@ -31,7 +31,7 @@ end
 function demo(X_train, y_train)
     # Synthetic dataset
     #X, y = @load_iris
-    model = StableRulesClassifier(;n_trees=1000,partial_sampling=1.0, q=10, max_depth=2,#n_subfeatures=14,
+    model = StableRulesClassifier(;n_trees=1000,partial_sampling=1.0, q=10, max_depth=2,n_subfeatures=14,
                                      lambda=1, max_rules=25,rng=StableRNG(1));
 
     fitted_model, fit_time = benchmark_fit(model, X_train, y_train)
