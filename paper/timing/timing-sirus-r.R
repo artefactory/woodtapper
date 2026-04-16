@@ -73,7 +73,7 @@ output_dir_Rules <- "paper/timing/times-csv/"
 write.csv(list_time_samples, file = file.path(output_dir_Rules, "list_time_samples_r.csv"), row.names = FALSE, col.names = FALSE)
 
 list_time_dims <- c()
-run_list <- c(0,1,2,2,3,4)
+run_list <- c(0,1,2,3,4)
 for (run in run_list) {
   cat("\n================ Starting run DIMENSION",run,"================\n")
   n_samples_train <- 300000

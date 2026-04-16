@@ -144,7 +144,7 @@ for n_dim in n_dims:
             max_depth=2,
             max_features=14,
             quantile=10,
-            p0=0.01,
+            p0=0.0,
             to_not_binarize_colindexes=None,
             starting_index_one_hot=None,
             random_state=0,

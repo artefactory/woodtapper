@@ -49,10 +49,10 @@ fit_times_samples = [];
 run_list = [0,1,2,3,4];
 for run in run_list
     println("********* Run number SAMPLES: $run *********");
-    #n_samples_train_list = [100000, 200000, 300000, 400000, 500000];
-    #n_dim=200;
-    n_samples_train_list = [1000, 2000, 3000, 4000, 5000];
-    n_dim=10;
+    n_samples_train_list = [100000, 200000, 300000, 400000, 500000];
+    n_dim=200;
+    #n_samples_train_list = [1000, 2000, 3000, 4000, 5000];
+    #n_dim=10;
     for n_samples_train in n_samples_train_list
         X_train = X_train_original[1:n_samples_train, names(X_train_original)[1:n_dim]];
         y_train_df = y_train_original[1:n_samples_train,r"Column1"];
@@ -72,10 +72,10 @@ fit_times_dims = [];
 run_list = [0,1,2,3,4];
 for run in run_list
     println("********* Run number DIMENSION: $run *********");
-    #n_samples_train = 300000;
-    #n_dims = [15, 25, 50, 75, 100, 125, 150, 175, 200];
-    n_samples_train = 3000;
-    n_dims = [5, 6, 7, 8, 9, 10, 11, 12, 13];
+    n_samples_train = 300000;
+    n_dims = [15, 25, 50, 75, 100, 125, 150, 175, 200];
+    #n_samples_train = 3000;
+    #n_dims = [5, 6, 7, 8, 9, 10, 11, 12, 13];
     for n_dim in n_dims
         X_train = X_train_original[1:n_samples_train, names(X_train_original)[1:n_dim]];
         y_train_df = y_train_original[1:n_samples_train,r"Column1"];
