@@ -2,9 +2,13 @@
 
 The elements of the JOSS submission are avialable in this folder.
 
-## 🧪 Experiments
+## 🧪 Experiments regarding generated rules and performances
 
 If you want to reproduce our experiments of our paper on google colab, this [Python notebook](https://colab.research.google.com/github/artefactory/woodtapper/blob/main/paper/exp_py.ipynb) and [R notebook](https://colab.research.google.com/github/artefactory/woodtapper/blob/main/paper/exp_r.ipynb) are available. Otherwise you can clone the reporsitory following the instructions below.
+
+## ⏳ Experiments regarding computation time
+
+Experiments measuring the runtime of the different SIRUS methodologies are available in the **[timing](./timing)** folder and explained in this  **[file](./timing/README.md)** , along with clear instructions for running them.
 
 ## 🛠 Installation
 **From source**:

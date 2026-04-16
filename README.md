@@ -111,7 +111,7 @@ If you find the code useful, please consider citing us:
 }
 ```
 For SIRUS methodology, consider citing:
-```
+```bibtex
 @article{benard2021sirus,
   title={Sirus: Stable and interpretable rule set for classification},
   author={Benard, Clement and Biau, Gerard and Da Veiga, Sebastien and Scornet, Erwan},
