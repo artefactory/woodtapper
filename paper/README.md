@@ -8,7 +8,7 @@ If you want to reproduce our experiments of our paper on google colab, this [Pyt
 
 ## ⏳ Experiments regarding computation time
 
-Experiments measuring the runtime of the different SIRUS methodologies are available in the **timing** folder, along with clear instructions for running them.
+Experiments measuring the runtime of the different SIRUS methodologies are available in the **[timing](./timing)** folder and explained in this  **[file](./timing/README.md)** , along with clear instructions for running them.
 
 ## 🛠 Installation
 **From source**:
