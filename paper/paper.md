@@ -5,19 +5,19 @@ tags:
   - Machine Learning
   - XAI
 authors:
-  - name: Abdoulaye SAKHO
+  - name: Abdoulaye Sakho
     orcid: 0009-0002-0248-4881
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Jad AOUAD
+  - name: Jad Aouad
     orcid: 0009-0000-1456-3056
     affiliation: 1
-  - name: Carl-Erik GAUTHIER
+  - name: Carl-Erik Gauthier
     orcid: 0009-0009-4256-5425
     affiliation: 3
-  - name: Emmanuel MALHERBE
+  - name: Emmanuel Malherbe
     orcid: 0009-0006-0898-6873
     affiliation: 1
-  - name: Erwan SCORNET
+  - name: Erwan Scornet
     orcid: 0000-0001-9946-4160
     affiliation: 2
 affiliations:
@@ -170,6 +170,6 @@ Generative AI tools were used in this software only to implement the Cython func
 
 # Acknowledgements
 
-We would like to express our gratitude to Clément BENARD, Alexandre CHAUSSARD and Vincent AURIAU for their valuable help and feedbacks.
+We would like to express our gratitude to Clément Bénard, Alexandre Chaussard and Vincent Auriau for their valuable help and feedbacks.
 
 # References
