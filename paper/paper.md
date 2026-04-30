@@ -33,28 +33,28 @@ bibliography: paper.bib
 
 # Summary
 `WoodTapper` provides a dedicated Python toolbox to inspect, decompose, and explain predictions from tree-based classifiers using methods that directly leverage the discrete structure of trees.
-More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module provides example-based explanations for a given input sample.  We describe these two modules below.
+More specifically, one module converts any tree-based model of scikit-learn into a rule-based method, and a second module provides example-based explanations for a given input sample.
 
 # Statement of need
 
 Interpretable machine learning has become an increasingly critical concern [@nussberger2022public;@sokol2024interpretable] as predictive models are deployed in high-stakes settings such as healthcare [@Khalilia:2011], marketing [@ex-churn] or finance [@ex-fraud;@sakho2025harnessing] which is moreover a regulated sector. While complex models, such as tree-based ensemble methods, often yield strong predictive performance, their opacity can pose challenges for accountability, trust and compliance.
-Popular explanation toolkits such as SHAP and LIME offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles, and their computation remains a black-box estimation.
+Popular explanation toolkits such as SHAP [@shap] and LIME [@lime] offer model-agnostic or surrogate-based attributions that are broadly applicable, but they can be computationally expensive for large ensembles, and their computation remains a black-box estimation.
 Another field of interpretable models are rule-based methods. They are especially attractive because they are in the form of “if-then” statements, which are often easier to audit and communicate than latent feature transformations.
 
 
 # State of the Field
 
-The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-regression] offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. `WoodTapper` addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, `WoodTapper` extends rules extraction $(i)$ from all the tree-based models in scikit-learn (Random Forest, Gradient Boosting and Extremely Randomized Trees) and $(ii)$ to the multiclass classification setting.
+The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-regression] offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. `WoodTapper` addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, `WoodTapper` extends rules extraction $(i)$ from all the tree-based models in scikit-learn (Random Forest [@breiman2001random], Gradient Boosting [@gbdt] and Extremely Randomized Trees [@geurts2006extremely]) and $(ii)$ to the multiclass classification setting.
 
 In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
 
-We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Table \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
+We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Tables \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
 
 # Research impact statement
-As a Python package, `WoodTapper` provides a practical interface for extracting decision rules with SIRUS and integrating those rules into downstream projects. The SIRUS rule-extraction procedure, originally developed for random forests, has been applied in more than 200 publications (according to Google Scholar) and has since been extended to diverse domains, including microbiome analysis, time-series analysis, and hydrological process analysis. Python adaptation of SIRUS has been requested multiple times by practitioners and researcher to the authors, which `WoodTapper` addresses. Beyond rule extraction, `WoodTapper` offers an example-based auditing tool for black-box, tree-based models deployed in production, and has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking[^1].
+As a Python package, `WoodTapper` provides a practical interface for extracting decision rules with SIRUS and integrating those rules into downstream projects. The SIRUS rule-extraction procedure, originally developed for random forests, has been applied in more than 200 publications (according to Google Scholar 2025) and has since been extended to diverse domains, including microbiome analysis, time-series analysis, and hydrological process analysis. Python adaptation of SIRUS has been requested multiple times by practitioners and researcher to the authors, which `WoodTapper` addresses. Beyond rule extraction, `WoodTapper` offers an example-based auditing tool for black-box, tree-based models deployed in production, and has been already applied successfully in the context of Artefact's consulting missions with clients of different sectors, including banking.[^1]
 
-`WoodTapper` has demonstrated notable research impact and has grown its user and contributor communities since its initial release. It has been downloaded more than 1,500 times[^2], indicating strong demand for a Python implementation. The package has evolved through contributions from multiple developers, with community members able to add new features, reporting and fixing bugs, and proposing enhancements. Furthermore, the fully reproducible benchmarks described below show concrete improvements in both generalisation to all tree-based models and computation time.
+`WoodTapper` has demonstrated notable research impact and has grown its user and contributor communities since its initial release. It has been downloaded more than 1,500 times,[^2] indicating strong demand for a Python implementation. The package has evolved through contributions from multiple developers, with community members able to add new features, reporting and fixing bugs, and proposing enhancements. Furthermore, the fully reproducible benchmarks described below show concrete improvements in both generalisation to all tree-based models and computation time.
 
 [^1]: The details of these deployments remain confidential and are beyond the scope of this paper.
 [^2]: Counted on pepy in first 2 months.
@@ -91,7 +91,7 @@ Beyond the binary classification detailed here, we also implemented the rule ext
 
 : **Comparison of SIRUS implementations across softwares.**\label{tab:comparison}
 
-| **Feature**                 | **`WoodTapper` (Py)**                        | **SIRUS (R)**                          | **SIRUS (Jl)**           |
+| **Feature**                 | **`WoodTapper` (Python)**                        | **SIRUS (R)**                          | **SIRUS (Julia)**           |
 |-----------------------------|--------------------------------------------|----------------------------------------|---------------------------|
 | Language          | Python 3.x                                 | R 4.x                                  | Julia 1.x                 |
 | Forest        | `scikit-learn`                             | `ranger`                               | Own                       |
@@ -103,7 +103,7 @@ Beyond the binary classification detailed here, we also implemented the rule ext
 | Tree depth $≥ 3$            | $\checkmark$                                           | $\checkmark$                                       | $\times$                          |
 | Classification              | Multiclass                                | Binary                                 | Multiclass                |
 
-We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 250GB RAM. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, regardless of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
+We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads on an AMD Ryzen Threadripper PRO 5955WX (16 cores, 4GHz) with 256GB RAM. We also experimented on large-scale industrial data sets, including from the banking sector, and observed the same trends as displayed here. SIRUS.jl exhibits higher runtime compared to Python and R implementations. The R version, relying on ranger, is faster for tree construction on large datasets than scikit-learn. Our Python implementation, however, is considerably more efficient for rule extraction, regardless of sample size or feature dimensionality (see Figures \ref{fig:run-time-samples} and \ref{fig:run-time-dim}).
 
 ![SIRUS running time for simulated data using 5 threads, with d=200 and M=1000.\label{fig:run-time-samples}](images/run-time-samples-log-5threads-final.pdf){ width=100% }
 
@@ -112,7 +112,7 @@ We compare the runtimes of SIRUS in Python (ours), R, and Julia using 5 threads 
 
 ## Extracted rules and predictive performances
 
-The rules produced by the original SIRUS (R) and our $\texttt{RulesExtraction}$ in \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py} on the Titanic data set are identical, and predictive performances in Table \ref{tab:perf_metrics} are very similar, confirming that our implementation faithfully reproduces the original algorithm.
+The rules generated by the original SIRUS (R) and our RulesExtraction implementation (Figures \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}) on the Titanic dataset match for 9 out of 10 rules. The predictive performances reported in Table \ref{tab:perf_metrics} are also very similar, confirming that our implementation faithfully reproduces the original algorithm. The remaining differences stem from the fact that the Python and R implementations do not use the exact same randomness when growing trees. As a result, rule occurrence frequencies can vary, which may change the ordering of the rules (Figures \ref{fig:sub-titanic-r} and \ref{fig:sub-titanic-py}) and, in turn, affect the final rule selected (therefore, the predictive performance is not exactly identical).
 
 ![SIRUS (R) rules on Titanic data set. \label{fig:sub-titanic-r}](images/rules-titanic-r-final.pdf){ width=70% }
 
