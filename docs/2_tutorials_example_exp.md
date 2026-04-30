@@ -42,10 +42,10 @@ X_test.iloc[0,:]  # First test sample
 ```
 !!! example "Output"
 ```text
-a    5.8
-b    2.8
-c    5.1
-d    2.4
+sepal length (cm)    5.8
+sepal width (cm)     2.8
+petal length (cm)    5.1
+petal width (cm)     2.4
 Name: 114, dtype: float64
 ```
 

@@ -53,7 +53,7 @@ Fitting time =  1.2483680248260498 s
 ```
 
 ## Rules illustration
-The rules are the same for all three classes but the output probabilities are specfici to each class:
+The rules are the same for all three classes but the output probabilities are specific to each class:
 
 ```python
 show_rules(RFSirus,max_rules=10,target_class_index=0) ## show class Y=0
