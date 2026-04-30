@@ -39,6 +39,8 @@ markdown_extensions:
       permalink: true
   - tables
   - attr_list
+  - pymdownx.highlight
+  - pymdownx.superfences
   - pymdownx.arithmatex:
       generic: true
 

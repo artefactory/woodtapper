@@ -40,12 +40,27 @@ Xy_explain = RFExplained.explanation(X_test) # Get the 5 most similar samples fo
 ```python
 X_test.iloc[0,:]  # First test sample
 ```
-![](images/x-test-0.png)
+!!! example "Output"
+```text
+sepal length (cm)    5.8
+sepal width (cm)     2.8
+petal length (cm)    5.1
+petal width (cm)     2.4
+Name: 114, dtype: float64
+```
 
 ```python
 Xy_explain[0] # Explanation for the first test sample
 ```
-![](images/Xy-explain-0.png)
+!!! example "Output"
+```text
+(array([[5.8, 2.7, 5.1, 1.9],
+        [5.8, 2.7, 5.1, 1.9],
+        [5.7, 2.5, 5. , 2. ],
+        [5.9, 3. , 5.1, 1.8],
+        [6.3, 3.4, 5.6, 2.4]]),
+ array([2, 2, 2, 2, 2]))
+```
 
 ## Load an existing RandomForestClassifier into the explainer
 
