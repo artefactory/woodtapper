@@ -170,6 +170,6 @@ Generative AI tools were used in this software only to implement the Cython func
 
 # Acknowledgements
 
-We would like to express our gratitude to Clément Bénard, Alexandre Chaussard and Vincent Auriau for their valuable help and feedbacks.
+We would like to express our gratitude to Clément Bénard, Alexandre Chaussard and Vincent Auriau for their valuable help and feedback.
 
 # References
