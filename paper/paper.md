@@ -46,7 +46,7 @@ Another field of interpretable models are rule-based methods. They are especiall
 
 The original SIRUS algorithm [@benard2021sirus-classif;@benard2021interpretable-regression] offered a principled approach to generate simple and stable rule-based models from random forests. However, its implementations have been limited to R and Julia [@benard2021sirus-classif;@huijzer2023sirus-jl], creating accessibility barriers for the Python data science community. `WoodTapper` addresses this gap by offering a native Python implementation that integrates with the scikit-learn ecosystem. Furthermore, `WoodTapper` extends rules extraction $(i)$ from all the tree-based models in scikit-learn (Random Forest [@breiman2001random], Gradient Boosting [@gbdt] and Extremely Randomized Trees [@geurts2006extremely]) and $(ii)$ to the multiclass classification setting.
 
-In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based models predictions through examples.
+In addition, `WoodTapper` introduces an example-based explainability methodology that can be applied to all scikit-learn tree-based models. This approach associates predicted samples with representative samples from the training data set, explaining tree-based model's predictions through examples.
 
 We compare below our Python implementation `WoodTapper` with the Julia, R and skgrf versions (see Tables \ref{tab:comparison} and \ref{tab:comparison-grf}) and observe that `WoodTapper` provides broader options for tree-based model extraction, faster rule-extraction runtimes, and support for multiclass classification with unlimited tree depth.
 
@@ -62,14 +62,14 @@ As a Python package, `WoodTapper` provides a practical interface for extracting 
 # Software design
 `WoodTapper` package adheres to the scikit-learn [@pedregosa2011scikit] estimator interface.
 This design enables smooth integration with existing workflows involving pipelines, cross-validation, and model selection, and enables to efficiently benefit from future maintenance updates and improvements to scikit-learn.
-The implementation leverages NumPy for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
+The implementation leverages NumPy [@numpy] for numerical computation and joblib for parallel processing to optimize performance on large datasets (\ref{tab:comparison}).
 The code architecture uses a Mixin inherited by all tree-based models to improve code reuse and factorization. For each tree-based ensemble type, a subclass inherits both the original scikit-learn class and the Mixin. The standard $\texttt{fit}$ and $\texttt{predict}$ methods remain unchanged, while additional methods of `WoodTapper` are available.
 
 
 # Rules Extraction Module
 
 ## Formulation
-In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif.
+In this section, we present our $\texttt{RulesExtraction}$ module and we specifically consider its application to a random forest classifier, which corresponds to the SIRUS algorithm introduced by @benard2021sirus-classif. The module is designed to extract a set of rules from an ensemble of trees and then aggregate them to produce the final output probabilities.
 
 We suppose that we have a training set $\mathcal{D}_{n}=\{(x_i,y_i)\}_{i=1}^{n}$ composed of $n$ pairs taking values in $\mathbb{R}^p$ and $\{0,1\}$ respectively (binary classification). We denote by $x_i^{(j)}$ the $j$-th component of the $i$-th sample in $\mathcal{D}_n$. We suppose we have a set of trees $\{\mathcal{T}_m, m=1, \dots, M \}$ from a tree ensemble procedure, each grown with randomness $\Theta_m$.
 
