@@ -35,7 +35,7 @@ WoodTapper is a Python toolbox that provides:
 
 
 WoodTapper is supported by a peer reviewed publication:
-> &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2024) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
+> &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
 
 ## 🛠 Installation
 
