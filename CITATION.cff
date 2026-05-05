@@ -1,0 +1,52 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Sakho
+  given-names: Abdoulaye
+  orcid: "https://orcid.org/0009-0002-0248-4881"
+- family-names: Aouad
+  given-names: Jad
+  orcid: "https://orcid.org/0009-0000-1456-3056"
+- family-names: Gauthier
+  given-names: Carl-Erik
+  orcid: "https://orcid.org/0009-0009-4256-5425"
+- family-names: Malherbe
+  given-names: Emmanuel
+  orcid: "https://orcid.org/0009-0006-0898-6873"
+- family-names: Scornet
+  given-names: Erwan
+  orcid: "https://orcid.org/0000-0001-9946-4160"
+doi: 10.5281/zenodo.20026885
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Sakho
+    given-names: Abdoulaye
+    orcid: "https://orcid.org/0009-0002-0248-4881"
+  - family-names: Aouad
+    given-names: Jad
+    orcid: "https://orcid.org/0009-0000-1456-3056"
+  - family-names: Gauthier
+    given-names: Carl-Erik
+    orcid: "https://orcid.org/0009-0009-4256-5425"
+  - family-names: Malherbe
+    given-names: Emmanuel
+    orcid: "https://orcid.org/0009-0006-0898-6873"
+  - family-names: Scornet
+    given-names: Erwan
+    orcid: "https://orcid.org/0000-0001-9946-4160"
+  date-published: 2026-05-05
+  doi: 10.21105/joss.10112
+  issn: 2475-9066
+  issue: 121
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 10112
+  title: "WoodTapper: a Python package for explaining decision tree
+    ensembles"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.10112"
+  volume: 11
+title: "`WoodTapper`: a Python package for explaining decision tree
+  ensembles"
