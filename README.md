@@ -33,7 +33,9 @@ WoodTapper is a Python toolbox that provides:
 
 [**Detailed information about the modules can be found here.**](https://artefactory.github.io/woodtapper/0_tutorials/)
 
-WoodTapper is fully compatible with scikit-learn tree ensemble models.
+
+WoodTapper is supported by a peer reviewed publication:
+> &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
 
 ## 🛠 Installation
 
@@ -103,12 +105,16 @@ This work was done through a partnership between the **Artefact Research Center*
 If you find the code useful, please consider citing us:
 
 ```bibtex
-@misc{woodtapper,
-  title        = {WoodTapper: a Python package for explaining decision tree ensembles},
-  author       = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
-  year         = {2025},
-  howpublished = {\url{https://github.com/artefactory/woodtapper}},
-}
+@article{Sakho2026,
+doi = {10.21105/joss.10112},
+url = {https://doi.org/10.21105/joss.10112},
+year = {2026}, publisher = {The Open Journal},
+volume = {11},
+number = {121},
+pages = {10112},
+author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
+title = {WoodTapper: a Python package for explaining decision tree ensembles},
+journal = {Journal of Open Source Software} }
 ```
 For SIRUS methodology, consider citing:
 ```bibtex
