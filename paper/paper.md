@@ -143,7 +143,7 @@ $$
 
 Finally, the $l$ training samples with the highest $w(x,x_i)$ values, along with their target values $y_i$, are shown as the examples that best explain the prediction of $x$ by the tree-based ensemble model.
 
-In python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compare the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
+In Python, the $\textit{skgrf}$ [@skgrf] package is an interface for using the R implementation of generalized random forest, focusing on classifiers for specifics learning tasks (causal inference, quantile regression,...). For each task, the user can compute the kernel weights, equivalently to our leaf frequency match introduce above. Thus, we compare the kernel weights computation by $\textit{skgrf}$ and our module. We stress on the fact that our $\texttt{ExampleExplanation}$ is designed for usual tree-based models such as random forest of extra trees and not specifically in a context of causal inference or quantile regression. In particular, the tree building of our forest is different from the one in $\textit{skgrf}$.
 
 ## Running time
 
