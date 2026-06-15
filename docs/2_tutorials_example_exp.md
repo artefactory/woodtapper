@@ -34,7 +34,7 @@ RFExplained.fit(X_train,y_train)
 
 ## Generate example-based explainability
 ```python
-Xy_explain = RFExplained.explanation(X_test,to_pandas=True) # Get the 5 most similar samples for each test sample
+Xy_explain = RFExplained.explanation(X_test,to_pandas=True, feature_names=iris.feature_names) # Get the 5 most similar samples for each test sample
 ```
 
 ```python
@@ -54,7 +54,7 @@ Xy_explain[0] # Explanation for the first test sample
 ```
 !!! example "Output"
 
-| Index | feature_0 | feature_1 | feature_2 | feature_3 | target |
+|  | sepal length (cm)	 | sepal width (cm)	 | petal length (cm)	 | petal width (cm)	 | target |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | 0 | 5.8 | 2.7 | 5.1 | 1.9 | 2 |
 | 1 | 5.8 | 2.7 | 5.1 | 1.9 | 2 |
