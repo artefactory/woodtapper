@@ -54,13 +54,13 @@ Xy_explain[0] # Explanation for the first test sample
 ```
 !!! example "Output"
 
-|  | sepal length (cm)	 | sepal width (cm)	 | petal length (cm)	 | petal width (cm)	 | target |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| 0 | 5.8 | 2.7 | 5.1 | 1.9 | 2 |
-| 1 | 5.8 | 2.7 | 5.1 | 1.9 | 2 |
-| 2 | 5.7 | 2.5 | 5.0 | 2.0 | 2 |
-| 3 | 5.9 | 3.0 | 5.1 | 1.8 | 2 |
-| 4 | 6.3 | 3.4 | 5.6 | 2.4 | 2 |
+| sepal length (cm)	 | sepal width (cm)	 | petal length (cm)	 | petal width (cm)	 | target |
+| :---: | :---: | :---: | :---: | :---: |
+| 5.8 | 2.7 | 5.1 | 1.9 | 2 |
+| 5.8 | 2.7 | 5.1 | 1.9 | 2 |
+| 5.7 | 2.5 | 5.0 | 2.0 | 2 |
+| 5.9 | 3.0 | 5.1 | 1.8 | 2 |
+| 6.3 | 3.4 | 5.6 | 2.4 | 2 |
 
 ## Load an existing RandomForestClassifier into the explainer
 
