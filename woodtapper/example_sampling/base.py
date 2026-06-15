@@ -135,7 +135,9 @@ class ExplanationMixin:
             leafs_by_sample, self.train_samples_leaves, leaf_sizes
         )
 
-    def explanation(self, X, n_examples=5, batch_size=None, to_pandas=False):
+    def explanation(
+        self, X, n_examples=5, batch_size=None, to_pandas=False, feature_names=None
+    ):
         """
         Explanation procedure.
         Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
@@ -164,7 +166,13 @@ class ExplanationMixin:
         # Get the 5 most similar samples
         if to_pandas:
             list_ = []
-            feature_names = [f"feature_{j}" for j in range(self.train_X.shape[1])]
+            if feature_names is None:
+                feature_names = [f"feature_{j}" for j in range(self.train_X.shape[1])]
+            elif len(feature_names) != self.train_X.shape[1]:
+                raise ValueError(
+                    f"Length of feature_names ({len(feature_names)}) must match "
+                    f"the number of features ({self.train_X.shape[1]})."
+                )
             for i in range(most_similar_idx.shape[0]):
                 df = pd.DataFrame(
                     self.train_X[most_similar_idx[i]], columns=feature_names
@@ -176,6 +184,7 @@ class ExplanationMixin:
                 else:
                     for j in range(self.train_y.shape[1]):
                         df[f"target_{j}"] = self.train_y[most_similar_idx[i]][:, j]
+                df.reset_index(drop=True, inplace=True)
                 list_.append(df)
             return list_
         else:
