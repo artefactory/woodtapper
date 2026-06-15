@@ -4,6 +4,7 @@ ExampleExplanation mixin for tree-based models.
 
 import copy
 import numpy as np
+import pandas as pd
 from sklearn.utils.validation import validate_data
 
 from .utils.utils import compute_leaf_sizes
@@ -134,7 +135,7 @@ class ExplanationMixin:
             leafs_by_sample, self.train_samples_leaves, leaf_sizes
         )
 
-    def explanation(self, X, n_examples=5, batch_size=None):
+    def explanation(self, X, n_examples=5, batch_size=None, to_pandas=False):
         """
         Explanation procedure.
         Show the 5 most similar samples based on the frequency of training samples ending in the same leaf as the new sample
@@ -161,4 +162,20 @@ class ExplanationMixin:
             weights = np.array(list_weights)  # n_samples x n_train
         most_similar_idx = np.argsort(-weights, axis=1)[:, :n_examples]
         # Get the 5 most similar samples
-        return list(zip(self.train_X[most_similar_idx], self.train_y[most_similar_idx]))
+        if to_pandas:
+            list_ = []
+            for i in range(most_similar_idx.shape[0]):
+                df_covariates = pd.DataFrame(
+                    self.train_X[most_similar_idx[i]],
+                    columns=[f"feature_{j}" for j in range(self.train_X.shape[1])],
+                )
+                df_target = pd.DataFrame(
+                    self.train_y[most_similar_idx[i]], columns=["target"]
+                )
+                df = pd.concat([df_covariates, df_target], axis=1)
+                list_.append(df)
+            return list_
+        else:
+            return list(
+                zip(self.train_X[most_similar_idx], self.train_y[most_similar_idx])
+            )
