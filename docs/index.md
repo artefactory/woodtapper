@@ -7,7 +7,7 @@
 </div>
 
 <div align="center">
-User-friendly and scalable Python package for tapping decision tree ensembles
+User-friendly and scalable Python package for tapping decision tree ensembles [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
 </div>
 
 WoodTapper is a machine learning toolbox for investigating tree-based models.
@@ -38,3 +38,29 @@ Here is a quick overview of the different functionalities offered by WoodTapper.
 ### Example Explanation
 - [Classification Example Explanation](./references/classification_explanation.md)
 - [Regression Example Explanation](./references/regression_explanation.md)
+
+
+## 📜 Citation
+
+If you find the code useful, please consider citing us:
+
+```bibtex
+@article{Sakho2026,
+doi = {10.21105/joss.10112},
+url = {https://doi.org/10.21105/joss.10112},
+year = {2026}, publisher = {The Open Journal},
+volume = {11},
+number = {121},
+pages = {10112},
+author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
+title = {WoodTapper: a Python package for explaining decision tree ensembles},
+journal = {Journal of Open Source Software} }
+```
+For SIRUS methodology, consider citing:
+```bibtex
+@article{benard2021sirus,
+  title={Sirus: Stable and interpretable rule set for classification},
+  author={Benard, Clement and Biau, Gerard and Da Veiga, Sebastien and Scornet, Erwan},
+  year={2021}
+}
+```
