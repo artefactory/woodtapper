@@ -7,8 +7,11 @@
 </div>
 
 <div align="center">
-User-friendly and scalable Python package for tapping decision tree ensembles [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
+User-friendly and scalable Python package for tapping decision tree ensembles
 </div>
+
+WoodTapper is supported by a peer reviewed publication:
+> &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
 
 WoodTapper is a machine learning toolbox for investigating tree-based models.
 In this documentation you will find examples to be quickly getting started as well as some more in-depth example.
