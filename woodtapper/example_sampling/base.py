@@ -164,15 +164,17 @@ class ExplanationMixin:
         # Get the 5 most similar samples
         if to_pandas:
             list_ = []
+            feature_names = [f"feature_{j}" for j in range(self.train_X.shape[1])] + [
+                "target"
+            ]
             for i in range(most_similar_idx.shape[0]):
-                df_covariates = pd.DataFrame(
-                    self.train_X[most_similar_idx[i]],
-                    columns=[f"feature_{j}" for j in range(self.train_X.shape[1])],
+                combined = np.column_stack(
+                    (
+                        self.train_X[most_similar_idx[i]],
+                        self.train_y[most_similar_idx[i]],
+                    )
                 )
-                df_target = pd.DataFrame(
-                    self.train_y[most_similar_idx[i]], columns=["target"]
-                )
-                df = pd.concat([df_covariates, df_target], axis=1)
+                df = pd.DataFrame(combined, columns=feature_names)
                 list_.append(df)
             return list_
         else:
