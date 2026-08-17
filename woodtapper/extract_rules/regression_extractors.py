@@ -83,6 +83,7 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
+        verbose_stability_criterion=False,
     ):
         super(ForestRegressor, self).__init__(
             estimator=DecisionTreeRegressor(),
@@ -126,6 +127,7 @@ class SirusRegressor(RulesExtractorRegressorMixin, RandomForestRegressor):
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.verbose_stability_criterion = verbose_stability_criterion
 
 
 class ExtraTreesRulesRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor):
@@ -197,6 +199,7 @@ class ExtraTreesRulesRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
+        verbose_stability_criterion=False,
     ):
         super(ForestRegressor, self).__init__(
             estimator=ExtraTreeRegressor(),
@@ -239,6 +242,7 @@ class ExtraTreesRulesRegressor(RulesExtractorRegressorMixin, ExtraTreesRegressor
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.verbose_stability_criterion = verbose_stability_criterion
 
 
 class GBRulesRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
@@ -317,6 +321,7 @@ class GBRulesRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
         quantile=10,
         to_not_binarize_colindexes=None,
         starting_index_one_hot=None,
+        verbose_stability_criterion=False,
     ):
         super().__init__(
             loss=loss,
@@ -347,6 +352,7 @@ class GBRulesRegressor(RulesExtractorRegressorMixin, GradientBoostingRegressor):
         self.quantile = quantile
         self.to_not_binarize_colindexes = to_not_binarize_colindexes
         self.starting_index_one_hot = starting_index_one_hot  # index of the first one-hot encoded variable in the dataset (to handle correctly the binarization of the rules)
+        self.verbose_stability_criterion = verbose_stability_criterion
 
     def _fit_stage(
         self,

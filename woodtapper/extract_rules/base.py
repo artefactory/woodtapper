@@ -222,7 +222,8 @@ class RulesExtractorMixin:
                 rules_.extend(curr_tree_rules)
         self._fit_rules(X, y, rules_, sample_weight)
         # Will call the _fit_rules for classifier or regressor (implemented in child class)
-        compute_stability_criterion(self)
+        if self.verbose_stability_criterion:
+            compute_stability_criterion(self)
 
 
 class RulesExtractorClassifierMixin(RulesExtractorMixin):
