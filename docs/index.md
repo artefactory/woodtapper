@@ -6,7 +6,7 @@
 
 <div align="center">
 
-**A Python package for explainability of tree-based machine learning models**
+User-friendly and scalable Python package for tapping decision tree ensembles
 
 </div>
 
