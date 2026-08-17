@@ -1,69 +1,74 @@
-
-
-# Welcome to the WoodTapper documentation!
+# WoodTapper Documentation
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_woodpecker_compressed.png" width="300">
 </div>
 
 <div align="center">
-User-friendly and scalable Python package for tapping decision tree ensembles
+
+**A Python package for explainability of tree-based machine learning models**
+
 </div>
 
-WoodTapper is supported by a peer reviewed publication:
-> &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
+## Overview
 
-WoodTapper is a machine learning toolbox for investigating tree-based models.
-In this documentation you will find examples to be quickly getting started as well as some more in-depth example.
+WoodTapper is a comprehensive Python package designed for interpretability and explainability of decision tree ensembles. It provides tools for extracting interpretable rules and generating example-based explanations from tree-based models.
 
-## Installation
+The package is supported by peer-reviewed research:
 
-[Getting started.](./installation.md)
+> Sakho et al. (2026). *WoodTapper: a Python package for explaining decision tree ensembles*. **Journal of Open Source Software**, 11(121), 10112. [📄](https://joss.theoj.org/papers/10.21105/joss.10112) https://doi.org/10.21105/joss.10112
 
-## Tutorials
+## Quick Start
 
-[**The mathematical formulation of WoodTapper modules are available here.**](./0_tutorials.md)
+- [Installation guide](./installation.md)
+- [Mathematical foundations](./0_tutorials.md)
 
-Example tutorials are also available for each module:
+## Modules
 
-  - [Tutorials for Rules Extraction](1_tutorials.md)
-  - [Tutorials for Example-based Explainability](2_tutorials_example_exp.md)
+### Rules Extraction
 
+Extract interpretable decision rules from tree-based models:
 
-## What's in there ?
+- [Classification Rules](./references/classification_extractors.md)
+- [Regression Rules](./references/regression_extractors.md)
 
-Here is a quick overview of the different functionalities offered by WoodTapper. Further details are given in the rest of the documentation.
+**Tutorials:** [Rules Extraction](./1_tutorials.md)
 
-### Rules Extractors
-- [Classification Rules Extractors](./references/classification_extractors.md)
-- [Regression Rules Extractors](./references/regression_extractors.md)
+### Example-Based Explainability
 
-### Example Explanation
-- [Classification Example Explanation](./references/classification_explanation.md)
-- [Regression Example Explanation](./references/regression_explanation.md)
+Generate instance-level explanations:
 
+- [Classification Explanations](./references/classification_explanation.md)
+- [Regression Explanations](./references/regression_explanation.md)
 
-## 📜 Citation
+**Tutorials:** [Example-Based Explainability](./2_tutorials_example_exp.md)
 
-If you find the code useful, please consider citing us:
+## Citation
+
+If you use WoodTapper in your research, please cite:
 
 ```bibtex
 @article{Sakho2026,
-doi = {10.21105/joss.10112},
-url = {https://doi.org/10.21105/joss.10112},
-year = {2026}, publisher = {The Open Journal},
-volume = {11},
-number = {121},
-pages = {10112},
-author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
-title = {WoodTapper: a Python package for explaining decision tree ensembles},
-journal = {Journal of Open Source Software} }
+  doi = {10.21105/joss.10112},
+  url = {https://doi.org/10.21105/joss.10112},
+  year = {2026},
+  publisher = {The Open Journal},
+  volume = {11},
+  number = {121},
+  pages = {10112},
+  author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
+  title = {WoodTapper: a Python package for explaining decision tree ensembles},
+  journal = {Journal of Open Source Software}
+}
 ```
-For SIRUS methodology, consider citing:
+
+For SIRUS methodology:
+
 ```bibtex
 @article{benard2021sirus,
-  title={Sirus: Stable and interpretable rule set for classification},
+  title={SIRUS: Stable and interpretable rule set for classification},
   author={Benard, Clement and Biau, Gerard and Da Veiga, Sebastien and Scornet, Erwan},
-  year={2021}
+  journal = {Machine Learning},
+  year = {2021}
 }
 ```

@@ -1,25 +1,30 @@
-
-# 🌳 Installation
-
 To install the required packages in a virtual environment, run the following command:
 
-## From PyPi
-The easiest is to pip-install the package:
+
+
+# 🛠 Installation
+
+## From PyPi:
 ```bash
 pip install woodtapper
 ```
+> **Warning (scikit-learn already installed):**
+> If you install `woodtapper` in an environment where `scikit-learn` is already present, the prebuilt PyPI wheel may not be compatible with your existing `scikit-learn` binary. In that case, reinstall `woodtapper` from source so it is compiled against the `scikit-learn` version in your environment:
+>
+> ```bash
+> pip uninstall -y woodtapper
+> pip install -U pip setuptools wheel
+> pip install -U Cython pybind11
+> pip install --no-binary=woodtapper --no-build-isolation woodtapper
+> ```
 
-## From Source
-Otherwise you can use the git repository to get the latest version (with python 3.11 or 3.12):
+## From source:
 ```bash
 git clone https://github.com/artefactory/woodtapper.git
-```
-And install the required packages into your environment (conda, mamba or pip):
-```bash
+cd woodtapper
 pip install -e .[dev,docs]
 ```
-
-**Warning:** If you are a Windows user, you need to have a C/C++ compiler before installing woodtapper.
+> **Warning:** If you are a Windows user, you need to have a C/C++ compiler before installing woodtapper.
 
 ## Dependencies
 
@@ -41,9 +46,29 @@ You are welcome to contribute to the project ! You can help in various ways:
 
 We recommend to first open an [issue](https://github.com/artefactory/woodtapper/issues) to discuss your ideas.
 
-## Citation
+## 📜 Citation
 
-If you consider this package and any of its feature useful for your research, please cite us.
+If you find the code useful, please consider citing us:
+
+```bibtex
+@article{Sakho2026,
+doi = {10.21105/joss.10112},
+url = {https://doi.org/10.21105/joss.10112},
+year = {2026}, publisher = {The Open Journal},
+volume = {11},
+number = {121},
+pages = {10112},
+author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
+title = {WoodTapper: a Python package for explaining decision tree ensembles},
+journal = {Journal of Open Source Software} }
+```
+For SIRUS methodology, consider citing:
+```bibtex
+@article{benard2021sirus,
+  title={Sirus: Stable and interpretable rule set for classification},
+  author={Benard, Clement and Biau, Gerard and Da Veiga, Sebastien and Scornet, Erwan},
+  year={2021}
+}
 
 ### License
 
