@@ -43,8 +43,8 @@ WoodTapper is supported by a peer reviewed publication:
 ```bash
 pip install woodtapper
 ```
-> **Warning (scikit-learn already installed):**
-> If you install `woodtapper` in an environment where `scikit-learn` is already present, the prebuilt PyPI wheel may not be compatible with your existing `scikit-learn` binary. In that case, reinstall `woodtapper` from source so it is compiled against the `scikit-learn` version in your environment:
+> **Compatibility note:**
+> WoodTapper includes a compiled Cython component that depends on the binary interface of `scikit-learn`. If `scikit-learn` is already installed in your environment, the prebuilt PyPI wheel may be incompatible with it. WoodTapper is currently pinned to `scikit-learn` 1.6.1: versions 1.9 and newer are not compatible with this component. To use another compatible version, rebuild WoodTapper locally with:
 >
 > ```bash
 > pip uninstall -y woodtapper

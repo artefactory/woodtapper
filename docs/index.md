@@ -6,7 +6,7 @@
 
 <div align="center">
 
-**A Python package for explainability of tree-based machine learning models**
+User-friendly and scalable Python package for tapping decision tree ensembles
 
 </div>
 
@@ -42,6 +42,30 @@ Generate instance-level explanations:
 - [Regression Explanations](./references/regression_explanation.md)
 
 **Tutorials:** [Example-Based Explainability](./2_tutorials_example_exp.md)
+
+## License
+
+WoodTapper is distributed under the MIT License.
+
+Copyright (c) 2025 artefactory.
+
+This permissive license allows you to use, copy, modify, merge, publish,
+distribute, sublicense, and sell copies of the software, provided that the
+copyright notice and permission notice are included in all copies or
+substantial portions of the software.
+
+## Acknowledgements
+`WoodTapper` has been developed through a collaboration between the **Artefact Research Center** and the **Laboratoire de Probabilités Statistiques et Modélisation** (LPSM) of Sorbonne University.
+
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap;">
+  <a href="https://www.artefact.com/data-consulting-transformation/artefact-research-center/" style="width: 180px; height: 70px; display: flex; align-items: center; justify-content: center;">
+    <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_arc.png" style="max-width: 180px; max-height: 70px; object-fit: contain;" />
+  </a>
+  <a href="https://www.lpsm.paris/" style="width: 180px; height: 70px; display: flex; align-items: center; justify-content: center;">
+    <img src="https://raw.githubusercontent.com/artefactory/woodtapper/main/data/logos/logo_LPSM.jpg" style="max-width: 180px; max-height: 70px; object-fit: contain;" />
+  </a>
+</div>
 
 ## Citation
 
