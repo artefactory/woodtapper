@@ -10,6 +10,7 @@ def derive_fair_grad_hess_terms(
     sensitive_attribute,
     fairness_mode="Demographic_Parity",
     n_steps_cdf=1024,
+    is_classification=True,
 ):
     if fairness_mode == "Demographic_Parity":
         grad, hess = w2_fair_grad_hess(
@@ -38,10 +39,11 @@ def derive_fair_grad_hess_terms(
     else:
         raise ValueError(f"Unsupported fairness mode: {fairness_mode}")
 
-    dscore_dz = y_preds * (1.0 - y_preds)
-    d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds)
-    grad = grad * dscore_dz
-    hess = hess * (dscore_dz**2) + grad * d2score_dz2
+    if is_classification:
+        dscore_dz = y_preds * (1.0 - y_preds)
+        d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds)
+        grad = grad * dscore_dz
+        hess = hess * (dscore_dz**2) + grad * d2score_dz2
 
     return grad, hess
 
@@ -51,6 +53,7 @@ def build_fair_loss(
     lambda_fairness_value,
     fairness_mode="Demographic_Parity",
     n_steps_cdf=1024,
+    is_classification=True,
 ):
     def fair_loss(preds, train_data):  # LGBM signature ?
         y_true = train_data.get_label()
@@ -63,11 +66,18 @@ def build_fair_loss(
             sensitive_attribute,
             fairness_mode=fairness_mode,
             n_steps_cdf=n_steps_cdf,
+            is_classification=is_classification,
         )
 
-        y_preds_probas = _sigmoid(preds)
-        grad_predictive_perf = y_preds_probas - y_true
-        hess_predictive_perf = y_preds_probas * (1.0 - y_preds_probas)
+        if is_classification:
+            y_preds_probas = _sigmoid(preds)
+            grad_predictive_perf = y_preds_probas - y_true
+            hess_predictive_perf = y_preds_probas * (1.0 - y_preds_probas)
+        else:  # regression case
+            y_preds_probas = preds
+            grad_predictive_perf = y_preds_probas - y_true
+            hess_predictive_perf = np.ones_like(y_true)
+
         grad = (
             (1 / n) * grad_predictive_perf
         ) + lambda_fairness_value * grad_fairness_perf
