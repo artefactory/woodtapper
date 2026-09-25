@@ -66,8 +66,9 @@ pip install -e .[dev,docs]
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
 
-sirus = SirusClassifier(n_estimators=1000, max_depth=2,
-                        quantile=10, p0=0.01, random_state=0)
+sirus = SirusClassifier(
+    n_estimators=1000, max_depth=2, quantile=10, p0=0.01, random_state=0
+)
 sirus.fit(X_train, y_train)
 y_pred_sirus = sirus.predict(X_test)
 show_rules(sirus, max_rules=10)
