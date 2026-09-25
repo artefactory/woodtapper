@@ -98,7 +98,7 @@ def w2_fair_hess_binary(y_preds, sensitive_attribute):
 
     return hess
 
-def w2_fair_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
+def w2_fair_hess(y_preds, sensitive_attribute):
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
     #n0 = np.sum(sensitive_attribute == 0)
@@ -136,9 +136,10 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
         return grad, hess
 
     for group in classes:
-        s_ovr = np.where(sensitive_attribute == group, 0, 1) # group (as 0) vs rest (as 1)
-        grad_ovr = w2_fair_grad_binary(y_preds, s_ovr, n_steps_cdf=n_steps_cdf)
-        hess_ovr = w2_fair_hess_binary(y_preds, s_ovr)
+        sensitive_attribute_ovr = np.where(sensitive_attribute == group, 0, 1) # group (as 0) vs rest (as 1)
+        grad_ovr = w2_fair_grad_binary(y_preds, sensitive_attribute_ovr, n_steps_cdf=n_steps_cdf)
+        hess_ovr = w2_fair_hess_binary(y_preds, sensitive_attribute_ovr)
+
         idx_group = np.where(sensitive_attribute == group)[0]
         grad[idx_group] = grad_ovr[idx_group]
         hess[idx_group] = hess_ovr[idx_group]
