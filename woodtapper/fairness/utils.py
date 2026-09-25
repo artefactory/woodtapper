@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def _invert_cdf(array_steps_eta, cdf_H, target_u_proportion):
     H = np.maximum.accumulate(cdf_H)
     u = np.clip(target_u_proportion, H[0], H[-1])
@@ -11,6 +12,7 @@ def _invert_cdf(array_steps_eta, cdf_H, target_u_proportion):
     dh = h_hi - h_lo
     t = np.where(dh > 0.0, (u - h_lo) / np.where(dh > 0.0, dh, 1.0), 1.0)
     return e_lo + t * (e_hi - e_lo)
+
 
 def _split_groups(y_preds, sensitive_attribute):
     y_preds = np.asarray(y_preds, dtype=float)

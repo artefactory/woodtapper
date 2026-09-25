@@ -8,7 +8,7 @@ First, import necessary modules:
 import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import average_precision_score, accuracy_score,roc_auc_score
+from sklearn.metrics import average_precision_score, accuracy_score, roc_auc_score
 
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
@@ -18,7 +18,7 @@ from woodtapper.extract_rules.visualization import show_rules
 
 ```python
 iris = load_iris()
-X = pd.DataFrame(iris.data, columns=iris.feature_names )
+X = pd.DataFrame(iris.data, columns=iris.feature_names)
 y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 ```
@@ -27,8 +27,16 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
 ```python
 ## RandomForestClassifier rules extraction
-RFSirus = SirusClassifier(n_estimators=1000,max_depth=2,quantile=10,p0=0.0,max_n_rules=25, random_state=0,splitter="quantile")
-RFSirus.fit(X_train,y_train)
+RFSirus = SirusClassifier(
+    n_estimators=1000,
+    max_depth=2,
+    quantile=10,
+    p0=0.0,
+    max_n_rules=25,
+    random_state=0,
+    splitter="quantile",
+)
+RFSirus.fit(X_train, y_train)
 ```
 
 ## Predictions
@@ -36,9 +44,12 @@ RFSirus.fit(X_train,y_train)
 y_pred_sirus = RFSirus.predict(X_test)
 y_pred_proba_sirus = RFSirus.predict_proba(X_test)
 
-print('PR AUC :', average_precision_score(y_test, y_pred_proba_sirus))
-print('ROC AUC :', roc_auc_score(y_test, y_pred_proba_sirus,average='micro',multi_class='ovr'))
-print('Accuracy :', accuracy_score(y_test, y_pred_sirus))
+print("PR AUC :", average_precision_score(y_test, y_pred_proba_sirus))
+print(
+    "ROC AUC :",
+    roc_auc_score(y_test, y_pred_proba_sirus, average="micro", multi_class="ovr"),
+)
+print("Accuracy :", accuracy_score(y_test, y_pred_sirus))
 ```
 !!! example "Output"
 ```text
@@ -56,7 +67,7 @@ Fitting time =  1.2483680248260498 s
 The rules are the same for all three classes but the output probabilities are specific to each class:
 
 ```python
-show_rules(RFSirus,max_rules=10,target_class_index=0) ## show class Y=0
+show_rules(RFSirus, max_rules=10, target_class_index=0)  ## show class Y=0
 ```
 !!! example "Output"
 ```text
@@ -78,7 +89,9 @@ if   petal length (cm) > 4.70 & petal length (cm) <= 5.10   then 0%             
 ```
 
 ```python
-show_rules(RFSirus,max_rules=10,target_class_index=1) ## show class Y=1 through target_class_index=1 argument
+show_rules(
+    RFSirus, max_rules=10, target_class_index=1
+)  ## show class Y=1 through target_class_index=1 argument
 ```
 !!! example "Output"
 ```text
@@ -100,7 +113,7 @@ if   petal length (cm) > 4.70 & petal length (cm) <= 5.10   then 55%            
 ```
 
 ```python
-show_rules(RFSirus,max_rules=10,target_class_index=2) ## show class Y=2
+show_rules(RFSirus, max_rules=10, target_class_index=2)  ## show class Y=2
 ```
 
 !!! example "Output"
