@@ -63,8 +63,6 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
 def w2_fair_grad(y_preds, sensitive_attribute, n_steps_cdf=1024):
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    # n0 = np.sum(sensitive_attribute == 0)
-    # n1 = np.sum(sensitive_attribute == 1)
     classes = np.unique(sensitive_attribute)
     grad = np.zeros(n, dtype=float)
     if classes.size < 2:
@@ -113,8 +111,6 @@ def w2_fair_hess_binary(y_preds, sensitive_attribute):
 def w2_fair_hess(y_preds, sensitive_attribute):
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    # n0 = np.sum(sensitive_attribute == 0)
-    # n1 = np.sum(sensitive_attribute == 1)
     classes = np.unique(sensitive_attribute)
     hess = np.zeros(n, dtype=float)
     if classes.size < 2:
@@ -137,8 +133,6 @@ def w2_fair_hess(y_preds, sensitive_attribute):
 def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    # n0 = np.sum(sensitive_attribute == 0)
-    # n1 = np.sum(sensitive_attribute == 1)
     classes = np.unique(sensitive_attribute)
     grad = np.zeros(n, dtype=float)
     hess = np.zeros(n, dtype=float)
