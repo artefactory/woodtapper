@@ -23,3 +23,12 @@ def _split_groups(y_preds, sensitive_attribute):
     y0 = y_preds[idx0]
     y1 = y_preds[idx1]
     return idx0, idx1, y0, y1
+
+
+def _sigmoid(x):
+    out = np.empty_like(x, dtype=float)
+    pos = x >= 0
+    out[pos] = 1.0 / (1.0 + np.exp(-x[pos]))
+    expx = np.exp(x[~pos])
+    out[~pos] = expx / (1.0 + expx)
+    return out
