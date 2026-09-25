@@ -74,6 +74,21 @@ y_pred_sirus = sirus.predict(X_test)
 show_rules(sirus, max_rules=10)
 ```
 
+## ⚖️ WoodTapper voosted-trees Fairness module
+```python
+from woodtapper.fairness import OTFairBoostClassifier
+
+otfair_clf = OTFairBoostClassifier(
+    n_estimators=100,
+    lambda_fairness_value=0.1,
+    fairness_mode="Demographic_Parity",
+    verbose=-1,
+)
+
+otfair_clf.fit(X_train, y_train,sensitive_attribute_train)
+otfair_clf.predict(X_test)
+```
+
 ## 🌱 WoodTapper ExampleExplanation module
 ```python
 from woodtapper.example_sampling import RandomForestClassifierExplained
