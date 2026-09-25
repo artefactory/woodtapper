@@ -1,7 +1,11 @@
+"""
+Fairness objective functions for LightGBM.
+"""
+
 import numpy as np
 
-from woodtapper.fairness.base import w2_fair_grad_hess
-from woodtapper.fairness.utils import _sigmoid
+from .base import w2_fair_grad_hess
+from .utils import _sigmoid
 
 
 def derive_fair_grad_hess_terms(
@@ -12,6 +16,31 @@ def derive_fair_grad_hess_terms(
     n_steps_cdf=1024,
     is_classification=True,
 ):
+    """
+    Derive the gradient and hessian terms for the fairness objective.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True labels.
+    y_preds : np.ndarray
+        Predicted scores.
+    sensitive_attribute : np.ndarray
+        Sensitive attribute values.
+    fairness_mode : str, optional
+        Fairness mode, by default "Demographic_Parity".
+    n_steps_cdf : int, optional
+        Number of steps for the CDF approximation, by default 1024.
+    is_classification : bool, optional
+        Whether the task is classification, by default True.
+
+    Returns
+    -------
+    grad : np.ndarray
+        Gradient of the fairness objective.
+    hess : np.ndarray
+        Hessian of the fairness objective.
+    """
     if fairness_mode == "Demographic_Parity":
         grad, hess = w2_fair_grad_hess(
             y_preds, sensitive_attribute, n_steps_cdf=n_steps_cdf

@@ -1,3 +1,7 @@
+"""
+Wasserstein-2 fairness gradient and hessian computations for LightGBM.
+"""
+
 import numpy as np
 from scipy.stats import cumfreq
 
@@ -58,6 +62,21 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
 
 
 def w2_fair_hess_binary(y_preds, sensitive_attribute):
+    """
+    Compute the Wasserstein-2 fair hessian for binary sensitive attributes.
+
+    Parameters
+    ----------
+    y_preds : np.ndarray
+        Predicted values.
+    sensitive_attribute : np.ndarray
+        Binary sensitive attribute (0 or 1).
+
+    Returns
+    -------
+    hess : np.ndarray
+        Hessian adjusted for fairness.
+    """
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
     n0 = np.sum(sensitive_attribute == 0)
@@ -77,6 +96,25 @@ def w2_fair_hess_binary(y_preds, sensitive_attribute):
 
 
 def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
+    """
+    Compute the Wasserstein-2 fair gradient and hessian for binary or multi-class sensitive attributes.
+
+    Parameters
+    ----------
+    y_preds : np.ndarray
+        Predicted values.
+    sensitive_attribute : np.ndarray
+        Sensitive attribute values (binary or multi-class).
+    n_steps_cdf : int, optional
+        Number of steps for the CDF approximation, by default 1024.
+
+    Returns
+    -------
+    grad : np.ndarray
+        Gradient adjusted for fairness.
+    hess : np.ndarray
+        Hessian adjusted for fairness.
+    """
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
     classes = np.unique(sensitive_attribute)
