@@ -74,7 +74,7 @@ y_pred_sirus = sirus.predict(X_test)
 show_rules(sirus, max_rules=10)
 ```
 
-## ⚖️ WoodTapper voosted-trees Fairness module
+## ⚖️ WoodTapper boosted trees Fairness module
 ```python
 from woodtapper.fairness import OTFairBoostClassifier
 
@@ -132,6 +132,17 @@ author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, 
 title = {WoodTapper: a Python package for explaining decision tree ensembles},
 journal = {Journal of Open Source Software} }
 ```
+
+```bibtex
+@article{shilova2026ot,
+  title={OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data},
+  author={Shilova, Veronika and Sakho, Abdoulaye and Boumoussou, Younes and Risser, Laurent and Loubes, Jean-Michel and Malherbe, Emmanuel},
+  journal={arXiv preprint arXiv:2607.28014},
+  year={2026}
+}
+````
+
+
 For SIRUS methodology, consider citing:
 ```bibtex
 @article{benard2021sirus,
