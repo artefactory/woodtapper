@@ -129,7 +129,9 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
             validate_features=validate_features,
             **kwargs,
         )
+        # print("result before sigmoid: ",result)
         result = _sigmoid(result)
+        # print("result after sigmoid: ",result)
         # if callable(self._objective) and not (raw_score or pred_leaf or pred_contrib):
         #    _log_warning(
         #        "Cannot compute class probabilities or labels "
@@ -138,12 +140,9 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         #    )
         #    return result
         # if self.__is_multiclass or raw_score or pred_leaf or pred_contrib:  # type: ignore [operator]
-        if raw_score or pred_leaf or pred_contrib:  # type: ignore [operator]
-            return result
-        else:
-            error_msg = (
-                "predict() should return np.ndarray when pred_contrib=False. "
-                "If you're seeing this message, it's a bug in lightgbm. Please report it at https://github.com/lightgbm-org/LightGBM/issues."
+        if raw_score or pred_leaf or pred_contrib:
+            raise ValueError(
+                "Cannot compute raw_score, pred_leaf, or pred_contrib with OTFairBoostClassifier."
             )
-            assert isinstance(result, np.ndarray), error_msg
-            return np.vstack((1.0 - result, result)).transpose()
+
+        return np.vstack((1.0 - result, result)).transpose()

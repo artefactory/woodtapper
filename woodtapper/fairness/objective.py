@@ -69,8 +69,9 @@ def derive_fair_grad_hess_terms(
         raise ValueError(f"Unsupported fairness mode: {fairness_mode}")
 
     if is_classification:
-        dscore_dz = y_preds * (1.0 - y_preds)
-        d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds)
+        probas = _sigmoid(y_preds)
+        dscore_dz = probas * (1.0 - probas)
+        d2score_dz2 = dscore_dz * (1.0 - 2.0 * probas)
         grad = grad * dscore_dz
         hess = hess * (dscore_dz**2) + grad * d2score_dz2
 
@@ -104,6 +105,15 @@ def build_fair_loss(
             y_preds_probas = y_pred
             grad_predictive_perf = y_preds_probas - y_true
             hess_predictive_perf = np.ones_like(y_true)
+
+        # print("      Predictive Gradient (Approximate):")
+        # print(grad_predictive_perf)
+        # print("      Predictive Hessian (Approximate):")
+        # print(hess_predictive_perf)
+        # print("      Fairness Gradient (Approximate):")
+        # print(grad_fairness_perf)
+        # print("      Fairness Hessian (Approximate):")
+        # print(hess_fairness_perf)
 
         grad = (
             (1 / n) * grad_predictive_perf
