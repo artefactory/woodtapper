@@ -84,14 +84,12 @@ def build_fair_loss(
     n_steps_cdf=1024,
     is_classification=True,
 ):
-    def fair_loss(preds, train_data):  # LGBM signature ?
-        y_true = train_data.get_label()
-        y_preds = preds
+    def fair_loss(y_true, y_pred, weight=None):  # LGBM signature ?
         n = y_true.size
 
         grad_fairness_perf, hess_fairness_perf = derive_fair_grad_hess_terms(
             y_true,
-            y_preds,
+            y_pred,
             sensitive_attribute,
             fairness_mode=fairness_mode,
             n_steps_cdf=n_steps_cdf,
@@ -99,11 +97,11 @@ def build_fair_loss(
         )
 
         if is_classification:
-            y_preds_probas = _sigmoid(preds)
+            y_preds_probas = _sigmoid(y_pred)
             grad_predictive_perf = y_preds_probas - y_true
             hess_predictive_perf = y_preds_probas * (1.0 - y_preds_probas)
         else:  # regression case
-            y_preds_probas = preds
+            y_preds_probas = y_pred
             grad_predictive_perf = y_preds_probas - y_true
             hess_predictive_perf = np.ones_like(y_true)
 
@@ -114,10 +112,9 @@ def build_fair_loss(
             (1 / n) * hess_predictive_perf
         ) + lambda_fairness_value * hess_fairness_perf
 
-        sample_weights = train_data.get_weight()  # Returns None or a 1D numpy array
-        if sample_weights is not None and len(sample_weights) > 0:
-            grad *= sample_weights
-            hess *= sample_weights
+        if weight is not None and len(weight) > 0:
+            grad *= weight
+            hess *= weight
 
         return grad, hess
 
