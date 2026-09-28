@@ -82,7 +82,7 @@ otfair_clf = OTFairBoostClassifier(
     n_estimators=100,
     lambda_fairness_value=0.1,
     fairness_mode="Demographic_Parity",
-    verbose=-1,
+    verbosity=-1,
 )
 
 otfair_clf.fit(X_train, y_train,sensitive_attribute_train)

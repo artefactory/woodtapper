@@ -28,6 +28,7 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         random_state=None,
         n_jobs=None,
         importance_type="split",
+        verbosity=-1,
     ):
         super().__init__(
             boosting_type=boosting_type,
@@ -49,6 +50,7 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
             random_state=random_state,
             n_jobs=n_jobs,
             importance_type=importance_type,
+            verbosity=verbosity,
         )
         self.lambda_fairness_value = lambda_fairness_value
         self.n_steps_cdf = n_steps_cdf
