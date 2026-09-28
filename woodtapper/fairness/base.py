@@ -58,6 +58,8 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
 
     grad[idx0] = (2 * (y0 - cor1_y0)) / n0
     grad[idx1] = (2 * (y1 - cor0_y1)) / n1
+    # print("      Empirical Gradient (Approximate)")
+    # print(grad)
     return grad
 
 
