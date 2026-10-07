@@ -59,7 +59,26 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         self.fairness_mode = fairness_mode
         self._initial_user_objective = objective  # Track whether the user explicitly supplied an objective at initialization
 
-    def fit(self, X, y, sensitive_attribute):
+    def fit(
+        self,
+        X,
+        y,
+        sensitive_attribute,
+        sample_weight=None,
+        init_score=None,
+        eval_set=None,
+        eval_names=None,
+        eval_sample_weight=None,
+        eval_class_weight=None,
+        eval_init_score=None,
+        eval_metric=None,
+        feature_name="auto",
+        categorical_feature="auto",
+        callbacks=None,
+        init_model=None,
+        eval_X=None,
+        eval_y=None,
+    ):
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
             lambda_fairness_value=self.lambda_fairness_value,
@@ -72,7 +91,24 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
                 f"An explicit objective ('{self._initial_user_objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
             )
         self.set_params(objective=fobj)
-        return super().fit(X, y)
+        return super().fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            init_score=init_score,
+            eval_set=eval_set,
+            eval_names=eval_names,
+            eval_sample_weight=eval_sample_weight,
+            eval_class_weight=eval_class_weight,
+            eval_init_score=eval_init_score,
+            eval_metric=eval_metric,
+            feature_name=feature_name,
+            categorical_feature=categorical_feature,
+            callbacks=callbacks,
+            init_model=init_model,
+            eval_X=eval_X,
+            eval_y=eval_y,
+        )
 
     def predict(
         self,
