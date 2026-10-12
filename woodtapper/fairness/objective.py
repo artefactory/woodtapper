@@ -41,23 +41,29 @@ def derive_fair_grad_hess_terms(
     hess : np.ndarray
         Hessian of the fairness objective.
     """
+    if is_classification:
+        y_preds_probas = _sigmoid(y_preds)
+    else:
+        y_preds_probas = y_preds
+    
     if fairness_mode == "Demographic_Parity":
+
         grad, hess = w2_fair_grad_hess(
-            y_preds, sensitive_attribute, n_steps_cdf=n_steps_cdf
+            y_preds_probas, sensitive_attribute, n_steps_cdf=n_steps_cdf
         )
 
     elif fairness_mode == "Equality_of_Odds":
         mask_pos = y_true == 1.0
         mask_neg = y_true == 0.0
         grad_pos, hess_pos = w2_fair_grad_hess(
-            y_preds[mask_pos], sensitive_attribute[mask_pos], n_steps_cdf=n_steps_cdf
+            y_preds_probas[mask_pos], sensitive_attribute[mask_pos], n_steps_cdf=n_steps_cdf
         )
         grad_neg, hess_neg = w2_fair_grad_hess(
-            y_preds[mask_neg], sensitive_attribute[mask_neg], n_steps_cdf=n_steps_cdf
+            y_preds_probas[mask_neg], sensitive_attribute[mask_neg], n_steps_cdf=n_steps_cdf
         )
 
-        grad = np.zeros_like(y_preds)
-        hess = np.zeros_like(y_preds)
+        grad = np.zeros_like(y_preds_probas)
+        hess = np.zeros_like(y_preds_probas)
         pi_pos = float(np.mean(mask_pos))
         pi_neg = float(np.mean(mask_neg))
         grad[mask_pos] = pi_pos * grad_pos
@@ -69,13 +75,16 @@ def derive_fair_grad_hess_terms(
         raise ValueError(f"Unsupported fairness mode: {fairness_mode}")
 
     if is_classification:
-        probas = _sigmoid(y_preds)
-        dscore_dz = probas * (1.0 - probas)
-        d2score_dz2 = dscore_dz * (1.0 - 2.0 * probas)
-        grad = grad * dscore_dz
-        hess = hess * (dscore_dz**2) + grad * d2score_dz2
+        #probas = _sigmoid(y_preds)
+        dscore_dz = y_preds_probas * (1.0 - y_preds_probas)
+        d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds_probas)
+        grad_final = grad * dscore_dz
+        hess_final = hess * (dscore_dz**2) + grad * d2score_dz2
+    else:
+        grad_final = grad
+        hess_final = hess
 
-    return grad, hess
+    return grad_final, hess_final
 
 
 def build_fair_loss(
