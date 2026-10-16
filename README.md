@@ -37,6 +37,10 @@ WoodTapper is a Python toolbox that provides:
 WoodTapper is supported by a peer reviewed publication:
 > &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
 
+and a preprint:
+
+> &nbsp; &nbsp;  *OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data*, Shivola et al. (2026) [📄](https://arxiv.org/pdf/2607.28014)
+
 ## 🛠 Installation
 
 **From PyPi**:
