@@ -29,6 +29,8 @@ WoodTapper is a Python toolbox that provides:
 
 - Rule extraction from tree-based ensembles: Generates a final estimator composed of a sequence of simple rule-based on features and thresholds.
 
+- Fairness-Constrained Gradient Boosting: A second-order tree-boosting implementation that directly incorporates demographic fairness into the training objective via a Wasserstein distance penalty.
+
 - Example-based explanations: Connects predictions to a small set of representative samples, returning the most similar examples along with their target values.
 
 [**Detailed information about the modules can be found here.**](https://artefactory.github.io/woodtapper/0_tutorials/)
