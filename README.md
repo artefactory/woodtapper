@@ -146,7 +146,7 @@ journal = {Journal of Open Source Software} }
   journal={arXiv preprint arXiv:2607.28014},
   year={2026}
 }
-````
+```
 
 
 For SIRUS methodology, consider citing:
