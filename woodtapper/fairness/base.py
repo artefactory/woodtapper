@@ -35,6 +35,8 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
     if y0.size == 0 or y1.size == 0:
         return np.zeros(n, dtype=float)
+    if np.min(y_preds) == np.max(y_preds):
+        return np.zeros(n, dtype=float)
     array_steps_eta, eta_step = np.linspace(
         y_preds.min(), y_preds.max(), n_steps_cdf + 1, retstep=True
     )
