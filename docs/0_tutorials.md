@@ -3,7 +3,9 @@
  A few tutorials to get started with the Woodtapper package are available here:
 
   - [Rules extractor](1_tutorials.md)
+  - [Fairness-aware classification](3_tutorials_fairness.md)
   - [Example-based expalinability](2_tutorials_example_exp.md)
+
 
 Let's describe some mathematical background that will be used in the different modules:
 
@@ -34,6 +36,57 @@ $$\hat{\eta}_{p_0}(x) = \frac{1}{|\hat{\mathcal{P}}_{p_0}|} \sum_{\mathcal{P} \i
 
 So far, we have focused on binary classification for clarity.
 We also implemented the rule extractor for regression, where final rules are aggregated using weights learned via ridge regression. Our implementation extends SIRUS, i.e. rules extracted from random forest, to multiclass classification (not available in the original R version). Finally, our implementation also leverages scikit-learn's implementations for tree-based models fitting.
+
+## Fairness:
+
+We build upon the functional gradient boosting paradigm exemplified by frameworks like XGBoost  and LightGBM . The model learns to estimate $\hat y$ from sum of weak learners $F_t=\sum_{k=1}^t f_k(x)$.
+%
+In the case of classification, this continuous output is converted to a probability using a sigmoid function $\sigma(F_t(x))=\frac{1}{1+e^{-F_t(x)}}$, and represents the estimated $P(\hat y=1)$.
+To iteratively learn $F_t$, at each boosting iteration $t$, a new decision tree $f_t$ is added to the model ensemble in order to improve the predictions on the dataset $\mathcal{D}$, as quantified by a samplewise loss $\ell\big(y_i, F_t(x_i)\big)$ (e.g., binary cross-entropy or squared error).
+The tree $f_t$ aims at minimizing a second-order Taylor expansion of the objective function around the previous iteration's predictions $F_{t-1}(x_i)$:
+\begin{align}
+&\mathcal{L}^{(t)}  = \sum_{i=1}^n \ell\!\left(y_i, F_{t-1}(x_i) + f_t(x_i)\right) + \Omega(f_t)
+\end{align}
+\begin{align}
+&\approx \sum_{i=1}^n \left[ \ell\!\left(y_i, F_{t-1}(x_i)\right) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)
+& = \tilde{\mathcal{L}}^{(t)},
+\end{align}
+where $\ell(\cdot, \cdot)$ is twice differentiable, with first-order gradients $g_i$ and second-order Hessians $h_i$ defined samplewise as:
+\begin{align} g_i = \frac{\partial \ell\left(y_i, F_{t}(x_i)\right)}{\partial {F_{t}(x_i)}} \left(F_{t-1}(x_i)\right),
+\end{align}
+
+\begin{align} h_i = \frac{\partial^2 \ell\left(y_i, {F}_{t}(x_i)\right)}{\partial {\left({F}_{t}(x_i)\right)^2}} \left({F}_{t-1}(x_i)\right). \end{align}
+
+and the term $\Omega(f_t) = \rho T + \frac{1}{2}\eta \sum_{j=1}^T w_j^2$ regularizes the structural complexity of the tree $f_t$.
+
+The practical algorithm to minimize this $\tilde{\mathcal{L}}^{(t)}$ and the corresponding leaf split criterion is detailed in \cite{chen2016xgboost}. Besides, please note that in the classification setting, $\ell$ is implicitly composed with $\sigma$ to obtain probabilities in $[0,1]$ from $F_t(x_i)$. In this case, the derivative includes a factor $\sigma'(F_t(x))$ coming from the chain rule.
+
+
+To enforce algorithmic fairness during this iterative optimization, we must formalize the statistical dependence between the model's predictions and the sensitive attribute.
+
+
+To operationalize DP and EOdds over continuous prediction scales, let us focus on the Demographic Parity. To ease notations, we will write $\hat{z} \in \mathbb{R}$ the continuous prediction of the model, in the case of classification and regression:
+\begin{align}
+\hat z^{(t)} =
+\begin{cases}
+   F_t(x) & \text{if } y \in \mathbb{R} \\
+  \sigma\left(F_t(x)\right)   & \text{if } y \in \{0,1\}
+\end{cases}
+\end{align}
+%
+We group $\hat z_i^{(t)}$ values by sensitive attribute $s_i$. We define the empirical set of prediction scores at iteration $t$ for group $s$ as
+$$\mathcal{Z}^s = \{\hat{z}_i^{(t)} \in \mathbb{R} \mid s_i = s\}=\{{\hat{z}_j}^{s^{(t)}} \in \mathbb{R} \mid j = 1, \dots, n_s\}$$
+where $n^s = |\{i : s_i = s\}|$ denote the size of sensitive group $s \in \{0, 1\}$, and each group is re-indexed. In the following, we omit to write $^{(t)}$ for clarity. The empirical probability measure $\mu^{\mathcal{Z}^s}$ for the demographic cohort $\mathcal{Z}^s$ is expressed as:
+\begin{equation}
+\mu^{\mathcal{Z}^s} = \frac{1}{n_s} \sum_{j=1}^{n^s} \delta_{\hat{z}^s_j},
+\end{equation}
+where $\delta_z$ denotes the Dirac delta measure centered at $z$.
+
+We propose an in-processing regularization framework that directly incorporates a statistical distance metric $\mathcal{M}$ between these group-conditional empirical measures $\mu^{\mathcal{Z}^0}$ and $\mu^{\mathcal{Z}^1}$ into the boosting objective at iteration $t$:
+\begin{equation}
+\mathcal{L}^{(t)}_{\text{fair}} = \mathcal{L}^{(t)} + \lambda \mathcal{M}\left(\mu^{\mathcal{Z}^0}, \mu^{\mathcal{Z}^1}\right),
+\end{equation}
+where $\lambda \in \mathbb{R}^+$ is a user-defined hyperparameter controlling the accuracy-fairness trade-off frontier. The functional structure of $\mathcal{M}$ can be adapted to accommodate diverse fairness definitions (e.g., conditioning on ground truth $y$ to satisfy EOdds). In this work, we consider the discrete Wasserstein distance, to follow the nature of our distributions $\mu^{\mathcal{Z}^s}$.
 
 ## Example-based explainability:
 

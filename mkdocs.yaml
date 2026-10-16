@@ -62,13 +62,18 @@ nav:
   - Tutorials:
     - Tutorials Overview: 0_tutorials.md
     - Rules Extractors: 1_tutorials.md
+    - Fairness-aware: 3_tutorials_fairness.md
     - Example-based explainability: 2_tutorials_example_exp.md
+
 
   - References:
     - Rules Extractors:
       - Classification Extractors: references/classification_extractors.md
       - Regression Extractors: references/regression_extractors.md
       - Base Extractors Mixin: references/mixin.md
+    - Fairness:
+      - Fairness-aware Classification: references/fairness_classification.md
+      - Fairness-aware Regression: references/fairness_regression.md
     - Example-based explainability:
       - Classification Example Explanation: references/classification_explanation.md
       - Regression Example Explanation: references/regression_explanation.md

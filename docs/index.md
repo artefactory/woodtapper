@@ -14,9 +14,11 @@ User-friendly and scalable Python package for tapping decision tree ensembles
 
 WoodTapper is a comprehensive Python package designed for interpretability and explainability of decision tree ensembles. It provides tools for extracting interpretable rules and generating example-based explanations from tree-based models.
 
-The package is supported by peer-reviewed research:
+The package is supported by peer-reviewed and preprint research:
 
 > Sakho et al. (2026). *WoodTapper: a Python package for explaining decision tree ensembles*. **Journal of Open Source Software**, 11(121), 10112. [📄](https://joss.theoj.org/papers/10.21105/joss.10112) https://doi.org/10.21105/joss.10112
+
+> Shivola et al. (2026) *OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data*, [📄](https://arxiv.org/pdf/2607.28014)
 
 ## Quick Start
 
@@ -27,21 +29,29 @@ The package is supported by peer-reviewed research:
 
 ### Rules Extraction
 
-Extract interpretable decision rules from tree-based models:
+Extract interpretable decision rules from tree-based models. **Tutorials:** [Rules Extraction](./1_tutorials.md)
 
 - [Classification Rules](./references/classification_extractors.md)
 - [Regression Rules](./references/regression_extractors.md)
 
-**Tutorials:** [Rules Extraction](./1_tutorials.md)
+
+
+### Fairness
+
+Gradient-Boosting with fairness-aware training. **Tutorials:** [Fairness](./3_tutorials_fairness.md)
+
+- [Classification Fairness](./references/classification_fairness.md)
+- [Regression Fairness](./references/regression_fairness.md)
+
+
 
 ### Example-Based Explainability
 
-Generate instance-level explanations:
+Generate instance-level explanations. **Tutorials:** [Example-Based Explainability](./2_tutorials_example_exp.md)
 
 - [Classification Explanations](./references/classification_explanation.md)
 - [Regression Explanations](./references/regression_explanation.md)
 
-**Tutorials:** [Example-Based Explainability](./2_tutorials_example_exp.md)
 
 ## License
 
@@ -83,6 +93,15 @@ If you use WoodTapper in your research, please cite:
   author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, Emmanuel and Scornet, Erwan},
   title = {WoodTapper: a Python package for explaining decision tree ensembles},
   journal = {Journal of Open Source Software}
+}
+```
+
+```bibtex
+@article{shilova2026ot,
+  title={OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data},
+  author={Shilova, Veronika and Sakho, Abdoulaye and Boumoussou, Younes and Risser, Laurent and Loubes, Jean-Michel and Malherbe, Emmanuel},
+  journal={arXiv preprint arXiv:2607.28014},
+  year={2026}
 }
 ```
 
