@@ -6,6 +6,20 @@ from .utils import _sigmoid
 
 
 class OTFairBoostClassifier(lgb.LGBMClassifier):
+    """
+    OTFairBoostClassifier that incorporates fairness constraints into the LightGBM classifier.
+    This classifier extends the LightGBM classifier by adding a custom fair loss objective that takes into account a sensitive attribute to enforce fairness constraints during training.
+    Parameters
+    ----------
+    lambda_fairness_value : float
+        The weight of the fairness constraint in the custom loss function.
+    n_steps_cdf : int, default=1024
+        The number of steps to use for approximating the cumulative distribution function (CDF) in the fairness loss.
+    fairness_mode : str, default="Demographic_Parity"
+        The fairness criterion to enforce. Options include "Demographic_Parity" and "Equalized_Opportunity".
+    All other parameters are inherited from lightgbm.LGBMClassifier.
+    """
+
     def __init__(
         self,
         lambda_fairness_value,
@@ -79,6 +93,54 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         eval_X=None,
         eval_y=None,
     ):
+        """
+        Fit the OTFairBoostClassifier model.
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            The input samples.
+        y : array-like of shape (n_samples,)
+            The target values.
+        sensitive_attribute : array-like of shape (n_samples,)
+            The sensitive attribute used for enforcing fairness.
+        sample_weight : array-like of shape (n_samples,), optional (default=None)
+            Weights of the training samples.
+        init_score : array-like of shape (n_samples,), optional (default=None)
+            Initial scores of the training samples.
+        eval_set : list of (X, y) tuples, optional (default=None)
+            A list of validation sets for early stopping.
+        eval_names : list of str, optional (default=None)
+            Names of the validation sets.
+        eval_sample_weight : list of array-like, optional (default=None)
+            Sample weights for the validation sets.
+        eval_class_weight : list of dict, optional (default=None)
+            Class weights for the validation sets.
+        eval_init_score : list of array-like, optional (default=None)
+            Initial scores for the validation sets.
+        eval_metric : str, callable, list of str or list of callable, optional (default=None)
+            Evaluation metric(s) for the validation sets.
+        feature_name : list of str or "auto", optional (default="auto")
+            Names of features.
+        categorical_feature : list of str, list of int or "auto", optional (default="auto")
+            Categorical features.
+        callbacks : list of callable, optional (default=None)
+            List of callback functions.
+        init_model : str, Booster, or LGBMModel, optional (default=None)
+            Model used for initialization.
+        eval_X : array-like or sparse matrix of shape (n_samples, n_features), optional (default=None)
+            Validation features.
+        eval_y : array-like of shape (n_samples,), optional (default=None)
+            Validation target values.
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        Notes
+        -----
+        This method overrides the default objective with a custom fair loss objective built using the sensitive attribute and fairness parameters.
+        """
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
             lambda_fairness_value=self.lambda_fairness_value,

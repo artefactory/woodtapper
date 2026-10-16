@@ -4,6 +4,20 @@ from .objective import build_fair_loss
 
 
 class OTFairBoostRegressor(lgb.LGBMRegressor):
+    """
+    A LightGBM regressor that incorporates a custom fair loss objective.
+
+    Parameters
+    ----------
+    lambda_fairness_value : float
+        The weight of the fairness term in the custom loss.
+    n_steps_cdf : int, default=1024
+        The number of steps to use for the cumulative distribution function approximation.
+    fairness_mode : str, default="Demographic_Parity"
+        The fairness criterion to enforce.
+    All other parameters are passed to the underlying LGBMRegressor.
+    """
+
     def __init__(
         self,
         lambda_fairness_value,
@@ -74,6 +88,49 @@ class OTFairBoostRegressor(lgb.LGBMRegressor):
         eval_X=None,
         eval_y=None,
     ):
+        """
+        Fit the regressor with the custom fair loss objective.
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix of shape (n_samples, n_features)
+            The input samples.
+        y : array-like of shape (n_samples,)
+            The target values.
+        sensitive_attribute : array-like of shape (n_samples,)
+            The sensitive attribute used for fairness.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Sample weights.
+        init_score : array-like of shape (n_samples,), default=None
+            Initial scores.
+        eval_set : list of (X, y) tuples, default=None
+            A list of validation sets.
+        eval_names : list of str, default=None
+            Names of the validation sets.
+        eval_sample_weight : list of array-like, default=None
+            Sample weights for the validation sets.
+        eval_init_score : list of array-like, default=None
+            Initial scores for the validation sets.
+        eval_metric : str or callable, default=None
+            Evaluation metric.
+        feature_name : list of str or "auto", default="auto"
+            Feature names.
+        categorical_feature : list of str or "auto", default="auto"
+            Categorical features.
+        callbacks : list of callable, default=None
+            List of callback functions.
+        init_model : str, LGBMModel or None, default=None
+            Initial model.
+        eval_X : array-like or None, default=None
+            Evaluation features.
+        eval_y : array-like or None, default=None
+            Evaluation targets.
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
             lambda_fairness_value=self.lambda_fairness_value,
@@ -86,7 +143,23 @@ class OTFairBoostRegressor(lgb.LGBMRegressor):
                 f"An explicit objective ('{self._initial_user_objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
             )
         self.set_params(objective=fobj)
-        return super().fit(X, y)
+        return super().fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            init_score=init_score,
+            eval_set=eval_set,
+            eval_names=eval_names,
+            eval_sample_weight=eval_sample_weight,
+            eval_init_score=eval_init_score,
+            eval_metric=eval_metric,
+            feature_name=feature_name,
+            categorical_feature=categorical_feature,
+            callbacks=callbacks,
+            init_model=init_model,
+            eval_X=eval_X,
+            eval_y=eval_y,
+        )
 
     def predict_(
         self,
