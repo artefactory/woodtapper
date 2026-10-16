@@ -29,6 +29,8 @@ WoodTapper is a Python toolbox that provides:
 
 - Rule extraction from tree-based ensembles: Generates a final estimator composed of a sequence of simple rule-based on features and thresholds.
 
+- Fairness-Constrained Gradient Boosting: A second-order tree-boosting implementation that directly incorporates demographic fairness into the training objective via a Wasserstein distance penalty.
+
 - Example-based explanations: Connects predictions to a small set of representative samples, returning the most similar examples along with their target values.
 
 [**Detailed information about the modules can be found here.**](https://artefactory.github.io/woodtapper/0_tutorials/)
@@ -36,6 +38,10 @@ WoodTapper is a Python toolbox that provides:
 
 WoodTapper is supported by a peer reviewed publication:
 > &nbsp; &nbsp;  *`WoodTapper`: a Python package for explaining decision tree ensembles*, Sakho et al. (2026) [📄](https://joss.theoj.org/papers/10.21105/joss.10112)
+
+and a preprint:
+
+> &nbsp; &nbsp;  *OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data*, Shivola et al. (2026) [📄](https://arxiv.org/pdf/2607.28014)
 
 ## 🛠 Installation
 
@@ -66,11 +72,27 @@ pip install -e .[dev,docs]
 from woodtapper.extract_rules import SirusClassifier
 from woodtapper.extract_rules.visualization import show_rules
 
-sirus = SirusClassifier(n_estimators=1000, max_depth=2,
-                        quantile=10, p0=0.01, random_state=0)
+sirus = SirusClassifier(
+    n_estimators=1000, max_depth=2, quantile=10, p0=0.01, random_state=0
+)
 sirus.fit(X_train, y_train)
 y_pred_sirus = sirus.predict(X_test)
 show_rules(sirus, max_rules=10)
+```
+
+## ⚖️ WoodTapper boosted trees Fairness module
+```python
+from woodtapper.fairness import OTFairBoostClassifier
+
+otfair_clf = OTFairBoostClassifier(
+    n_estimators=100,
+    lambda_fairness_value=0.1,
+    fairness_mode="Demographic_Parity",
+    verbosity=-1,
+)
+
+otfair_clf.fit(X_train, y_train,sensitive_attribute_train)
+otfair_clf.predict(X_test)
 ```
 
 ## 🌱 WoodTapper ExampleExplanation module
@@ -116,6 +138,17 @@ author = {Sakho, Abdoulaye and Aouad, Jad and Gauthier, Carl-Erik and Malherbe, 
 title = {WoodTapper: a Python package for explaining decision tree ensembles},
 journal = {Journal of Open Source Software} }
 ```
+
+```bibtex
+@article{shilova2026ot,
+  title={OT-FairBoost: Optimal Transport-Guided Gradient Boosting for Fairness Regularization on Tabular Data},
+  author={Shilova, Veronika and Sakho, Abdoulaye and Boumoussou, Younes and Risser, Laurent and Loubes, Jean-Michel and Malherbe, Emmanuel},
+  journal={arXiv preprint arXiv:2607.28014},
+  year={2026}
+}
+```
+
+
 For SIRUS methodology, consider citing:
 ```bibtex
 @article{benard2021sirus,

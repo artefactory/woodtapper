@@ -10,7 +10,7 @@ First, import necessary modules:
 import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import average_precision_score, accuracy_score,roc_auc_score
+from sklearn.metrics import average_precision_score, accuracy_score, roc_auc_score
 
 from woodtapper.example_sampling import RandomForestClassifierExplained
 ```
@@ -28,17 +28,19 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
 ```python
 ## RandomForestClassifier rules extraction
-RFExplained = RandomForestClassifierExplained(n_estimators=100,random_state=0)
-RFExplained.fit(X_train,y_train)
+RFExplained = RandomForestClassifierExplained(n_estimators=100, random_state=0)
+RFExplained.fit(X_train, y_train)
 ```
 
 ## Generate example-based explainability
 ```python
-Xy_explain = RFExplained.explanation(X_test,to_pandas=True, feature_names=iris.feature_names) # Get the 5 most similar samples for each test sample
+Xy_explain = RFExplained.explanation(
+    X_test, to_pandas=True, feature_names=iris.feature_names
+)  # Get the 5 most similar samples for each test sample
 ```
 
 ```python
-X_test.iloc[0,:]  # First test sample
+X_test.iloc[0, :]  # First test sample
 ```
 !!! example "Output"
 ```text
@@ -50,7 +52,7 @@ Name: 114, dtype: float64
 ```
 
 ```python
-Xy_explain[0] # Explanation for the first test sample
+Xy_explain[0]  # Explanation for the first test sample
 ```
 !!! example "Output"
 
@@ -65,10 +67,12 @@ Xy_explain[0] # Explanation for the first test sample
 ## Load an existing RandomForestClassifier into the explainer
 
 ```python
-RF = RandomForestClassifier(n_estimators=100) # Standard RandomForestClassifier
+RF = RandomForestClassifier(n_estimators=100)  # Standard RandomForestClassifier
 RF.fit(X_train, y_train)
 
 # Load an existing RandomForestClassifier into the explainer
-RFExplained = RandomForestClassifierExplained.load_forest(RandomForestClassifierExplained,RF,X_train,y_train)
+RFExplained = RandomForestClassifierExplained.load_forest(
+    RandomForestClassifierExplained, RF, X_train, y_train
+)
 Xy_explain = RFExplained.explanation(X_test)
 ```
