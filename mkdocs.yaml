@@ -72,8 +72,8 @@ nav:
       - Regression Extractors: references/regression_extractors.md
       - Base Extractors Mixin: references/mixin.md
     - Fairness:
-      - Fairness-aware Classification: references/fairness_classification.md
-      - Fairness-aware Regression: references/fairness_regression.md
+      - Fairness-aware Classification: references/classification_fairness.md
+      - Fairness-aware Regression: references/regression_fairness.md
     - Example-based explainability:
       - Classification Example Explanation: references/classification_explanation.md
       - Regression Example Explanation: references/regression_explanation.md
