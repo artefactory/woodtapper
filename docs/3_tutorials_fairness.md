@@ -2,7 +2,6 @@
 
 This tutorial compares a standard LightGBM classifier with `OTFairBoostClassifier` on the Adult income dataset. The sensitive attribute (`sex`) is used during fair-model training and evaluation, but is excluded from the predictive features.
 
-The example follows the workflow in [`fairness.ipynb`](../notebooks/fairness.ipynb). It reports predictive performance and group fairness metrics on the same held-out test set; the values are computed when the code is run and are not fixed reference results.
 
 ## Import modules
 
