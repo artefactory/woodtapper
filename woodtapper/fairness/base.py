@@ -60,39 +60,7 @@ def w2_fair_grad_binary(y_preds,idx0, idx1, n_steps_cdf=1024):
     return grad
 
 
-def w2_fair_hess_binary(y_preds, idx0, idx1, n_steps_cdf=1024):
-    """
-    Compute the Wasserstein-2 fair hessian for binary sensitive attributes.
-
-    Parameters
-    ----------
-    y_preds : np.ndarray
-        Predicted values.
-    sensitive_attribute : np.ndarray
-        Binary sensitive attribute (0 or 1).
-
-    Returns
-    -------
-    hess : np.ndarray
-        Hessian adjusted for fairness.
-    """
-    n = len(y_preds)
-    n0 = idx0.size
-    n1 = idx1.size
-
-    if idx0.size == 0 or idx1.size == 0:
-        return np.zeros(n, dtype=float)
-    hess = np.zeros(n, dtype=float)
-
-    h0 = 2 / n0
-    h1 = 2 / n1
-    hess[idx0] = h0
-    hess[idx1] = h1
-
-    return hess
-
-
-def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
+def w2_fair_grad_hess(y_preds, partitions_group, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient and hessian for binary or multi-class sensitive attributes.
 
@@ -112,26 +80,12 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
     hess : np.ndarray
         Hessian adjusted for fairness.
     """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    classes = np.unique(sensitive_attribute)
     grad = np.zeros(n, dtype=float)
     hess = np.zeros(n, dtype=float)
-    partitions = []
-    if classes.size < 2:
+    partitions = partitions_group
+    if len(partitions) == 0:
         return grad, hess
-    
-    if classes.size == 2:
-        partitions.append(
-            (
-                np.flatnonzero(sensitive_attribute == 0),
-                np.flatnonzero(sensitive_attribute == 1),
-            )
-        )
-    elif classes.size > 2:
-        for group in classes:
-            mask = sensitive_attribute == group
-            partitions.append((np.flatnonzero(mask), np.flatnonzero(~mask)))
 
     for idx0, idx1 in partitions:
         if not(idx0.size and idx1.size):
