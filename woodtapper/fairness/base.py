@@ -8,7 +8,7 @@ import numpy as np
 from woodtapper.fairness.utils import _invert_cdf, _split_groups, _make_cdf
 
 
-def w2_fair_grad_binary(y_preds, sensitive_attribute,idx0, idx1, y0, y1, n_steps_cdf=1024):
+def w2_fair_grad_binary(y_preds,idx0, idx1, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient for binary sensitive attributes.
 
@@ -16,8 +16,10 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute,idx0, idx1, y0, y1, n_steps
     ----------
     y_preds : np.ndarray
         Predicted values.
-    sensitive_attribute : np.ndarray
-        Binary sensitive attribute (0 or 1).
+    idx0 : np.ndarray
+        Indices of group 0 in y_preds.
+    idx1 : np.ndarray
+        Indices of group 1 in y_preds.
     n_steps_cdf : int
         Number of steps for the cumulative distribution function (CDF) approximation.
 
@@ -26,13 +28,15 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute,idx0, idx1, y0, y1, n_steps
     grad : np.ndarray
         Gradient adjusted for fairness.
     """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    n0 = np.sum(sensitive_attribute == 0)
-    n1 = np.sum(sensitive_attribute == 1)
-
-    if y0.size == 0 or y1.size == 0:
+    n0 = idx0.size
+    n1 = idx1.size
+    if idx0.size == 0 or idx1.size == 0:
         return np.zeros(n, dtype=float)
+    
+    y0 = y_preds[idx0]
+    y1 = y_preds[idx1]
+    
     if np.min(y_preds) == np.max(y_preds):
         return np.zeros(n, dtype=float)
     array_steps_eta, eta_step = np.linspace(
@@ -53,12 +57,10 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute,idx0, idx1, y0, y1, n_steps
 
     grad[idx0] = (2 * (y0 - cor1_y0)) / n0
     grad[idx1] = (2 * (y1 - cor0_y1)) / n1
-    # print("      Empirical Gradient (Approximate)")
-    # print(grad)
     return grad
 
 
-def w2_fair_hess_binary(y_preds, sensitive_attribute):
+def w2_fair_hess_binary(y_preds, idx0, idx1, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair hessian for binary sensitive attributes.
 
@@ -74,13 +76,11 @@ def w2_fair_hess_binary(y_preds, sensitive_attribute):
     hess : np.ndarray
         Hessian adjusted for fairness.
     """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    n0 = np.sum(sensitive_attribute == 0)
-    n1 = np.sum(sensitive_attribute == 1)
+    n0 = idx0.size
+    n1 = idx1.size
 
-    idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
-    if y0.size == 0 or y1.size == 0:
+    if idx0.size == 0 or idx1.size == 0:
         return np.zeros(n, dtype=float)
     hess = np.zeros(n, dtype=float)
 
@@ -117,29 +117,32 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
     classes = np.unique(sensitive_attribute)
     grad = np.zeros(n, dtype=float)
     hess = np.zeros(n, dtype=float)
+    partitions = []
     if classes.size < 2:
         return grad, hess
-
+    
     if classes.size == 2:
-        idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
-        grad = w2_fair_grad_binary(
-            y_preds, sensitive_attribute, idx0, idx1, y0, y1, n_steps_cdf=n_steps_cdf
+        partitions.append(
+            (
+                np.flatnonzero(sensitive_attribute == 0),
+                np.flatnonzero(sensitive_attribute == 1),
+            )
         )
-        hess = w2_fair_hess_binary(y_preds, sensitive_attribute)
-        return grad, hess
+    elif classes.size > 2:
+        for group in classes:
+            mask = sensitive_attribute == group
+            partitions.append((np.flatnonzero(mask), np.flatnonzero(~mask)))
 
-    for group in classes:
-        sensitive_attribute_ovr = np.where(
-            sensitive_attribute == group, 0, 1
-        )  # group (as 0) vs rest (as 1)
-        idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute_ovr)
+    for idx0, idx1 in partitions:
+        if not(idx0.size and idx1.size):
+            raise ValueError("One of the groups has size 0.")
+
+        #Gradients
         grad_ovr = w2_fair_grad_binary(
-            y_preds, sensitive_attribute_ovr, idx0, idx1, y0, y1, n_steps_cdf=n_steps_cdf
-        )
-        hess_ovr = w2_fair_hess_binary(y_preds, sensitive_attribute_ovr)
-
-        idx_group = np.where(sensitive_attribute == group)[0]
-        grad[idx_group] = grad_ovr[idx_group]
-        hess[idx_group] = hess_ovr[idx_group]
+                    y_preds, idx0, idx1, n_steps_cdf=n_steps_cdf
+                )
+        grad[idx0] = grad_ovr[idx0] # Group 0 only, the rest no update
+        hess[idx0] = 2 / idx0.size
+        
 
     return grad, hess
