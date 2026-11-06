@@ -5,10 +5,10 @@ Wasserstein-2 fairness gradient and hessian computations for LightGBM.
 import numpy as np
 
 
-from woodtapper.fairness.utils import _invert_cdf, _split_groups, _make_cdf
+from woodtapper.fairness.utils import _invert_cdf, _make_cdf
 
 
-def w2_fair_grad_binary(y_preds,idx0, idx1, n_steps_cdf=1024):
+def w2_fair_grad_binary(y_preds, idx0, idx1, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient for binary sensitive attributes.
 
@@ -33,17 +33,16 @@ def w2_fair_grad_binary(y_preds,idx0, idx1, n_steps_cdf=1024):
     n1 = idx1.size
     if idx0.size == 0 or idx1.size == 0:
         return np.zeros(n, dtype=float)
-    
+
     y0 = y_preds[idx0]
     y1 = y_preds[idx1]
-    
+
     if np.min(y_preds) == np.max(y_preds):
         return np.zeros(n, dtype=float)
     array_steps_eta, eta_step = np.linspace(
         y_preds.min(), y_preds.max(), n_steps_cdf + 1, retstep=True
     )
     lims = (float(array_steps_eta[0]), float(array_steps_eta[-1]))
-
 
     cdf_H0 = _make_cdf(y0, n_steps_cdf, lims)
     cdf_H1 = _make_cdf(y1, n_steps_cdf, lims)
@@ -88,15 +87,12 @@ def w2_fair_grad_hess(y_preds, partitions_group, n_steps_cdf=1024):
         return grad, hess
 
     for idx0, idx1 in partitions:
-        if not(idx0.size and idx1.size):
+        if not (idx0.size and idx1.size):
             raise ValueError("One of the groups has size 0.")
 
-        #Gradients
-        grad_ovr = w2_fair_grad_binary(
-                    y_preds, idx0, idx1, n_steps_cdf=n_steps_cdf
-                )
-        grad[idx0] = grad_ovr[idx0] # Group 0 only, the rest no update
+        # Gradients
+        grad_ovr = w2_fair_grad_binary(y_preds, idx0, idx1, n_steps_cdf=n_steps_cdf)
+        grad[idx0] = grad_ovr[idx0]  # Group 0 only, the rest no update
         hess[idx0] = 2 / idx0.size
-        
 
     return grad, hess
