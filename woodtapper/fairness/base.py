@@ -8,7 +8,7 @@ import numpy as np
 from woodtapper.fairness.utils import _invert_cdf, _split_groups, _make_cdf
 
 
-def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
+def w2_fair_grad_binary(y_preds, sensitive_attribute,idx0, idx1, y0, y1, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient for binary sensitive attributes.
 
@@ -31,7 +31,6 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     n0 = np.sum(sensitive_attribute == 0)
     n1 = np.sum(sensitive_attribute == 1)
 
-    idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
     if y0.size == 0 or y1.size == 0:
         return np.zeros(n, dtype=float)
     if np.min(y_preds) == np.max(y_preds):
@@ -122,8 +121,9 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
         return grad, hess
 
     if classes.size == 2:
+        idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
         grad = w2_fair_grad_binary(
-            y_preds, sensitive_attribute, n_steps_cdf=n_steps_cdf
+            y_preds, sensitive_attribute, idx0, idx1, y0, y1, n_steps_cdf=n_steps_cdf
         )
         hess = w2_fair_hess_binary(y_preds, sensitive_attribute)
         return grad, hess
@@ -132,8 +132,9 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
         sensitive_attribute_ovr = np.where(
             sensitive_attribute == group, 0, 1
         )  # group (as 0) vs rest (as 1)
+        idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute_ovr)
         grad_ovr = w2_fair_grad_binary(
-            y_preds, sensitive_attribute_ovr, n_steps_cdf=n_steps_cdf
+            y_preds, sensitive_attribute_ovr, idx0, idx1, y0, y1, n_steps_cdf=n_steps_cdf
         )
         hess_ovr = w2_fair_hess_binary(y_preds, sensitive_attribute_ovr)
 
