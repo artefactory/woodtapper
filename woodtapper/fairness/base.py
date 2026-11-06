@@ -3,10 +3,9 @@ Wasserstein-2 fairness gradient and hessian computations for LightGBM.
 """
 
 import numpy as np
-from scipy.stats import cumfreq
 
 
-from woodtapper.fairness.utils import _invert_cdf, _split_groups
+from woodtapper.fairness.utils import _invert_cdf, _split_groups, _make_cdf
 
 
 def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
@@ -42,14 +41,9 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     )
     lims = (float(array_steps_eta[0]), float(array_steps_eta[-1]))
 
-    def make_cdf(y: np.ndarray) -> np.ndarray:
-        return (
-            cumfreq(y, numbins=n_steps_cdf + 1, defaultreallimits=lims).cumcount
-            / y.size
-        )
 
-    cdf_H0 = make_cdf(y0)
-    cdf_H1 = make_cdf(y1)
+    cdf_H0 = _make_cdf(y0, n_steps_cdf, lims)
+    cdf_H1 = _make_cdf(y1, n_steps_cdf, lims)
     target_u_proportion0 = np.interp(y0, array_steps_eta, cdf_H0)
     target_u_proportion1 = np.interp(y1, array_steps_eta, cdf_H1)
 
