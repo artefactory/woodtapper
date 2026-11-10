@@ -284,11 +284,12 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
             is_classification=True,
+            to_normalize_grads_hess_perfs=False,
         )
-        if self._initial_user_objective is not None:
-            raise ValueError(
-                f"An explicit objective ('{self._initial_user_objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
-            )
+        # if self.objective is not None:
+        #    raise ValueError(
+        #        f"An explicit objective ('{self.objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
+        #    )
         self.set_params(objective=fobj)
         super().fit(
             X,
@@ -311,33 +312,18 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         base_margin=None,
         iteration_range=None,
     ):
-        with self._verbosity_context():
-            class_probs = super().predict(
-                X=X,
-                output_margin=output_margin,
-                validate_features=validate_features,
-                base_margin=base_margin,
-                iteration_range=iteration_range,
-            )
-            if output_margin:
-                # If output_margin is active, simply return the scores
-                return class_probs
+        # with self._verbosity_context():
+        class_probs = self.predict_proba(
+            X=X,
+            validate_features=validate_features,
+            base_margin=base_margin,
+            iteration_range=iteration_range,
+        )
+        probs_class_1 = class_probs[:, 1]
+        column_indexes = np.repeat(0, class_probs.shape[0])
+        column_indexes[probs_class_1 > 0.5] = 1
 
-            if len(class_probs.shape) > 1 and self.n_classes_ != 2:
-                # multi-class, turns softprob into softmax
-                column_indexes: np.ndarray = np.argmax(class_probs, axis=1)
-            elif len(class_probs.shape) > 1 and class_probs.shape[1] != 1:
-                # multi-label
-                column_indexes = np.zeros(class_probs.shape)
-                column_indexes[class_probs > 0.5] = 1
-            elif self.objective == "multi:softmax":
-                return class_probs.astype(np.int32)
-            else:
-                # turns soft logit into class label
-                column_indexes = np.repeat(0, class_probs.shape[0])
-                column_indexes[class_probs > 0.5] = 1
-
-            return column_indexes
+        return column_indexes
 
     def predict_proba(
         self,
@@ -350,11 +336,12 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         Modify slightly LGBM method to obtain real probas with our custom loss.
         # Link source: https://github.com/dmlc/xgboost/blob/master/python-package/xgboost/sklearn.py
         """
-        class_probs = super().predict(
+        class_probs = super(xgb.XGBClassifier, self).predict(
             X=X,
             validate_features=validate_features,
             base_margin=base_margin,
             iteration_range=iteration_range,
         )
+        print(f"Raw class probabilities: {class_probs[:5]}")
         class_probs = _sigmoid(class_probs)
         return _cls_predict_proba(self.n_classes_, class_probs, np.vstack)

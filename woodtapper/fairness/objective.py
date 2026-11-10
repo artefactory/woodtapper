@@ -93,6 +93,7 @@ def build_fair_loss(
     fairness_mode="Demographic_Parity",
     n_steps_cdf=1024,
     is_classification=True,
+    to_normalize_grads_hess_perfs=True,
 ):
     sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     classes = np.unique(sensitive_attribute)
@@ -141,12 +142,12 @@ def build_fair_loss(
             grad_predictive_perf = y_preds_probas - y_true
             hess_predictive_perf = np.ones_like(y_true)
 
-        grad = (
-            (1 / n) * grad_predictive_perf
-        ) + lambda_fairness_value * grad_fairness_perf
-        hess = (
-            (1 / n) * hess_predictive_perf
-        ) + lambda_fairness_value * hess_fairness_perf
+        if to_normalize_grads_hess_perfs:
+            grad_predictive_perf /= n
+            hess_predictive_perf /= n
+
+        grad = grad_predictive_perf + lambda_fairness_value * grad_fairness_perf
+        hess = hess_predictive_perf + lambda_fairness_value * hess_fairness_perf
 
         if weight is not None and len(weight) > 0:
             grad *= weight
