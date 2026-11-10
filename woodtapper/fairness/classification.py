@@ -1,5 +1,7 @@
 import lightgbm as lgb
 import numpy as np
+import xgboost as xgb
+from xgboost.sklearn import _cls_predict_proba
 
 from .objective import build_fair_loss
 from .utils import _sigmoid
@@ -215,7 +217,7 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         **kwargs,
     ):
         """
-        Modify slightly LGBM method to obtain rzal probas with our custom loss.
+        Modify slightly LGBM method to obtain real probas with our custom loss.
         """
         result = super(lgb.LGBMClassifier, self).predict(
             X=X,
@@ -244,3 +246,115 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
             )
 
         return np.vstack((1.0 - result, result)).transpose()
+
+
+#############################################################
+
+
+class OTXFairBoostClassifier(xgb.XGBClassifier):
+    def __init__(
+        self,
+        lambda_fairness_value,
+        n_steps_cdf=1024,
+        fairness_mode="Demographic_Parity",
+        objective="binary:logistic",
+        **kwargs,
+    ):
+        super().__init__(objective=objective, **kwargs)
+        self.lambda_fairness_value = lambda_fairness_value
+        self.n_steps_cdf = n_steps_cdf
+        self.fairness_mode = fairness_mode
+
+    def fit(
+        self,
+        X,
+        y,
+        sensitive_attribute,
+        sample_weight=None,
+        base_margin=None,
+        eval_set=None,
+        verbose=True,
+        xgb_model=None,
+        sample_weight_eval_set=None,
+        base_margin_eval_set=None,
+    ):
+        fobj = build_fair_loss(
+            sensitive_attribute=sensitive_attribute,
+            lambda_fairness_value=self.lambda_fairness_value,
+            fairness_mode=self.fairness_mode,
+            n_steps_cdf=self.n_steps_cdf,
+            is_classification=True,
+        )
+        if self._initial_user_objective is not None:
+            raise ValueError(
+                f"An explicit objective ('{self._initial_user_objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
+            )
+        self.set_params(objective=fobj)
+        super().fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            base_margin=base_margin,
+            eval_set=eval_set,
+            verbose=verbose,
+            xgb_model=xgb_model,
+            sample_weight_eval_set=sample_weight_eval_set,
+            base_margin_eval_set=base_margin_eval_set,
+        )
+        return self
+
+    def predict(
+        self,
+        X,
+        output_margin=False,
+        validate_features=True,
+        base_margin=None,
+        iteration_range=None,
+    ):
+        with self._verbosity_context():
+            class_probs = super().predict(
+                X=X,
+                output_margin=output_margin,
+                validate_features=validate_features,
+                base_margin=base_margin,
+                iteration_range=iteration_range,
+            )
+            if output_margin:
+                # If output_margin is active, simply return the scores
+                return class_probs
+
+            if len(class_probs.shape) > 1 and self.n_classes_ != 2:
+                # multi-class, turns softprob into softmax
+                column_indexes: np.ndarray = np.argmax(class_probs, axis=1)
+            elif len(class_probs.shape) > 1 and class_probs.shape[1] != 1:
+                # multi-label
+                column_indexes = np.zeros(class_probs.shape)
+                column_indexes[class_probs > 0.5] = 1
+            elif self.objective == "multi:softmax":
+                return class_probs.astype(np.int32)
+            else:
+                # turns soft logit into class label
+                column_indexes = np.repeat(0, class_probs.shape[0])
+                column_indexes[class_probs > 0.5] = 1
+
+            return column_indexes
+
+    def predict_proba(
+        self,
+        X,
+        validate_features=True,
+        base_margin=None,
+        iteration_range=None,
+    ):
+        """
+        Modify slightly LGBM method to obtain real probas with our custom loss.
+        # Link source: https://github.com/dmlc/xgboost/blob/master/python-package/xgboost/sklearn.py
+        """
+        class_probs = super().predict(
+            X=X,
+            validate_features=validate_features,
+            base_margin=base_margin,
+            iteration_range=iteration_range,
+        )
+        class_probs = _sigmoid(class_probs)
+        return _cls_predict_proba(self.n_classes_, class_probs, np.vstack)
