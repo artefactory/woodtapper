@@ -76,7 +76,6 @@ def derive_fair_grad_hess_terms(
         raise ValueError(f"Unsupported fairness mode: {fairness_mode}")
 
     if is_classification:
-        # probas = _sigmoid(y_preds)
         dscore_dz = y_preds_probas * (1.0 - y_preds_probas)
         d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds_probas)
         grad_final = grad * dscore_dz
