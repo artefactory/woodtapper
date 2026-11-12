@@ -1,7 +1,11 @@
 import pytest
 import numpy as np
 
-from woodtapper.fairness import OTFairBoostClassifier, OTFairBoostRegressor
+from woodtapper.fairness import (
+    OTFairBoostClassifier,
+    OTFairBoostRegressor,
+    OTXFairBoostClassifier,
+)
 from woodtapper.fairness.base import w2_fair_grad_binary
 
 
@@ -12,6 +16,23 @@ def test_fair_gradient_is_zero_for_constant_predictions():
     gradient = w2_fair_grad_binary(predictions, sensitive_attribute, n_steps_cdf=32)
 
     np.testing.assert_array_equal(gradient, np.zeros(4))
+
+
+def test_xgb_parameters_exclude_fairness_and_fit_only_options():
+    model = OTXFairBoostClassifier(
+        lambda_fairness_value=0.1,
+        n_steps_cdf=32,
+        fairness_mode="Demographic_Parity",
+        verbose=0,
+    )
+
+    xgb_params = model.get_xgb_params()
+    assert not {
+        "lambda_fairness_value",
+        "n_steps_cdf",
+        "fairness_mode",
+        "verbose",
+    }.intersection(xgb_params)
 
 
 def test_classifier_rejects_explicit_objective(simple_dataset):
