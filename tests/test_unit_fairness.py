@@ -5,6 +5,7 @@ from woodtapper.fairness import (
     OTFairBoostClassifier,
     OTFairBoostRegressor,
     OTXFairBoostClassifier,
+    OTXFairBoostRegressor,
 )
 from woodtapper.fairness.base import w2_fair_grad_binary
 
@@ -32,6 +33,35 @@ def test_xgb_parameters_exclude_fairness_and_fit_only_options():
         "n_steps_cdf",
         "fairness_mode",
     }.intersection(xgb_params)
+
+
+def test_xgb_regressor_parameters_exclude_fairness_options():
+    model = OTXFairBoostRegressor(
+        lambda_fairness_value=0.1,
+        n_steps_cdf=32,
+        fairness_mode="Demographic_Parity",
+    )
+
+    xgb_params = model.get_xgb_params()
+    assert not {
+        "lambda_fairness_value",
+        "n_steps_cdf",
+        "fairness_mode",
+    }.intersection(xgb_params)
+    assert xgb_params["reg_lambda"] == 0.0
+
+
+def test_xgb_regressor_rejects_nonzero_min_child_weight(simple_regression_data):
+    X, y = simple_regression_data
+    model = OTXFairBoostRegressor(
+        lambda_fairness_value=0.1,
+        min_child_weight=1.0,
+        n_estimators=2,
+        n_jobs=1,
+    )
+
+    with pytest.raises(ValueError, match="min_child_weight to be 0.0"):
+        model.fit(X, y, sensitive_attribute=X[:, 0] > 0)
 
 
 def test_classifier_rejects_explicit_objective(simple_dataset):
