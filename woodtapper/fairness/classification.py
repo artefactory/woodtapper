@@ -1,6 +1,7 @@
 import lightgbm as lgb
 import numpy as np
 import xgboost as xgb
+import warnings
 from xgboost.sklearn import _cls_predict_proba
 
 from .objective import build_fair_loss
@@ -248,9 +249,6 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         return np.vstack((1.0 - result, result)).transpose()
 
 
-#############################################################
-
-
 class OTXFairBoostClassifier(xgb.XGBClassifier):
     def __init__(
         self,
@@ -259,10 +257,14 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         fairness_mode="Demographic_Parity",
         objective="binary:logistic",
         min_child_weight=0.0,
+        reg_lambda=0.0,
         **kwargs,
     ):
         super().__init__(
-            objective=objective, min_child_weight=min_child_weight, **kwargs
+            objective=objective,
+            min_child_weight=min_child_weight,
+            reg_lambda=reg_lambda,
+            **kwargs,
         )
         self.lambda_fairness_value = lambda_fairness_value
         self.n_steps_cdf = n_steps_cdf
@@ -302,6 +304,10 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         if self.min_child_weight != 0.0:
             raise ValueError(
                 "OTXFairBoostClassifier requires min_child_weight to be 0.0. Otherwise, the fairness objective may not be correctly applied."
+            )
+        if self.reg_lambda != 0.0:
+            warnings.warn(
+                "reg_lambda not set to 0.0, with min_child_weight=0.0, this may lead to the fairness term to dominate. Thus, produce low predictive performances."
             )
         self.set_params(objective=fobj)
         super().fit(
