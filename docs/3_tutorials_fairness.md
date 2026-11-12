@@ -1,6 +1,7 @@
 # Fairness-aware classification
 
 This tutorial compares a standard LightGBM classifier with `OTFairBoostClassifier` on the Adult income dataset. The sensitive attribute (`sex`) is used during fair-model training and evaluation, but is excluded from the predictive features.
+We also implemented a `OTXFairBoostClassifier` based on XGBoost.
 
 
 ## Import modules
