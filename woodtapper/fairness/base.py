@@ -94,5 +94,7 @@ def w2_fair_grad_hess(y_preds, partitions_group, n_steps_cdf=1024):
         grad_ovr = w2_fair_grad_binary(y_preds, idx0, idx1, n_steps_cdf=n_steps_cdf)
         grad[idx0] = grad_ovr[idx0]  # Group 0 only, the rest no update
         hess[idx0] = 2 / idx0.size
-
+        if len(partitions) == 1:  # binary case
+            grad[idx1] = grad_ovr[idx1]  # Group 1 only, the rest no update
+            hess[idx1] = 2 / idx1.size
     return grad, hess
