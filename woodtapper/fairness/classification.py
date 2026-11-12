@@ -258,9 +258,12 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         n_steps_cdf=1024,
         fairness_mode="Demographic_Parity",
         objective="binary:logistic",
+        min_child_weight=0.0,
         **kwargs,
     ):
-        super().__init__(objective=objective, **kwargs)
+        super().__init__(
+            objective=objective, min_child_weight=min_child_weight, **kwargs
+        )
         self.lambda_fairness_value = lambda_fairness_value
         self.n_steps_cdf = n_steps_cdf
         self.fairness_mode = fairness_mode
@@ -284,12 +287,15 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
             is_classification=True,
-            to_normalize_grads_hess_perfs=False,
         )
         # if self.objective is not None:
         #    raise ValueError(
         #        f"An explicit objective ('{self.objective}') was passed,but OTFairBoostClassifier overrides it with its custom fair loss objective."
         #    )
+        if self.min_child_weight != 0.0:
+            raise ValueError(
+                "OTXFairBoostClassifier requires min_child_weight to be 0.0. Otherwise, the fairness objective may not be correctly applied."
+            )
         self.set_params(objective=fobj)
         super().fit(
             X,
@@ -338,6 +344,7 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         """
         class_probs = super(xgb.XGBClassifier, self).predict(
             X=X,
+            output_margin=True,
             validate_features=validate_features,
             base_margin=base_margin,
             iteration_range=iteration_range,
