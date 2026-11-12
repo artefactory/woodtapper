@@ -349,6 +349,5 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
             base_margin=base_margin,
             iteration_range=iteration_range,
         )
-        print(f"Raw class probabilities: {class_probs[:5]}")
         class_probs = _sigmoid(class_probs)
         return _cls_predict_proba(self.n_classes_, class_probs, np.vstack)
