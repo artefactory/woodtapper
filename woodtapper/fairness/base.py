@@ -3,13 +3,12 @@ Wasserstein-2 fairness gradient and hessian computations for LightGBM.
 """
 
 import numpy as np
-from scipy.stats import cumfreq
 
 
-from woodtapper.fairness.utils import _invert_cdf, _split_groups
+from woodtapper.fairness.utils import _invert_cdf, _make_cdf
 
 
-def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
+def w2_fair_grad_binary(y_preds, idx0, idx1, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient for binary sensitive attributes.
 
@@ -17,8 +16,10 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     ----------
     y_preds : np.ndarray
         Predicted values.
-    sensitive_attribute : np.ndarray
-        Binary sensitive attribute (0 or 1).
+    idx0 : np.ndarray
+        Indices of group 0 in y_preds.
+    idx1 : np.ndarray
+        Indices of group 1 in y_preds.
     n_steps_cdf : int
         Number of steps for the cumulative distribution function (CDF) approximation.
 
@@ -27,14 +28,15 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     grad : np.ndarray
         Gradient adjusted for fairness.
     """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    n0 = np.sum(sensitive_attribute == 0)
-    n1 = np.sum(sensitive_attribute == 1)
-
-    idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
-    if y0.size == 0 or y1.size == 0:
+    n0 = idx0.size
+    n1 = idx1.size
+    if idx0.size == 0 or idx1.size == 0:
         return np.zeros(n, dtype=float)
+
+    y0 = y_preds[idx0]
+    y1 = y_preds[idx1]
+
     if np.min(y_preds) == np.max(y_preds):
         return np.zeros(n, dtype=float)
     array_steps_eta, eta_step = np.linspace(
@@ -42,14 +44,8 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
     )
     lims = (float(array_steps_eta[0]), float(array_steps_eta[-1]))
 
-    def make_cdf(y: np.ndarray) -> np.ndarray:
-        return (
-            cumfreq(y, numbins=n_steps_cdf + 1, defaultreallimits=lims).cumcount
-            / y.size
-        )
-
-    cdf_H0 = make_cdf(y0)
-    cdf_H1 = make_cdf(y1)
+    cdf_H0 = _make_cdf(y0, n_steps_cdf, lims)
+    cdf_H1 = _make_cdf(y1, n_steps_cdf, lims)
     target_u_proportion0 = np.interp(y0, array_steps_eta, cdf_H0)
     target_u_proportion1 = np.interp(y1, array_steps_eta, cdf_H1)
 
@@ -60,46 +56,10 @@ def w2_fair_grad_binary(y_preds, sensitive_attribute, n_steps_cdf=1024):
 
     grad[idx0] = (2 * (y0 - cor1_y0)) / n0
     grad[idx1] = (2 * (y1 - cor0_y1)) / n1
-    # print("      Empirical Gradient (Approximate)")
-    # print(grad)
     return grad
 
 
-def w2_fair_hess_binary(y_preds, sensitive_attribute):
-    """
-    Compute the Wasserstein-2 fair hessian for binary sensitive attributes.
-
-    Parameters
-    ----------
-    y_preds : np.ndarray
-        Predicted values.
-    sensitive_attribute : np.ndarray
-        Binary sensitive attribute (0 or 1).
-
-    Returns
-    -------
-    hess : np.ndarray
-        Hessian adjusted for fairness.
-    """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
-    n = len(y_preds)
-    n0 = np.sum(sensitive_attribute == 0)
-    n1 = np.sum(sensitive_attribute == 1)
-
-    idx0, idx1, y0, y1 = _split_groups(y_preds, sensitive_attribute)
-    if y0.size == 0 or y1.size == 0:
-        return np.zeros(n, dtype=float)
-    hess = np.zeros(n, dtype=float)
-
-    h0 = 2 / n0
-    h1 = 2 / n1
-    hess[idx0] = h0
-    hess[idx1] = h1
-
-    return hess
-
-
-def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
+def w2_fair_grad_hess(y_preds, partitions_group, n_steps_cdf=1024):
     """
     Compute the Wasserstein-2 fair gradient and hessian for binary or multi-class sensitive attributes.
 
@@ -119,32 +79,22 @@ def w2_fair_grad_hess(y_preds, sensitive_attribute, n_steps_cdf=1024):
     hess : np.ndarray
         Hessian adjusted for fairness.
     """
-    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
     n = len(y_preds)
-    classes = np.unique(sensitive_attribute)
     grad = np.zeros(n, dtype=float)
     hess = np.zeros(n, dtype=float)
-    if classes.size < 2:
+    partitions = partitions_group
+    if len(partitions) == 0:
         return grad, hess
 
-    if classes.size == 2:
-        grad = w2_fair_grad_binary(
-            y_preds, sensitive_attribute, n_steps_cdf=n_steps_cdf
-        )
-        hess = w2_fair_hess_binary(y_preds, sensitive_attribute)
-        return grad, hess
+    for idx0, idx1 in partitions:
+        if not (idx0.size and idx1.size):
+            raise ValueError("One of the groups has size 0.")
 
-    for group in classes:
-        sensitive_attribute_ovr = np.where(
-            sensitive_attribute == group, 0, 1
-        )  # group (as 0) vs rest (as 1)
-        grad_ovr = w2_fair_grad_binary(
-            y_preds, sensitive_attribute_ovr, n_steps_cdf=n_steps_cdf
-        )
-        hess_ovr = w2_fair_hess_binary(y_preds, sensitive_attribute_ovr)
-
-        idx_group = np.where(sensitive_attribute == group)[0]
-        grad[idx_group] = grad_ovr[idx_group]
-        hess[idx_group] = hess_ovr[idx_group]
-
+        # Gradients
+        grad_ovr = w2_fair_grad_binary(y_preds, idx0, idx1, n_steps_cdf=n_steps_cdf)
+        grad[idx0] = grad_ovr[idx0]  # Group 0 only, the rest no update
+        hess[idx0] = 2 / idx0.size
+        if len(partitions) == 1:  # binary case
+            grad[idx1] = grad_ovr[idx1]  # Group 1 only, the rest no update
+            hess[idx1] = 2 / idx1.size
     return grad, hess

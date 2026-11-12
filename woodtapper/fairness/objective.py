@@ -9,9 +9,9 @@ from .utils import _sigmoid
 
 
 def derive_fair_grad_hess_terms(
-    y_true,
+    partitions_group,
+    partitions_target,
     y_preds,
-    sensitive_attribute,
     fairness_mode="Demographic_Parity",
     n_steps_cdf=1024,
     is_classification=True,
@@ -21,12 +21,12 @@ def derive_fair_grad_hess_terms(
 
     Parameters
     ----------
-    y_true : np.ndarray
-        True labels.
+    partitions_group : list of tuples
+        List of partitions for the groups.
+    partitions_target : list of tuples
+        List of partitions for the target.
     y_preds : np.ndarray
         Predicted scores.
-    sensitive_attribute : np.ndarray
-        Sensitive attribute values.
     fairness_mode : str, optional
         Fairness mode, by default "Demographic_Parity".
     n_steps_cdf : int, optional
@@ -41,31 +41,32 @@ def derive_fair_grad_hess_terms(
     hess : np.ndarray
         Hessian of the fairness objective.
     """
+
     if is_classification:
         y_preds_probas = _sigmoid(y_preds)
     else:
         y_preds_probas = y_preds
-    
-    if fairness_mode == "Demographic_Parity":
 
+    if fairness_mode == "Demographic_Parity":
         grad, hess = w2_fair_grad_hess(
-            y_preds_probas, sensitive_attribute, n_steps_cdf=n_steps_cdf
+            y_preds_probas, partitions_group, n_steps_cdf=n_steps_cdf
         )
 
     elif fairness_mode == "Equality_of_Odds":
-        mask_pos = y_true == 1.0
-        mask_neg = y_true == 0.0
-        grad_pos, hess_pos = w2_fair_grad_hess(
-            y_preds_probas[mask_pos], sensitive_attribute[mask_pos], n_steps_cdf=n_steps_cdf
-        )
-        grad_neg, hess_neg = w2_fair_grad_hess(
-            y_preds_probas[mask_neg], sensitive_attribute[mask_neg], n_steps_cdf=n_steps_cdf
-        )
-
         grad = np.zeros_like(y_preds_probas)
         hess = np.zeros_like(y_preds_probas)
+        mask_pos = partitions_target[0]
+        mask_neg = partitions_target[1]
         pi_pos = float(np.mean(mask_pos))
         pi_neg = float(np.mean(mask_neg))
+
+        grad_pos, hess_pos = w2_fair_grad_hess(
+            y_preds_probas[mask_pos], partitions_group, n_steps_cdf=n_steps_cdf
+        )
+        grad_neg, hess_neg = w2_fair_grad_hess(
+            y_preds_probas[mask_neg], partitions_group, n_steps_cdf=n_steps_cdf
+        )
+
         grad[mask_pos] = pi_pos * grad_pos
         hess[mask_pos] = pi_pos * hess_pos
         grad[mask_neg] = pi_neg * grad_neg
@@ -75,7 +76,6 @@ def derive_fair_grad_hess_terms(
         raise ValueError(f"Unsupported fairness mode: {fairness_mode}")
 
     if is_classification:
-        #probas = _sigmoid(y_preds)
         dscore_dz = y_preds_probas * (1.0 - y_preds_probas)
         d2score_dz2 = dscore_dz * (1.0 - 2.0 * y_preds_probas)
         grad_final = grad * dscore_dz
@@ -94,13 +94,39 @@ def build_fair_loss(
     n_steps_cdf=1024,
     is_classification=True,
 ):
-    def fair_loss(y_true, y_pred, weight=None):  # LGBM signature ?
+    sensitive_attribute = np.asarray(sensitive_attribute, dtype=int)
+    classes = np.unique(sensitive_attribute)
+    partitions_sensitive_attribute = []
+    if classes.size < 2:
+        raise ValueError("Sensitive attribute must have at least two classes.")
+    if classes.size == 2:
+        partitions_sensitive_attribute.append(
+            (
+                np.flatnonzero(sensitive_attribute == 0),
+                np.flatnonzero(sensitive_attribute == 1),
+            )
+        )
+    elif classes.size > 2:
+        for group in classes:
+            mask = sensitive_attribute == group
+            partitions_sensitive_attribute.append(
+                (np.flatnonzero(mask), np.flatnonzero(~mask))
+            )
+
+    partitions_target = None
+
+    def fair_loss(y_true, y_pred, weight=None):
+        nonlocal partitions_target
         n = y_true.size
+        if partitions_target is None:
+            partitions_target = [
+                (np.flatnonzero(y_true == 0), np.flatnonzero(y_true == 1))
+            ]
 
         grad_fairness_perf, hess_fairness_perf = derive_fair_grad_hess_terms(
-            y_true,
-            y_pred,
-            sensitive_attribute,
+            partitions_group=partitions_sensitive_attribute,
+            partitions_target=partitions_target,
+            y_preds=y_pred,
             fairness_mode=fairness_mode,
             n_steps_cdf=n_steps_cdf,
             is_classification=is_classification,
@@ -114,15 +140,6 @@ def build_fair_loss(
             y_preds_probas = y_pred
             grad_predictive_perf = y_preds_probas - y_true
             hess_predictive_perf = np.ones_like(y_true)
-
-        # print("      Predictive Gradient (Approximate):")
-        # print(grad_predictive_perf)
-        # print("      Predictive Hessian (Approximate):")
-        # print(hess_predictive_perf)
-        # print("      Fairness Gradient (Approximate):")
-        # print(grad_fairness_perf)
-        # print("      Fairness Hessian (Approximate):")
-        # print(hess_fairness_perf)
 
         grad = (
             (1 / n) * grad_predictive_perf

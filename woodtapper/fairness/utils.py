@@ -1,6 +1,11 @@
 import numpy as np
 
 
+def _make_cdf(y, n_steps_cdf, lims):
+    counts, _ = np.histogram(y, bins=n_steps_cdf + 1, range=lims)
+    return counts.astype(float).cumsum() / y.size
+
+
 def _invert_cdf(array_steps_eta, cdf_H, target_u_proportion):
     """
     Invert the cumulative distribution function (CDF) for a given target proportion.

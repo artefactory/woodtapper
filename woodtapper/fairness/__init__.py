@@ -1,6 +1,11 @@
 """Fairness module for WoodTapper."""
 
-from .classification import OTFairBoostClassifier
-from .regression import OTFairBoostRegressor
+from .classification import OTFairBoostClassifier, OTXFairBoostClassifier
+from .regression import OTFairBoostRegressor, OTXFairBoostRegressor
 
-__all__ = ["OTFairBoostClassifier", "OTFairBoostRegressor"]
+__all__ = [
+    "OTFairBoostClassifier",
+    "OTXFairBoostClassifier",
+    "OTFairBoostRegressor",
+    "OTXFairBoostRegressor",
+]
