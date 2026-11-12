@@ -268,6 +268,13 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         self.n_steps_cdf = n_steps_cdf
         self.fairness_mode = fairness_mode
 
+    def get_xgb_params(self):
+        """Get XGBoost parameters excluding fairness-specific ones."""
+        params = super().get_xgb_params()
+        for name in ("lambda_fairness_value", "n_steps_cdf", "fairness_mode"):
+            params.pop(name, None)
+        return params
+
     def fit(
         self,
         X,
@@ -276,7 +283,7 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         sample_weight=None,
         base_margin=None,
         eval_set=None,
-        verbose=True,
+        verbose=None,
         xgb_model=None,
         sample_weight_eval_set=None,
         base_margin_eval_set=None,
