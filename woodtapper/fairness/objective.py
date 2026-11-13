@@ -55,8 +55,8 @@ def derive_fair_grad_hess_terms(
     elif fairness_mode == "Equality_of_Odds":
         grad = np.zeros_like(y_preds_probas)
         hess = np.zeros_like(y_preds_probas)
-        mask_pos = partitions_target[0]
-        mask_neg = partitions_target[1]
+        mask_pos = partitions_target[0][0]
+        mask_neg = partitions_target[0][1]
         pi_pos = float(np.mean(mask_pos))
         pi_neg = float(np.mean(mask_neg))
 
