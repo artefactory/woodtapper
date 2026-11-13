@@ -2,12 +2,16 @@ import numpy as np
 import pytest
 import warnings
 import xgboost as xgb
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 
 from woodtapper.fairness import (
     OTFairBoostClassifier,
     OTFairBoostRegressor,
     OTHGBFairBoostClassifier,
+    OTHGBFairBoostRegressor,
     OTXFairBoostClassifier,
     OTXFairBoostRegressor,
 )
@@ -214,3 +218,38 @@ def test_hgb_fair_classifier_rejects_validation_early_stopping(simple_dataset):
 
     with pytest.raises(ValueError, match="validation_fraction=None"):
         model.fit(X, y, sensitive_attribute=X[:, 0] > 0)
+
+
+def test_hgb_fair_regressor_matches_hgb_when_fairness_weight_is_zero(
+    simple_regression_data,
+):
+    X, y = simple_regression_data
+    params = {"max_iter": 10, "early_stopping": False, "random_state": 0}
+    reference = HistGradientBoostingRegressor(**params).fit(X, y)
+    model = OTHGBFairBoostRegressor(lambda_fairness_value=0.0, **params).fit(
+        X, y, sensitive_attribute=X[:, 0] > 0
+    )
+
+    np.testing.assert_allclose(model.predict(X), reference.predict(X), atol=1e-5)
+
+
+def test_hgb_fair_regressor_reduces_mean_gap():
+    rng = np.random.default_rng(0)
+    sensitive_attribute = rng.integers(0, 2, 500)
+    X = rng.normal(size=(500, 3))
+    X[:, 0] += 1.5 * sensitive_attribute
+    y = X[:, 0] + X[:, 1]
+
+    def mean_gap(lambda_fairness_value):
+        model = OTHGBFairBoostRegressor(
+            lambda_fairness_value=lambda_fairness_value,
+            n_steps_cdf=64,
+            max_iter=30,
+            random_state=0,
+        ).fit(X, y, sensitive_attribute=sensitive_attribute)
+        p = model.predict(X)
+        return abs(
+            p[sensitive_attribute == 1].mean() - p[sensitive_attribute == 0].mean()
+        )
+
+    assert mean_gap(10.0) < 0.5 * mean_gap(0.0)
