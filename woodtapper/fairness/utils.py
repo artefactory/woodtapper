@@ -68,6 +68,33 @@ def _split_groups(y_preds, sensitive_attribute):
     return idx0, idx1, y0, y1
 
 
+def _check_hgb_fair_fit_inputs(estimator, y, sensitive_attribute):
+    """
+    Validate the inputs of the HistGradientBoosting fair models before fitting.
+
+    Returns
+    -------
+    np.ndarray
+        The flattened sensitive attribute.
+    """
+    sensitive_attribute = np.asarray(sensitive_attribute).reshape(-1)
+    n_samples = len(y)
+    if sensitive_attribute.shape[0] != n_samples:
+        raise ValueError(
+            "sensitive_attribute must have the same number of samples as y."
+        )
+    early_stopping = estimator.early_stopping
+    if early_stopping == "auto":
+        early_stopping = n_samples > 10000
+    if early_stopping and estimator.validation_fraction is not None:
+        raise ValueError(
+            f"{type(estimator).__name__} does not support early stopping on a validation split "
+            "since the fairness term requires the full training set. "
+            "Set validation_fraction=None or early_stopping=False."
+        )
+    return sensitive_attribute
+
+
 def _sigmoid(x):
     out = np.empty_like(x, dtype=float)
     pos = x >= 0
