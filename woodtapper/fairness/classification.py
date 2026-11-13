@@ -7,7 +7,7 @@ from xgboost.sklearn import _cls_predict_proba
 
 from .loss import HalfBinomialFairLoss
 from .objective import build_fair_loss
-from .utils import _sigmoid
+from .utils import _check_hgb_fair_fit_inputs, _sigmoid
 
 
 class OTFairBoostClassifier(lgb.LGBMClassifier):
@@ -463,23 +463,9 @@ class OTHGBFairBoostClassifier(HistGradientBoostingClassifier):
         self : object
             Fitted estimator.
         """
-        sensitive_attribute = np.asarray(sensitive_attribute).reshape(-1)
-        n_samples = len(y)
-        if sensitive_attribute.shape[0] != n_samples:
-            raise ValueError(
-                "sensitive_attribute must have the same number of samples as y."
-            )
-        early_stopping = self.early_stopping
-        if early_stopping == "auto":
-            early_stopping = n_samples > 10000
-        if early_stopping and self.validation_fraction is not None:
-            raise ValueError(
-                "OTHGBFairBoostClassifier does not support early stopping on a validation split "
-                "since the fairness term requires the full training set. "
-                "Set validation_fraction=None or early_stopping=False."
-            )
-
-        self._sensitive_attribute = sensitive_attribute
+        self._sensitive_attribute = _check_hgb_fair_fit_inputs(
+            self, y, sensitive_attribute
+        )
         try:
             super().fit(X, y, sample_weight=sample_weight)
         finally:
