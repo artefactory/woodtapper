@@ -146,8 +146,10 @@ class OTFairBoostClassifier(lgb.LGBMClassifier):
         -----
         This method overrides the default objective with a custom fair loss objective built using the sensitive attribute and fairness parameters.
         """
+        partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
+            partitions_target=partitions_target,
             lambda_fairness_value=self.lambda_fairness_value,
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
@@ -292,8 +294,10 @@ class OTXFairBoostClassifier(xgb.XGBClassifier):
         sample_weight_eval_set=None,
         base_margin_eval_set=None,
     ):
+        partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
+            partitions_target=partitions_target,
             lambda_fairness_value=self.lambda_fairness_value,
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
@@ -415,6 +419,7 @@ class OTHGBFairBoostClassifier(HistGradientBoostingClassifier):
         verbose=0,
         random_state=None,
         class_weight=None,
+        partitions_target=None,
     ):
         super().__init__(
             loss="log_loss",
@@ -442,6 +447,7 @@ class OTHGBFairBoostClassifier(HistGradientBoostingClassifier):
         self.lambda_fairness_value = lambda_fairness_value
         self.n_steps_cdf = n_steps_cdf
         self.fairness_mode = fairness_mode
+        self.partitions_target = partitions_target
 
     def fit(self, X, y, sensitive_attribute, sample_weight=None):
         """
@@ -463,6 +469,7 @@ class OTHGBFairBoostClassifier(HistGradientBoostingClassifier):
         self : object
             Fitted estimator.
         """
+        self.partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         self._sensitive_attribute = _check_hgb_fair_fit_inputs(
             self, y, sensitive_attribute
         )
@@ -483,4 +490,5 @@ class OTHGBFairBoostClassifier(HistGradientBoostingClassifier):
             n_steps_cdf=self.n_steps_cdf,
             fairness_mode=self.fairness_mode,
             sample_weight=sample_weight,
+            partitions_target=self.partitions_target,
         )

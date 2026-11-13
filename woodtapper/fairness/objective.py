@@ -89,6 +89,7 @@ def derive_fair_grad_hess_terms(
 
 def build_fair_loss(
     sensitive_attribute,
+    partitions_target,
     lambda_fairness_value,
     fairness_mode="Demographic_Parity",
     n_steps_cdf=1024,
@@ -113,16 +114,9 @@ def build_fair_loss(
                 (np.flatnonzero(mask), np.flatnonzero(~mask))
             )
 
-    partitions_target = None
-
     def fair_loss(y_true, y_pred, weight=None):
-        nonlocal partitions_target
+        # nonlocal partitions_target
         n = y_true.size
-        if partitions_target is None:
-            partitions_target = [
-                (np.flatnonzero(y_true == 0), np.flatnonzero(y_true == 1))
-            ]
-
         grad_fairness_perf, hess_fairness_perf = derive_fair_grad_hess_terms(
             partitions_group=partitions_sensitive_attribute,
             partitions_target=partitions_target,

@@ -2,6 +2,7 @@ import lightgbm as lgb
 import warnings
 from sklearn.ensemble import HistGradientBoostingRegressor
 import xgboost as xgb
+import numpy as np
 
 
 from .loss import HalfSquaredFairLoss
@@ -137,12 +138,14 @@ class OTFairBoostRegressor(lgb.LGBMRegressor):
         self : object
             Fitted estimator.
         """
+        partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
             lambda_fairness_value=self.lambda_fairness_value,
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
             is_classification=False,
+            partitions_target=partitions_target,
         )
         if self._initial_user_objective is not None:
             raise ValueError(
@@ -251,12 +254,14 @@ class OTXFairBoostRegressor(xgb.XGBRegressor):
         sample_weight_eval_set=None,
         base_margin_eval_set=None,
     ):
+        partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         fobj = build_fair_loss(
             sensitive_attribute=sensitive_attribute,
             lambda_fairness_value=self.lambda_fairness_value,
             fairness_mode=self.fairness_mode,
             n_steps_cdf=self.n_steps_cdf,
             is_classification=False,
+            partitions_target=partitions_target,
         )
         # if self.objective is not None:
         #    raise ValueError(
@@ -352,6 +357,7 @@ class OTHGBFairBoostRegressor(HistGradientBoostingRegressor):
         tol=1e-7,
         verbose=0,
         random_state=None,
+        partitions_target=None,
     ):
         super().__init__(
             loss="squared_error",
@@ -378,6 +384,7 @@ class OTHGBFairBoostRegressor(HistGradientBoostingRegressor):
         self.lambda_fairness_value = lambda_fairness_value
         self.n_steps_cdf = n_steps_cdf
         self.fairness_mode = fairness_mode
+        self.partitions_target = partitions_target
 
     def fit(self, X, y, sensitive_attribute, sample_weight=None):
         """
@@ -399,6 +406,7 @@ class OTHGBFairBoostRegressor(HistGradientBoostingRegressor):
         self : object
             Fitted estimator.
         """
+        self.partitions_target = [(np.flatnonzero(y == 0), np.flatnonzero(y == 1))]
         self._sensitive_attribute = _check_hgb_fair_fit_inputs(
             self, y, sensitive_attribute
         )
@@ -415,4 +423,5 @@ class OTHGBFairBoostRegressor(HistGradientBoostingRegressor):
             n_steps_cdf=self.n_steps_cdf,
             fairness_mode=self.fairness_mode,
             sample_weight=sample_weight,
+            partitions_target=self.partitions_target,
         )
