@@ -5,7 +5,7 @@ import xgboost as xgb
 import warnings
 from xgboost.sklearn import _cls_predict_proba
 
-from .loss import HalfBinomialFairLoss
+from .scikit_loss import HalfBinomialFairLoss
 from .objective import build_fair_loss
 from .utils import _check_hgb_fair_fit_inputs, _sigmoid
 
