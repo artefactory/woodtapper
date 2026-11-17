@@ -40,8 +40,9 @@ Extract interpretable decision rules from tree-based models. **Tutorials:** [Rul
 
 Gradient-Boosting with fairness-aware training. **Tutorials:** [Fairness](./3_tutorials_fairness.md)
 
-- [Classification Fairness](./references/classification_fairness.md)
-- [Regression Fairness](./references/regression_fairness.md)
+- [LightGBM-based (OTFairBoost)](./references/lgbm_fairness.md)
+- [XGBoost-based (OTXFairBoost)](./references/xgb_fairness.md)
+- [HistGradientBoosting-based (OTHGBFairBoost)](./references/hgb_fairness.md)
 
 
 
