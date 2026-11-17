@@ -5,7 +5,7 @@ import xgboost as xgb
 import numpy as np
 
 
-from .loss import HalfSquaredFairLoss
+from .scikit_loss import HalfSquaredFairLoss
 from .objective import build_fair_loss
 from .utils import _check_hgb_fair_fit_inputs
 
