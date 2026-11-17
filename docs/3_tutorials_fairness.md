@@ -3,6 +3,8 @@
 This tutorial compares a standard LightGBM classifier with `OTFairBoostClassifier` on the Adult income dataset. The sensitive attribute (`sex`) is used during fair-model training and evaluation, but is excluded from the predictive features.
 We also implemented a `OTXFairBoostClassifier` based on XGBoost and a `OTHGBFairBoostClassifier` / `OTHGBFairBoostRegressor` based on scikit-learn's `HistGradientBoostingClassifier` / `HistGradientBoostingRegressor` (same `fit(X, y, sensitive_attribute=...)` API).
 
+> **Note:** LightGBM and XGBoost are optional dependencies. Install them with `pip install woodtapper[lightgbm]` (for `OTFairBoost*`) and/or `pip install woodtapper[xgboost]` (for `OTXFairBoost*`). The `OTHGBFairBoost*` estimators only need scikit-learn.
+
 
 ## Import modules
 

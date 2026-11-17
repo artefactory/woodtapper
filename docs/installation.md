@@ -34,6 +34,14 @@ WoodTapper requires the following:
 * Numpy (>=2.3.1)
 * Scikit-learn (==1.6.1)
 
+Optional dependencies (only needed for some fairness estimators):
+
+* LightGBM (>=4.7.0) for `OTFairBoostClassifier` / `OTFairBoostRegressor`: `pip install woodtapper[lightgbm]`
+* XGBoost (>=3.2.0) for `OTXFairBoostClassifier` / `OTXFairBoostRegressor`: `pip install woodtapper[xgboost]`
+* Both at once: `pip install woodtapper[all]`
+
+`OTHGBFairBoostClassifier` / `OTHGBFairBoostRegressor` only rely on scikit-learn.
+
 # Contributing
 You are welcome to contribute to the project ! You can help in various ways:
 
