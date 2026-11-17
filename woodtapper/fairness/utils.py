@@ -1,3 +1,4 @@
+import importlib
 import numpy as np
 
 
@@ -102,3 +103,14 @@ def _sigmoid(x):
     expx = np.exp(x[~pos])
     out[~pos] = expx / (1.0 + expx)
     return out
+
+
+def _import_optional_dependency(name, extra):
+    """Import an optional dependency, raising an informative ImportError if missing."""
+    try:
+        return importlib.import_module(name)
+    except ImportError as e:
+        raise ImportError(
+            f"Missing optional dependency '{name}', required by this WoodTapper estimator. "
+            f"Install it with `pip install {name}` or `pip install woodtapper[{extra}]`."
+        ) from e
