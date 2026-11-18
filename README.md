@@ -81,6 +81,7 @@ show_rules(sirus, max_rules=10)
 ```
 
 ## ⚖️ WoodTapper boosted trees Fairness module
+`OTFairBoost` estimators need LightGBM (`pip install woodtapper[lightgbm]`) and `OTXFairBoost` estimators need XGBoost (`pip install woodtapper[xgboost]`). `OTHGBFairBoost` estimators only rely on scikit-learn.
 ```python
 from woodtapper.fairness import OTFairBoostClassifier
 

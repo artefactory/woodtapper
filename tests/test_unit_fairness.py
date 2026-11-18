@@ -80,3 +80,27 @@ def test_regressor_rejects_explicit_objective(simple_regression_data):
 
     with pytest.raises(ValueError, match="explicit objective"):
         model.fit(X, y, sensitive_attribute=sensitive_attribute)
+
+
+@pytest.mark.parametrize(
+    "estimator_name, dependency, module",
+    [
+        ("OTFairBoostClassifier", "lightgbm", "lgbm_fairboost"),
+        ("OTFairBoostRegressor", "lightgbm", "lgbm_fairboost"),
+        ("OTXFairBoostClassifier", "xgboost", "xgb_fairboost"),
+        ("OTXFairBoostRegressor", "xgboost", "xgb_fairboost"),
+    ],
+)
+def test_missing_optional_dependency_raises_informative_error(
+    monkeypatch, estimator_name, dependency, module
+):
+    import sys
+    import woodtapper.fairness as fairness
+
+    monkeypatch.setitem(sys.modules, dependency, None)
+    monkeypatch.delitem(sys.modules, f"woodtapper.fairness.{module}", raising=False)
+
+    with pytest.raises(ImportError, match=rf"pip install woodtapper\[{dependency}\]"):
+        getattr(fairness, estimator_name)
+    # scikit-learn based estimators stay available without the optional dependency
+    assert fairness.OTHGBFairBoostClassifier is not None
